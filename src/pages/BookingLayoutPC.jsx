@@ -37,7 +37,7 @@ const BookingLayoutPC = ({
       onClick={() => {}}
     >
      
-      <div className="bookingAppointmentWrapper max-w-[1420px]  h-full">
+      <div className="bookingAppointmentWrapper max-w-[1420px] mx-auto  h-full">
         <Header />
         {appPage === "visit type" ? (
           <VisiteTypePage

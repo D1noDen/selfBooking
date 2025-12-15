@@ -226,6 +226,7 @@ const auth = {
 
   useEffect(() => {
     if (doctorsWithEvents.length !== 0) {
+      console.log(calendarRefs , 'calendarRefs');
       if (calendarRefs[0].current !== null) {
         queueMicrotask(() => {
           calendarRefs.forEach((item) => {

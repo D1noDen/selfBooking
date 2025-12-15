@@ -39,6 +39,7 @@ const ForGuestPage = () => {
   const auth = {
     clinicId: 1,
     companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
+    userId: "7",
   }
   const {
     mutate: CreateBookingMutate,
@@ -56,14 +57,21 @@ const ForGuestPage = () => {
     data: createContactPersonData,
   } = create_Contact_Person();
   const onSubmit = async (data) => {
+    console.log("Form submitted:", data);
+    console.log("appointmentData:", appointmentData);
     setSubmit(!submit);
     setFormData(data);
   };
 
+  const onError = (errors) => {
+    console.log("Validation errors:", errors);
+  };
+
   const createPatient = async () => {
+    console.log("createPatient called");
     CreatePatientMutate({
-      companyId: auth?.user?.companyId,
-      clinicId: auth?.user?.clinicId,
+      companyId: auth.companyId,
+      clinicId: auth.clinicId,
       title: "",
       firstName: appointmentData.firstName,
       lastName: appointmentData.lastName,
@@ -107,22 +115,25 @@ const ForGuestPage = () => {
     });
   };
   const CreateBooking = async () => {
+    console.log("CreateBooking called");
     CreateBookingMutate({
-      companyId: auth?.user?.companyId,
-      clinicId: auth?.user?.clinicId,
+      companyId: auth.companyId,
+      clinicId: auth.clinicId,
       eventStartDateTime: newStartDate,
       eventEndDateTime: newEndDate,
       appointmentDescription: CreatePatientData.data.comments,
       appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
-      userId: auth?.user?.userId,
+      userId: auth.userId,
       patientId: CreatePatientData.data.patientId,
       patientContactPersonId: CreatePatientData.data.patientContactPersonId,
     });
   };
+  console.log("formData:", formData);
   const CreateContactPerson = async () => {
+    console.log("CreateContactPerson called");
     CreateContactPersonMutate({
-      companyId: auth?.user?.companyId,
-      clinicId: auth?.user?.clinicId,
+      companyId: auth.companyId,
+      clinicId: auth.clinicId,
       patientId: CreatePatientData.data.patientId,
       firstName: formData.firstName,
       lastName: formData.lastName,
@@ -139,6 +150,7 @@ const ForGuestPage = () => {
 
   useEffect(() => {
     if (formData) {
+      console.log("useEffect formData triggered:", formData);
       (async function () {
         try {
           await createPatient();
@@ -147,9 +159,10 @@ const ForGuestPage = () => {
         }
       })();
     }
-  }, [submit]);
+  }, [formData]);
   useEffect(() => {
     if (CreatePatientData) {
+      console.log("CreatePatientData received:", CreatePatientData);
       (async function () {
         try {
           await CreateContactPerson();
@@ -162,6 +175,7 @@ const ForGuestPage = () => {
 
   useEffect(() => {
     if (createContactPersonData) {
+      console.log("createContactPersonData received:", createContactPersonData);
       (async function () {
         try {
           await CreateBooking();
@@ -174,6 +188,7 @@ const ForGuestPage = () => {
 
   useEffect(() => {
     if (CreateBookingData) {
+      console.log("CreateBookingData received:", CreateBookingData);
       setAppPage("complete");
       setHeaderPage(4);
       setAppointmentData({});
@@ -211,7 +226,7 @@ const ForGuestPage = () => {
         </div>
         <form
           className={`flex flex-wrap justify-between mb-[10px]`}
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(onSubmit, onError)}
         >
           <InputBlock
             label={`PESEL`}
@@ -221,6 +236,7 @@ const ForGuestPage = () => {
             id={"pesel"}
             register={register}
             errors={errors}
+            optional={true}
           />
           <InputBlock
             label={"First Name"}
@@ -506,6 +522,7 @@ const InputBlock = ({
   mark,
   register,
   errors,
+  optional = false,
 }) => {
   const emailRegExp =
     /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
@@ -534,7 +551,7 @@ const InputBlock = ({
         placeholder={placeholder}
         className={` border-[2px] border-[#E8E8E9] bg-white h-9 rounded-[10px] pl-[15px] text-[15px]/[18px] text-[#5E5E5E] font-inter tracking-[0.675px]`}
         {...register(id, {
-          required: true,
+          required: !optional,
           pattern: id === "email" ? emailRegExp : null,
           minLength: id === "phoneNumber" ? 9 : null,
           maxLength: id === "phoneNumber" ? 9 : null,

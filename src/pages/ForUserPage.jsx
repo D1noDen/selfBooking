@@ -40,6 +40,7 @@ const ForUserPage = () => {
 const auth = {
     clinicId: 1,
     companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
+    userId: "7",
   }
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setUser = SelfBookingStore((state) => state.setUser);
@@ -50,9 +51,11 @@ const auth = {
   const someOneElsePage = SelfBookingStore((state) => state.someOneElsePage);
 
   const onSubmit = (data) => {
+    console.log("Submitting data:", data);
+    console.log("Auth:", auth);
     CreatePatientMutate({
-      companyId: auth?.user?.companyId,
-      clinicId: auth?.user?.clinicId,
+      companyId: auth.companyId,
+      clinicId: auth.clinicId,
       title: "",
       firstName: data.firstName,
       lastName: data.lastName,
@@ -101,9 +104,10 @@ const auth = {
         informationWithSorage.doctor?.eventStartDateTime
       );
       const newEndDate = dateHelper(informationWithSorage?.doctor.eventEnd);
+      console.log("CreatePatientData received:", CreatePatientData);
       CreateBookingMuttate({
-        companyId: auth?.user?.companyId,
-        clinicId: auth?.user?.clinicId,
+        companyId: auth.companyId,
+        clinicId: auth.clinicId,
         eventStartDateTime: newStartDate,
         eventEndDateTime: newEndDate,
         appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
@@ -121,10 +125,15 @@ const auth = {
 
   useEffect(() => {
     if (CreateBookingData) {
+      console.log("CreateBookingData received:", CreateBookingData);
       setHeaderPage(4);
       setAppPage("complete");
     }
   }, [CreateBookingData]);
+
+  const onError = (errors) => {
+    console.log("Validation errors:", errors);
+  };
 
   let _width = window.innerWidth;
   let _height = window.innerHeight;
@@ -175,7 +184,7 @@ const auth = {
         </div>
         <form
           className={`flex flex-wrap justify-between mb-[10px]`}
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(onSubmit, onError)}
         >
           <InputBlock
             label={"PESEL"}

@@ -418,27 +418,137 @@
   resolved "https://registry.npmjs.org/@floating-ui/utils/-/utils-0.2.10.tgz"
   integrity sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==
 
-"@fullcalendar/core@^6.1.19":
+"@fullcalendar/adaptive@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/adaptive/-/adaptive-6.1.4.tgz#36c8bd1a2ce1be9475d8b26636426ebf6654c358"
+  integrity sha512-KQQ3pByRBq59VtvcJVYk/NFsZ765OtMoqTvhRtaRxlUjdOCmI9GfJKtjd3Eoxlx43+Fne3JP5Jpp/ShKEUGWNQ==
+  dependencies:
+    "@fullcalendar/premium-common" "~6.1.4"
+
+"@fullcalendar/core@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/core/-/core-6.1.4.tgz#bfc67bf4ad0c8d99a7e1258b24b5b241c6f48ed1"
+  integrity sha512-ZDD0Owv0LezAk14nsRNaOc9nbowItGmT0mnjOhEw+L6B8P5eads8yYaNA9itn70MWoOjiAG8xqD7Yk1iJGxqgQ==
+  dependencies:
+    preact "^10.0.5"
+
+"@fullcalendar/core@~6.1.4":
   version "6.1.19"
-  resolved "https://registry.npmjs.org/@fullcalendar/core/-/core-6.1.19.tgz"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/core/-/core-6.1.19.tgz#60379111ba0cfb9fd9bc6594fee47cf855fc77b2"
   integrity sha512-z0aVlO5e4Wah6p6mouM0UEqtRf1MZZPt4mwzEyU6kusaNL+dlWQgAasF2cK23hwT4cmxkEmr4inULXgpyeExdQ==
   dependencies:
     preact "~10.12.1"
 
-"@fullcalendar/daygrid@^6.1.19":
+"@fullcalendar/daygrid@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/daygrid/-/daygrid-6.1.4.tgz#fe1335eaa7a4e60ee4b0e6b3896b32398fac6c2c"
+  integrity sha512-X0QWEiA/hT8GYiQzmXt9DlZTWaQbNtBHBXGtaMNcVXbGHDCzLoWTHrde/jABGfr/i2+d9sLUO4oTtwz2HVpNtQ==
+
+"@fullcalendar/daygrid@~6.1.19", "@fullcalendar/daygrid@~6.1.4":
   version "6.1.19"
   resolved "https://registry.npmjs.org/@fullcalendar/daygrid/-/daygrid-6.1.19.tgz"
   integrity sha512-IAAfnMICnVWPjpT4zi87i3FEw0xxSza0avqY/HedKEz+l5MTBYvCDPOWDATpzXoLut3aACsjktIyw9thvIcRYQ==
 
-"@fullcalendar/interaction@^6.1.19":
+"@fullcalendar/interaction@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/interaction/-/interaction-6.1.4.tgz#4816f29a4af824937be4639800cbafbca63e1af8"
+  integrity sha512-69G2B61bPiHy7VyTDiwU9l8yRHPUK9XxNxjIdm3N0nvWR6BaUIBDQe8dIWht+IZUf9qirFhnfcLWkRI0fOTWtw==
+
+"@fullcalendar/interaction@~6.1.4":
   version "6.1.19"
-  resolved "https://registry.npmjs.org/@fullcalendar/interaction/-/interaction-6.1.19.tgz"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/interaction/-/interaction-6.1.19.tgz#48d85601a4203ede7cb400323fe5a9c163e28804"
   integrity sha512-GOciy79xe8JMVp+1evAU3ytdwN/7tv35t5i1vFkifiuWcQMLC/JnLg/RA2s4sYmQwoYhTw/p4GLcP0gO5B3X5w==
 
-"@fullcalendar/react@^6.1.19":
+"@fullcalendar/list@~6.1.4":
   version "6.1.19"
-  resolved "https://registry.npmjs.org/@fullcalendar/react/-/react-6.1.19.tgz"
-  integrity sha512-FP78vnyylaL/btZeHig8LQgfHgfwxLaIG6sKbNkzkPkKEACv11UyyBoTSkaavPsHtXvAkcTED1l7TOunAyPEnA==
+  resolved "https://registry.yarnpkg.com/@fullcalendar/list/-/list-6.1.19.tgz#060bc8ee1895c172d28689475b8e567e166a9828"
+  integrity sha512-knZHpAVF0LbzZpSJSUmLUUzF0XlU/MRGK+Py2s0/mP93bCtno1k2L3XPs/kzh528hSjehwLm89RgKTSfW1P6cA==
+
+"@fullcalendar/multimonth@~6.1.4":
+  version "6.1.19"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/multimonth/-/multimonth-6.1.19.tgz#9a125ece3c2161fcabc30350a3eb9d9d985ff7c5"
+  integrity sha512-YYP8o/tjNLFRKhelwiq5ja3Jm3WDf3bfOUHf32JvAWwfotCvZjD7tYv66Nj02mQ8OWWJINa2EQGJxFHgIs14aA==
+  dependencies:
+    "@fullcalendar/daygrid" "~6.1.19"
+
+"@fullcalendar/premium-common@~6.1.19", "@fullcalendar/premium-common@~6.1.4":
+  version "6.1.19"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/premium-common/-/premium-common-6.1.19.tgz#367ab5f4bf2cdd4f64b553b1c954f5fa49ab0ee4"
+  integrity sha512-bOWHm1u1dUy6M4fQ0hNK7qEI7SrVWrN1ovv/z4/FE/ybfM19ukz7SFs907Ur7KUBWLNKTQYXBtdrY/ginwWraw==
+
+"@fullcalendar/react@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/react/-/react-6.1.4.tgz#8113d1e05b1310be43e6eed1e9ffc9b1a52f373b"
+  integrity sha512-9nc0uHr7zfhNIMyaM+ftoVqX9UEn+frCjTeofN3lcl3bCYvo2dwLw+n9jBJx//f+NRrSwmIvKq2JrqmF2IrwJA==
+
+"@fullcalendar/resource-daygrid@~6.1.4":
+  version "6.1.19"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/resource-daygrid/-/resource-daygrid-6.1.19.tgz#97cfb4b6e7307e120e9d6366cb7929205a762576"
+  integrity sha512-ylcPQwxwbMS4sIvhwJltNWUZhCinD/IhsYvIxfv/wXb0UBds8d9zacPEjcRRKiXShXj/95W/YWVF+9JcCiRfIQ==
+  dependencies:
+    "@fullcalendar/daygrid" "~6.1.19"
+    "@fullcalendar/premium-common" "~6.1.19"
+
+"@fullcalendar/resource-timegrid@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/resource-timegrid/-/resource-timegrid-6.1.4.tgz#12b71d224bae3a6b65c09da7e78db2fc5db5c051"
+  integrity sha512-IAVfzZP82YbC5m48RUJPGfj08+RUpVM77s37fDom+ZjkT8lNuio75w+z83QVKSDIJbfMpeWzEbS1BrvjpwYzTw==
+  dependencies:
+    "@fullcalendar/premium-common" "~6.1.4"
+    "@fullcalendar/resource-daygrid" "~6.1.4"
+    "@fullcalendar/timegrid" "~6.1.4"
+
+"@fullcalendar/resource-timeline@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/resource-timeline/-/resource-timeline-6.1.4.tgz#f8848a9d5b2390d51e716a4c094fd00cf4f42d45"
+  integrity sha512-P8bAcWhE8xG4wUG/SHPDhXHXPG6H47BGc9Ge27dwdzlG3qKcOkF8bC3TX52f9WigUjV+R00gPkZ6KRDOA0gWhg==
+  dependencies:
+    "@fullcalendar/premium-common" "~6.1.4"
+    "@fullcalendar/scrollgrid" "~6.1.4"
+    "@fullcalendar/timeline" "~6.1.4"
+
+"@fullcalendar/resource@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/resource/-/resource-6.1.4.tgz#69c271216fa7e25065e8b2d2e47345f15bbad0c4"
+  integrity sha512-SApmuVZL8gIJuznvCp9wYcHibWdxMjlXEe+d+iu/3UdaP6l6lM09KJ9tVzPwX6z2CFp1jIH2BnmBvhfSUuVmZw==
+  dependencies:
+    "@fullcalendar/premium-common" "~6.1.4"
+
+"@fullcalendar/scrollgrid@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/scrollgrid/-/scrollgrid-6.1.4.tgz#3fc5b759f5086fce4777aadc537c0d73ed7207af"
+  integrity sha512-ZHwI22x/XQg1/9IARxKcjQxLRieIf66nFS8O0JQp7mUUJhr0DAXchXQIGbON2KpCJI802TpMKsmtxdcItEW7tA==
+  dependencies:
+    "@fullcalendar/premium-common" "~6.1.4"
+
+"@fullcalendar/scrollgrid@~6.1.19", "@fullcalendar/scrollgrid@~6.1.4":
+  version "6.1.19"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/scrollgrid/-/scrollgrid-6.1.19.tgz#34ed62ba5febd0bada817c90e73fad0fb36df110"
+  integrity sha512-S1pbiYHvmV0ep6z5sWXJQfgW4Y/jrS5iLIAqSagDFPK0jr327nBxl7Ryi3Zb5UdMIP0/O4GXs8jwZabQPd8SOg==
+  dependencies:
+    "@fullcalendar/premium-common" "~6.1.19"
+
+"@fullcalendar/timegrid@6.1.4":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/timegrid/-/timegrid-6.1.4.tgz#b3370b80726d52445ec6f988744220a93c884f94"
+  integrity sha512-B2/levLKW0CyDQru75JeuASpCZml5W8sINCwVTstxxhjKmNBG3F5qvSX12DDrTdga/ySYObNNP1pKDwavKk/JQ==
+  dependencies:
+    "@fullcalendar/daygrid" "~6.1.4"
+
+"@fullcalendar/timegrid@~6.1.4":
+  version "6.1.19"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/timegrid/-/timegrid-6.1.19.tgz#bb4b2e3039c995b61284ee5b76ad9dcc696b71ce"
+  integrity sha512-OuzpUueyO9wB5OZ8rs7TWIoqvu4v3yEqdDxZ2VcsMldCpYJRiOe7yHWKr4ap5Tb0fs7Rjbserc/b6Nt7ol6BRg==
+  dependencies:
+    "@fullcalendar/daygrid" "~6.1.19"
+
+"@fullcalendar/timeline@~6.1.4":
+  version "6.1.19"
+  resolved "https://registry.yarnpkg.com/@fullcalendar/timeline/-/timeline-6.1.19.tgz#d08dfcd6bacc87507d59e8159f529ca83d93cd46"
+  integrity sha512-d2P961mnUTXtJeWNmIq1neoDmZcrPUaK7nGFoc+jQAlnmG3aNSVWQmD1ia694AMqLWtcWkwipW9MuaJgx2QvrA==
+  dependencies:
+    "@fullcalendar/premium-common" "~6.1.19"
+    "@fullcalendar/scrollgrid" "~6.1.19"
 
 "@headlessui/react@^2.2.9":
   version "2.2.9"
@@ -811,17 +921,34 @@
   dependencies:
     tslib "^2.8.0"
 
-"@tanstack/query-core@5.90.12":
-  version "5.90.12"
-  resolved "https://registry.npmjs.org/@tanstack/query-core/-/query-core-5.90.12.tgz"
-  integrity sha512-T1/8t5DhV/SisWjDnaiU2drl6ySvsHj1bHBCWNXd+/T+Hh1cf6JodyEYMd5sgwm+b/mETT4EV3H+zCVczCU5hg==
-
-"@tanstack/react-query@^5.90.12":
-  version "5.90.12"
-  resolved "https://registry.npmjs.org/@tanstack/react-query/-/react-query-5.90.12.tgz"
-  integrity sha512-graRZspg7EoEaw0a8faiUASCyJrqjKPdqJ9EwuDRUF9mEYJ1YPczI9H+/agJ0mOJkPCJDk0lsz5QTrLZ/jQ2rg==
+"@tanstack/match-sorter-utils@^8.7.0":
+  version "8.19.4"
+  resolved "https://registry.yarnpkg.com/@tanstack/match-sorter-utils/-/match-sorter-utils-8.19.4.tgz#dacf772b5d94f4684f10dbeb2518cf72dccab8a5"
+  integrity sha512-Wo1iKt2b9OT7d+YGhvEPD3DXvPv2etTusIMhMUoG7fbhmxcXCtIjJDEygy91Y2JFlwGyjqiBPRozme7UD8hoqg==
   dependencies:
-    "@tanstack/query-core" "5.90.12"
+    remove-accents "0.5.0"
+
+"@tanstack/query-core@4.24.10":
+  version "4.24.10"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-4.24.10.tgz#758e1f5b2d7faf7316d299facd272a9f64c26299"
+  integrity sha512-2QywqXEAGBIUoTdgn1lAB4/C8QEqwXHj2jrCLeYTk2xVGtLiPEUD8jcMoeB2noclbiW2mMt4+Fq7fZStuz3wAQ==
+
+"@tanstack/react-query-devtools@4.29.6":
+  version "4.29.6"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query-devtools/-/react-query-devtools-4.29.6.tgz#117d88d598c5d5ec323d011fb7670a9096a6ede8"
+  integrity sha512-qpYI41a69MWmrllcGiSE1KlpmnwJY/w0yKMnmp6VXn7nVy0i5TMMAT4u8D48F1Ipv/BKIDI1lqxPAvB4MqryBg==
+  dependencies:
+    "@tanstack/match-sorter-utils" "^8.7.0"
+    superjson "^1.10.0"
+    use-sync-external-store "^1.2.0"
+
+"@tanstack/react-query@4.24.10":
+  version "4.24.10"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-4.24.10.tgz#2e1004bb1d1f55198961a21e875e2c65ec865130"
+  integrity sha512-FY1DixytOcNNCydPQXLxuKEV7VSST32CAuJ55BjhDNqASnMLZn+6c30yQBMrODjmWMNwzfjMZnq0Vw7C62Fwow==
+  dependencies:
+    "@tanstack/query-core" "4.24.10"
+    use-sync-external-store "^1.2.0"
 
 "@tanstack/react-virtual@^3.13.9":
   version "3.13.13"
@@ -1131,6 +1258,13 @@ convert-source-map@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz"
   integrity sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==
+
+copy-anything@^3.0.2:
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/copy-anything/-/copy-anything-3.0.5.tgz#2d92dce8c498f790fa7ad16b01a1ae5a45b020a0"
+  integrity sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==
+  dependencies:
+    is-what "^4.1.8"
 
 cross-spawn@^7.0.6:
   version "7.0.6"
@@ -1500,6 +1634,18 @@ fsevents@~2.3.2, fsevents@~2.3.3:
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
   integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
+fullcalendar@6.1.4:
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/fullcalendar/-/fullcalendar-6.1.4.tgz#f5280cde6103eeed619e3ba709a72625f998ef8e"
+  integrity sha512-XAgWTauifC8HKkbN8574wEWwWCgzcgMfjkxyvK1V5D0Q/HKldZlYuvOSrI0JKkzIXtufurx9IN+QljVQkAvg+A==
+  dependencies:
+    "@fullcalendar/core" "~6.1.4"
+    "@fullcalendar/daygrid" "~6.1.4"
+    "@fullcalendar/interaction" "~6.1.4"
+    "@fullcalendar/list" "~6.1.4"
+    "@fullcalendar/multimonth" "~6.1.4"
+    "@fullcalendar/timegrid" "~6.1.4"
+
 function-bind@^1.1.2:
   version "1.1.2"
   resolved "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz"
@@ -1659,6 +1805,11 @@ is-number@^7.0.0:
   version "7.0.0"
   resolved "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz"
   integrity sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==
+
+is-what@^4.1.8:
+  version "4.1.16"
+  resolved "https://registry.yarnpkg.com/is-what/-/is-what-4.1.16.tgz#1ad860a19da8b4895ad5495da3182ce2acdd7a6f"
+  integrity sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==
 
 isexe@^2.0.0:
   version "2.0.0"
@@ -1986,6 +2137,11 @@ postcss@^8.4.0, postcss@^8.4.47, postcss@^8.5.6:
     picocolors "^1.1.1"
     source-map-js "^1.2.1"
 
+preact@^10.0.5:
+  version "10.28.0"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-10.28.0.tgz#a851300df42842797046545e4172a4128d158755"
+  integrity sha512-rytDAoiXr3+t6OIP3WGlDd0ouCUG1iCWzkcY3++Nreuoi17y6T5i/zRhe6uYfoVcxq6YU+sBtJouuRDsq8vvqA==
+
 preact@~10.12.1:
   version "10.12.1"
   resolved "https://registry.npmjs.org/preact/-/preact-10.12.1.tgz"
@@ -2056,10 +2212,10 @@ react-draggable@^4.4.5:
     clsx "^2.1.1"
     prop-types "^15.8.1"
 
-react-hook-form@^7.68.0:
-  version "7.68.0"
-  resolved "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.68.0.tgz"
-  integrity sha512-oNN3fjrZ/Xo40SWlHf1yCjlMK417JxoSJVUXQjGdvdRCU07NTFei1i1f8ApUAts+IVh14e4EdakeLEA+BEAs/Q==
+react-hook-form@7.43.9:
+  version "7.43.9"
+  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.43.9.tgz#84b56ac2f38f8e946c6032ccb760e13a1037c66d"
+  integrity sha512-AUDN3Pz2NSeoxQ7Hs6OhQhDr6gtF9YRuutGDwPQqhSUAHJSgGl2VeY3qN19MG0SucpjgDiuMJ4iC5T5uB+eaNQ==
 
 react-is@^16.13.1:
   version "16.13.1"
@@ -2103,6 +2259,11 @@ readdirp@~3.6.0:
   integrity sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==
   dependencies:
     picomatch "^2.2.1"
+
+remove-accents@0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/remove-accents/-/remove-accents-0.5.0.tgz#77991f37ba212afba162e375b627631315bed687"
+  integrity sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==
 
 requires-port@^1.0.0:
   version "1.0.0"
@@ -2361,6 +2522,13 @@ sucrase@^3.35.0:
     tinyglobby "^0.2.11"
     ts-interface-checker "^0.1.9"
 
+superjson@^1.10.0:
+  version "1.13.3"
+  resolved "https://registry.yarnpkg.com/superjson/-/superjson-1.13.3.tgz#3bd64046f6c0a47062850bb3180ef352a471f930"
+  integrity sha512-mJiVjfd2vokfDxsQPOwJ/PtanO87LhpYY88ubI5dUB1Ab58Txbyje3+jpm+/83R/fevaq/107NNhtYBLuoTrFg==
+  dependencies:
+    copy-anything "^3.0.2"
+
 supports-color@^7.1.0:
   version "7.2.0"
   resolved "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz"
@@ -2514,7 +2682,7 @@ url-parse@^1.5.3:
     querystringify "^2.1.1"
     requires-port "^1.0.0"
 
-use-sync-external-store@^1.5.0:
+use-sync-external-store@^1.2.0, use-sync-external-store@^1.5.0:
   version "1.6.0"
   resolved "https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz"
   integrity sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==

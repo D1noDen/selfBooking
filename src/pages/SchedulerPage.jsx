@@ -524,7 +524,7 @@ const auth = {
                       ref={calendarRefs[i]}
                       initialDate={startDate}
                       eventClick={(e) => {
-                        setAppPage("continue as");
+                        setAppPage("for who");
                         setHeaderPage(2);
                         setSesionStorage({
                           ...informationWithSorage,

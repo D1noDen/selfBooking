@@ -57,8 +57,7 @@ const ForGuestPage = () => {
     data: createContactPersonData,
   } = create_Contact_Person();
   const onSubmit = async (data) => {
-    console.log("Form submitted:", data);
-    console.log("appointmentData:", appointmentData);
+   
     setSubmit(!submit);
     setFormData(data);
   };
@@ -68,7 +67,6 @@ const ForGuestPage = () => {
   };
 
   const createPatient = async () => {
-    console.log("createPatient called");
     CreatePatientMutate({
       companyId: auth.companyId,
       clinicId: auth.clinicId,

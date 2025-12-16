@@ -73,7 +73,7 @@ const FinalPage = () => {
             if (_width < 1000) {
               setAppPage("visit type mobile");
             } else {
-              setAppPage("visite type");
+              setAppPage("visit type");
             }
             setHeaderPage(0);
             setUser(false);

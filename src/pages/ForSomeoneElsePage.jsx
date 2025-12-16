@@ -45,8 +45,10 @@ const auth = {
     setAppointmentData({ ...data, activePatientGuardian });
     setAppPage("for guest page");
   };
+  console.log('appointmentData', appointmentData);
   useEffect(() => {
-    if (Object.keys(appointmentData).length === 0) {
+    if(appointmentData){
+    if (Object?.keys(appointmentData).length === 0) {
       setValue("gender", selectedGender);
       setActivePatientGuardian("Yes");
     } else {
@@ -56,6 +58,7 @@ const auth = {
       setSelectedGender(appointmentData.gender);
       setValue("gender", selectedGender);
       setActivePatientGuardian(appointmentData.activePatientGuardian);
+    }
     }
   }, []);
   const genderList = gender.map((item, i) => {

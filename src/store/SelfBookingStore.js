@@ -7,6 +7,9 @@ const SelfBookingStore = create(
       headerPage: 0,
       setHeaderPage: (page) => set({ headerPage: page }),
 
+    appointmentData : null ,
+    setAppointmentData : (data) => set ( { appointmentData : data } ) ,
+    
       appPage: "visite type",
       setAppPage: (namePage) => set({ appPage: namePage }),
 

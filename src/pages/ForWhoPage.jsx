@@ -30,10 +30,10 @@ const ForWhoPage = () => {
     const prevStep = (status) => {
         if (status === 'logUser') {
             setUser(true);
-            setAppPage('continue as');
+            setAppPage('sheduler');
         } else {
             setUser(false);
-            setAppPage('continue as');
+            setAppPage('scheduler');
         }
     };
 

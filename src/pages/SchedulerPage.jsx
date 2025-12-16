@@ -525,7 +525,7 @@ const auth = {
                       initialDate={startDate}
                       eventClick={(e) => {
                         setAppPage("for who");
-                        setHeaderPage(2);
+                        setHeaderPage(3);
                         setSesionStorage({
                           ...informationWithSorage,
                           doctor: {

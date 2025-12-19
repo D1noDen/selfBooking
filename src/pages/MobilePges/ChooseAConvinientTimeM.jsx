@@ -16,7 +16,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import FullCalendar from "@fullcalendar/react";
 
 import Spinner from "../helpers/Spinner";
-
+import useAuth from "../../store/useAuth";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import calendar from "../../assets/images/self-booking/calendar.png";
@@ -26,10 +26,11 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
   const calendarApi = SelfBookingStore((state) => state.calendarApi);
   const setCalendarApi = SelfBookingStore((state) => state.setCalendarApi);
-const auth = {
-    clinicId: 1,
-    companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
-  }
+  const { auth } = useAuth();
+// const auth = {
+//     clinicId: 1,
+//     companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
+//   }
 
   const dayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
   const curDate = new Date();
@@ -94,16 +95,14 @@ const auth = {
         setPrevButton("myCustomButtonPrev");
       }
       GetSlotApoimentInformation({
-        companyId: auth?.companyId,
-        clinicId: auth?.clinicId,
+        bookingToken:auth,
         appointmentTypeId:
           selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
         startDate: start,
         endDate: endDate,
       });
       GetDoctorByTypeIdInformation({
-        companyId: auth?.companyId,
-        clinicId: auth?.clinicId,
+        bookingToken:auth,
         appointmentTypeId:
           selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
       });
@@ -111,11 +110,12 @@ const auth = {
   }, [selectedAppointment, startDate]);
 
   useEffect(() => {
-    GetApoimentTypesSelfBookingInformation({
-      companyId: auth?.companyId,
-      clinicId: auth?.clinicId,
+  if(auth){
+      GetApoimentTypesSelfBookingInformation({
+      bookingToken:auth,
     });
-  }, []);
+  }
+  }, [auth]);
 
   useEffect(() => {
     if (GetApoimentTypesSelfBookingData) {

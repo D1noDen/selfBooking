@@ -10,7 +10,7 @@ import dateFormat from "dateformat";
 import SelfBookingStore from "../../store/SelfBookingStore";
 import moment from "moment";
 //import useAuth from "../../../Routes/useAuth";
-
+import useAuth from "../../store/useAuth";
 import Spinner from "../helpers/Spinner";
 
 import googleTranslate from "../../assets/images/self-booking/googleTranslate.png";
@@ -22,10 +22,7 @@ import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 
 const UpcomingScheduleM = ({ setSesionStorage }) => {
-const auth = {
-    clinicId: 1,
-    companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
-  }
+const {auth} = useAuth();
   const languages = [
     { label: "English", id: 0 },
     { label: "Polish", id: 1 },
@@ -73,11 +70,12 @@ const auth = {
   }
 
   useEffect(() => {
-    GetApoimentTypesSelfBookingInformation({
-      companyId: auth?.companyId,
-      clinicId: auth?.clinicId,
+   if(auth){
+     GetApoimentTypesSelfBookingInformation({
+     bookingToken :auth,
     });
-  }, []);
+  }
+  }, [auth]);
 
   useEffect(() => {
     if (GetApoimentTypesSelfBookingData) {
@@ -93,16 +91,14 @@ const auth = {
       const start = moment(startDate).format("YYYY-MM-DD");
       const endDate = moment(startDate).format("YYYY-MM-DD");
       GetSlotApoimentInformation({
-        companyId: auth?.companyId,
-        clinicId: auth?.clinicId,
+        bookingToken:auth,
         appointmentTypeId:
           selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
         startDate: start,
         endDate: endDate,
       });
       GetDoctorByTypeIdInformation({
-        companyId: auth?.companyId,
-        clinicId: auth?.clinicId,
+        bookingToken:auth,
         appointmentTypeId:
           selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
       });
@@ -147,7 +143,7 @@ const auth = {
 
   return (
     <div>
-      {doctorsWithEvents.length === 0 ? <Spinner /> : null}
+      {/* {doctorsWithEvents.length === 0 ? <Spinner /> : null} */}
       <section className="mobileBG h-[75px]">
         <div className="flex h-full items-center justify-center">
           <div className="relative w-[290px]">

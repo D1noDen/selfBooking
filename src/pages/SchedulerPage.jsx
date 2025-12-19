@@ -21,6 +21,7 @@ import { DateComponent } from "@fullcalendar/core/internal";
 import { HubConnectionState } from "@microsoft/signalr";
 import { TRUE } from "sass";
 import { createInstance } from "i18next";
+import useAuth from "../store/useAuth";
 const sity = ["Warsaw", "Lublin", "Alwernia"];
 const SchedulerPage = ({ setSesionStorage }) => {
   const informationWithSorage = JSON.parse(
@@ -48,11 +49,8 @@ const SchedulerPage = ({ setSesionStorage }) => {
 
   const curDate = new Date();
   const curWeekStart = moment(curDate).startOf("week").format("YYYY-MM-DD");
+const {auth} = useAuth();
 
-const auth = {
-    clinicId: 1,
-    companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
-  }
   const {
     data: GetSlotApoimentData,
     isLoading: GetSlotApoimentLoading,
@@ -75,16 +73,14 @@ const auth = {
         setPrevButton("myCustomButtonPrev");
       }
       GetSlotApoimentInformation({
-        companyId: auth?.companyId,
-        clinicId: auth?.clinicId,
+        bookingToken:auth,
         appointmentTypeId:
           selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
         startDate: start,
         endDate: endDate,
       });
       GetDoctorByTypeIdInformation({
-        companyId: auth?.companyId,
-        clinicId: auth?.clinicId,
+         bookingToken:auth,
         appointmentTypeId:
           selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
       });
@@ -98,10 +94,9 @@ const auth = {
   } = get_Apoiment_Types_Self_Booking();
   useEffect(() => {
     GetApoimentTypesSelfBookingInformation({
-      companyId: auth?.companyId,
-      clinicId: auth?.clinicId,
+      bookingToken:auth,
     });
-  }, []);
+  }, [auth]);
   useEffect(() => {
     if (GetApoimentTypesSelfBookingData) {
       setTypes(GetApoimentTypesSelfBookingData?.data?.result);

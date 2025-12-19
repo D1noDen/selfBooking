@@ -15,11 +15,11 @@ const ForWhoPage = () => {
     const nextStep = (text, status) => {
 
         setTimeout(() => {
-            if (status === 'guest' && text === 'Scheduling for me') {
+            if (text === 'Scheduling for me') {
                 setAppPage('for user');
-            } else if ((status === 'guest' || status === 'logUser') && text === 'Scheduling for someone else') {
+            } else if ( text === 'Scheduling for someone else') {
                 setAppPage('for someone else');
-            } else if (status === 'logUser' && text === 'Scheduling for me') {
+            } else if ( text === 'Scheduling for me') {
                 setAppPage('for guest page');
             }
         }, 500);

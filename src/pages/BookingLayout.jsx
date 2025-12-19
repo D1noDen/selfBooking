@@ -5,15 +5,14 @@ import BookingLayoutPC from "./BookingLayoutPC";
 import SelfBookingStore from "../store/SelfBookingStore";
 import { GlobalHookWindowSummary } from "../helpers/GlobalHookWindowSummary";
 import { GlobalHookWindowHeight } from "../helpers/GlobalHookWindowSummary";
-import { get_Apoiment_Types_Self_Booking } from "./request/requestSelfBooking";
-
+import { get_Apoiment_Types_Self_Booking , get_Clinic_Info} from "./request/requestSelfBooking";
+import useAuth from "../store/useAuth";
 import BookingLayoutMobile from "./BookingLayoutMobile";
 const MainLayout = () => {
   const pageSize = useResize();
-  const auth = {
-    clinicId: 1,
-    companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
-  }
+ 
+  const {data:DataClinicInfo , isLoading:LoadingClinicInfo , setText:UseClinicInfo} = get_Clinic_Info()
+  const {setAuth , auth} = useAuth();
   const appPage = SelfBookingStore((state) => state.appPage);
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const headerPage = SelfBookingStore((state) => state.headerPage);
@@ -31,11 +30,13 @@ const MainLayout = () => {
     setText: GetApoimentTypesSelfBookingInformation,
   } = get_Apoiment_Types_Self_Booking();
   useEffect(() => {
-    GetApoimentTypesSelfBookingInformation({
-      companyId: auth?.companyId,
-      clinicId: auth?.clinicId,
+   if(auth){
+     GetApoimentTypesSelfBookingInformation({
+      bookingToken:auth
     });
-  }, []);
+    UseClinicInfo(auth)
+    }
+  }, [auth]);
   useEffect(() => {
     if (pageSize[0] < 1024) {
       setAppPage("visit type mobile");
@@ -44,6 +45,7 @@ const MainLayout = () => {
     }
     setHeaderPage(0);
   }, [pageSize[0]]);
+  
   useEffect(() => {
     if (GetApoimentTypesSelfBookingData) {
       setTypes(GetApoimentTypesSelfBookingData?.data?.result);
@@ -82,6 +84,12 @@ const MainLayout = () => {
   //   setAppPage("continue as");
   //   setHeaderPage(2);
   // }, []);
+ const token = window.location.pathname.replace("/b/", "");
+useEffect(() => {
+  if (token) {
+    setAuth(token);
+  }
+}, [token]);
   const content =
     pageSize[0] < 1024 ? (
       <BookingLayoutMobile

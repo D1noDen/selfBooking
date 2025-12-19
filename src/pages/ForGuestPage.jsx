@@ -9,6 +9,7 @@ import {
   create_Contact_Person,
 } from "./request/requestSelfBooking";
 import WithoutAvatar from "../assets/images/svg/NoAvatar.svg";
+import useAuth from "../store/useAuth";
 // import useAuth from "../../Routes/useAuth";
 import { dateHelper } from "./helpers/dateHelper";
 
@@ -34,13 +35,16 @@ const ForGuestPage = () => {
   );
   const newEndDate = dateHelper(informationWithSorage?.doctor.eventEnd);
   const someOneElsePage = SelfBookingStore((state) => state.someOneElsePage);
+   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
+console.log("chosenDoctor:", chosenDoctor);
   const [submit, setSubmit] = useState(false);
   const [formData, setFormData] = useState(null);
-  const auth = {
-    clinicId: 1,
-    companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
-    userId: "7",
-  }
+  // const auth = {
+  //   clinicId: 1,
+  //   companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
+  //   userId: "7",
+  // }
+  const {auth} = useAuth();
   const {
     mutate: CreateBookingMutate,
     isLoading: CreateBookingLoading,
@@ -67,9 +71,10 @@ const ForGuestPage = () => {
   };
 
   const createPatient = async () => {
-    CreatePatientMutate({
-      companyId: auth.companyId,
-      clinicId: auth.clinicId,
+    CreatePatientMutate(
+      {
+         data:{
+      
       title: "",
       firstName: appointmentData.firstName,
       lastName: appointmentData.lastName,
@@ -110,28 +115,31 @@ const ForGuestPage = () => {
       isChild: false,
       patientChildId: 0,
       patientParentId: 0,
-    });
+    
+    },
+    token:auth
+      });
   };
   const CreateBooking = async () => {
-    console.log("CreateBooking called");
+    
     CreateBookingMutate({
-      companyId: auth.companyId,
-      clinicId: auth.clinicId,
-      eventStartDateTime: newStartDate,
+      data:{
+        eventStartDateTime: newStartDate,
       eventEndDateTime: newEndDate,
       appointmentDescription: CreatePatientData.data.comments,
       appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
-      userId: auth.userId,
+      userId: chosenDoctor?.id,
       patientId: CreatePatientData.data.patientId,
       patientContactPersonId: CreatePatientData.data.patientContactPersonId,
+      },
+      token:auth
     });
   };
   console.log("formData:", formData);
   const CreateContactPerson = async () => {
-    console.log("CreateContactPerson called");
+   
     CreateContactPersonMutate({
-      companyId: auth.companyId,
-      clinicId: auth.clinicId,
+      data:{
       patientId: CreatePatientData.data.patientId,
       firstName: formData.firstName,
       lastName: formData.lastName,
@@ -143,6 +151,8 @@ const ForGuestPage = () => {
       zipCode: "",
       title: "",
       contactPersonTypeId: 0,
+      },
+      token:auth
     });
   };
 

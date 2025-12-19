@@ -7,7 +7,8 @@ import { GlobalHookWindowSummary } from "../helpers/GlobalHookWindowSummary";
 import { useOnClickOutside } from "./helpers/helpers";
 import WithoutAvatar from "../assets/images/svg/NoAvatar.svg";
 import { create_Patient, create_Booking } from "./request/requestSelfBooking";
-import { dateHelper } from "./helpers/dateHelper";
+import { dateHelper } from "./helpers/dateHelper"
+import useAuth from "../store/useAuth";
 // import useAuth from "../../Routes/useAuth";
 const ForUserPage = () => {
   const {
@@ -19,7 +20,7 @@ const ForUserPage = () => {
     trigger,
     formState: { errors },
   } = useForm({ mode: "all" });
-
+  const {auth} = useAuth();
   const gender = ["Male", "Female", "Other"];
   const informationWithSorage = JSON.parse(
     sessionStorage.getItem("BookingInformation")
@@ -37,11 +38,11 @@ const ForUserPage = () => {
   const [showList, setShowList] = useState(false);
   const [arrowHover, setArrowHover] = useState(false);
   const [selectedGender, setSelectedGender] = useState(gender[0]);
-const auth = {
-    clinicId: 1,
-    companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
-    userId: "7",
-  }
+// const auth = {
+//     clinicId: 1,
+//     companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
+//     userId: "7",
+//   }
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setUser = SelfBookingStore((state) => state.setUser);
   const user = SelfBookingStore((state) => state.user);
@@ -54,6 +55,8 @@ const auth = {
     console.log("Submitting data:", data);
     console.log("Auth:", auth);
     CreatePatientMutate({
+      data:{
+        
       companyId: auth.companyId,
       clinicId: auth.clinicId,
       title: "",
@@ -96,6 +99,9 @@ const auth = {
       isChild: false,
       patientChildId: 0,
       patientParentId: 0,
+    
+      },
+      token: auth
     });
   };
   useEffect(() => {
@@ -106,15 +112,19 @@ const auth = {
       const newEndDate = dateHelper(informationWithSorage?.doctor.eventEnd);
       console.log("CreatePatientData received:", CreatePatientData);
       CreateBookingMuttate({
-        companyId: auth.companyId,
-        clinicId: auth.clinicId,
-        eventStartDateTime: newStartDate,
+       data:{
+         eventStartDateTime: newStartDate,
         eventEndDateTime: newEndDate,
         appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
         userId: informationWithSorage?.doctor.id,
         patientContactPersonId: null,
         patientId: CreatePatientData.data.patientId,
         appointmentDescription: getValues("comment"),
+       },
+       token:{
+        tokenAuth:auth
+       }
+       
       });
     }
   }, [CreatePatientData]);

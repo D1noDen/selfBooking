@@ -45,7 +45,9 @@ const SelfBookingStore = create(
 
       guardianInfo: {},
       setGuardianInfo: (dataObj) => set({ guardianInfo: dataObj }),
+      
     }),
+  
     {
       name: "selfBooking-storage",
       storage: createJSONStorage(() => sessionStorage),

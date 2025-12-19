@@ -51,8 +51,18 @@ export const create_Contact_Person = () => {
 
 export const create_Booking = () => {
   const helper = selfBookingBackendHelper();
-  const { mutate, data, isLoading, isSuccess, error } = useMutation((data) =>
-    helper.createBooking(data)
+  const { mutate, data, isLoading, isSuccess, error } = useMutation((token ,data) =>
+    helper.createBooking(token ,data)
   );
   return { mutate, data, isLoading, isSuccess, error };
+};
+
+export const get_Clinic_Info = () => {
+  const helper = selfBookingBackendHelper();
+  const [text, setText] = useState(null);
+  const { data, isLoading, isSuccess, error } = useQuery({
+    queryKey: [`getClinicInfo`, text],
+    queryFn: () => text && helper.getClinicInfo(text),
+  });
+  return { data, isLoading, isSuccess, error, setText };
 };

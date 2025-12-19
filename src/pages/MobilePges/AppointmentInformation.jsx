@@ -4,6 +4,7 @@ import { get_Doctor_By_Type_Id } from "../request/requestSelfBooking";
 import { useEffect, useState } from "react";
 import { dateHelper } from "../helpers/dateHelper";
 //import useAuth from "../../../Routes/useAuth";
+import useAuth from "../../store/useAuth";
 import {
   create_Booking,
   create_Patient,
@@ -15,6 +16,7 @@ import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import Spinner from "../helpers/Spinner";
 
 const AppointmentInformation = () => {
+  const {auth} = useAuth();
   const informationWithSorage = JSON.parse(
     sessionStorage.getItem("BookingInformation")
   );
@@ -23,18 +25,19 @@ const AppointmentInformation = () => {
     isLoading: GetDoctorByTypeIdLoading,
     setText: GetDoctorByTypeIdInformation,
   } = get_Doctor_By_Type_Id();
-const auth = {
-    clinicId: 1,
-    companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
-  }
+// const auth = {
+//     clinicId: 1,
+//     companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
+//   }
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const guardianInfo = SelfBookingStore((state) => state.guardianInfo);
   const patientInfo = SelfBookingStore((state) => state.patientInfo);
   const appointmentTime = SelfBookingStore((state) => state.appointmentTime);
+ 
   const [doctor, setDoctor] = useState([]);
   const [submit, setSubmit] = useState(false);
   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
-
+console.log("chosenDoctor:", chosenDoctor);
   let start = moment(
     dateHelper(informationWithSorage.doctor?.eventStartDateTime)
   );
@@ -66,8 +69,7 @@ const auth = {
   useEffect(() => {
     if (informationWithSorage) {
       GetDoctorByTypeIdInformation({
-        companyId: auth?.companyId,
-        clinicId: auth?.clinicId,
+          bookingToken:auth,
         appointmentTypeId: informationWithSorage.apoimentTypeId.id,
       });
     }
@@ -152,9 +154,8 @@ const auth = {
 
   const CreateContactPerson = async () => {
     CreateContactPersonMutate({
-      companyId: auth?.companyId,
-      clinicId: auth?.clinicId,
-      patientId: CreatePatientData.data.patientId,
+      data:{
+        patientId: CreatePatientData.data.patientId,
       firstName: guardianInfo.firstName,
       lastName: guardianInfo.lastName,
       email: guardianInfo.email,
@@ -165,13 +166,17 @@ const auth = {
       zipCode: "",
       title: "",
       contactPersonTypeId: 0,
+      },
+      token:auth,
     });
   };
 
   const createPatient = async () => {
+
     CreatePatientMutate({
-      companyId: auth?.companyId,
-      title: "",
+     
+     data:{
+       title: "",
       firstName: patientInfo.firstName,
       lastName: patientInfo.lastName,
       email: "",
@@ -211,19 +216,22 @@ const auth = {
       isChild: false,
       patientChildId: 0,
       patientParentId: 0,
+     },
+     token:auth,
     });
   };
   const CreateBooking = async () => {
     CreateBookingMutate({
-      companyId: auth?.companyId,
-      clinicId: auth?.clinicId,
-      eventStartDateTime: newStartDate,
+     data:{
+       eventStartDateTime: newStartDate,
       eventEndDateTime: newEndDate,
       appointmentDescription: CreatePatientData.data.comments,
       appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
-      userId: auth?.userId,
+      userId: chosenDoctor?.id,
       patientId: CreatePatientData.data.patientId,
       patientContactPersonId: CreatePatientData.data.patientContactPersonId,
+     },
+      token:auth,
     });
   };
 

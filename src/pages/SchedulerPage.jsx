@@ -22,6 +22,8 @@ import { HubConnectionState } from "@microsoft/signalr";
 import { TRUE } from "sass";
 import { createInstance } from "i18next";
 import useAuth from "../store/useAuth";
+
+import "react-datepicker/dist/react-datepicker.css"
 const sity = ["Warsaw", "Lublin", "Alwernia"];
 const SchedulerPage = ({ setSesionStorage }) => {
   const informationWithSorage = JSON.parse(
@@ -145,7 +147,7 @@ const {auth} = useAuth();
               const year = date.split(".")[2];
 
               return {
-                title: formatAMPM(time),
+                title: moment(time, "HH:mm:ss").format("HH:mm "),
                 date: year + "-" + month + "-" + day,
                 dateStart: apoiment.startTime,
                 dateEnd: apoiment.endTime,
@@ -158,7 +160,7 @@ const {auth} = useAuth();
   }, [doctors, events]);
 
   const TimeAppointment = (eventInfo) => {
-    console.log(eventInfo);
+   
     return (
       <div
         className={`bg-white text-[14px]/[19px] text-[#6674F3] font-hebrew tracking-[0.63px] w-24 lg:h-[30px] xl:h-[35px] flex justify-center items-center border-[1px] border-solid border-[#E8E8E9] rounded-[5px] hover:bg-[#F2F3FF] cursor-pointer mb-[10px] active:border-[#8380FF] active:bg-[#F2F3FF]`}
@@ -385,7 +387,20 @@ const {auth} = useAuth();
                   })}
                 </div>
               </span>
+             <div className="relative z-[20]">
               <DatePicker
+              selected={startDate}
+                onChange={(date) => {
+                  setStartDay(date);
+                  calendarRef.current
+                    .getApi()
+                    .gotoDate(
+                      date.toLocaleDateString().split(".").reverse().join("-")
+                    );
+                }}
+              customInput={<DatePickerButton />}
+              />
+               {/* <DatePicker
                 selected={startDate}
                 onChange={(date) => {
                   setStartDay(date);
@@ -397,22 +412,11 @@ const {auth} = useAuth();
                 }}
                 customInput={<DatePickerButton />}
                 calendarStartDay={0}
-              >
-                <hr
-                  className={` absolute top-[45px] left-0 w-full border-[1px] border-[#EEEFFF]`}
-                />
-                <div
-                  className={` absolute top-[60px] left-0 w-full flex justify-between px-[25px] text-[9px]/[9px] text-[#75708A] font-lato font-medium tracking-[0.279px] uppercase`}
-                >
-                  {dayNames.map((item, i) => {
-                    return (
-                      <div key={i} className={``}>
-                        {item}
-                      </div>
-                    );
-                  })}
-                </div>
-              </DatePicker>
+              /> */}
+               
+               
+            
+             </div>
             </div>
             <FullCalendar
               ref={calendarRef}

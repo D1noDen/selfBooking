@@ -1,3 +1,6 @@
+ .fc-daygrid-day.fc-day-today {
+            background-color: transparent !important;
+        }
 .bookingAppointmentPage {
    
 
@@ -53,9 +56,7 @@
         }
 
 
-        .fc-daygrid-day.fc-day-today {
-            background-color: rgba($color: #000000, $alpha: 0);
-        }
+       
 
         .fc-next-button {
             background: none;
@@ -570,16 +571,19 @@
     .react-datepicker {
         width: 325px;
         height: 100%;
-        padding-top: 15px;
+       
         left: 10px;
-
+        
+.react-datepicker__month-container {
+            float: none;
+        }
         .react-datepicker__header {
             // width: 325px;
             background-color: #5C59D9;
         }
 
         .react-datepicker__current-month {
-            color: #828282;
+            color: white;
             font-family: 'Montserrat';
             font-size: 15px;
             font-style: normal;
@@ -608,12 +612,12 @@
 
         .react-datepicker__navigation--previous {
             left: 25px;
-            top: -2px;
+            top: 3px;
         }
 
         .react-datepicker__navigation--next {
             right: 25px;
-            top: -2px;
+            top: 3px;
         }
 
         .react-datepicker__day-name {

@@ -121,9 +121,8 @@ const ForUserPage = () => {
         patientId: CreatePatientData.data.patientId,
         appointmentDescription: getValues("comment"),
        },
-       token:{
-        tokenAuth:auth
-       }
+       token:auth
+       
        
       });
     }

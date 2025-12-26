@@ -65,7 +65,7 @@ const VisiteTypePageM = ({ visitTypeArr, setSesionStorage }) => {
   return (
     <>
       <div
-        className={`visitTypePageMobile py-[26px] px-[15px] screen-520:my-[0] gap-[16px] screen-520:mx-[auto] h-[600px] sm:m-0 sm:w-auto sm:text-[20px] mx-auto flex flex-col `}
+        className={`visitTypePageMobile py-[26px] px-[15px] screen-520:my-[0] gap-[16px] screen-520:mx-[auto] h-fit min-h-[600px] sm:m-0 sm:w-auto sm:text-[20px] mx-auto flex flex-col `}
       >
         <div className="flex justify-center w-full relative mb-[12px]">
           <div className="w-[90px] h-[90px] rounded-[50%] bg-black">

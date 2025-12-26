@@ -84,7 +84,7 @@ const VisiteTypePage = ({ visitTypeArr, setSesionStorage }) => {
   return (
     <>
       <div
-        className={`visitTypePage screen-520:my-[0] screen-1440:w-[1360px] screen-1920:w-[1420px] screen-520:mx-[auto] h-[600px] lg:w-[944px]  sm:mb-[10px] xl:mb-0 sm:mt-[20px] xl:mt-[0px] sm:m-0 sm:w-auto sm:text-[20px] lg:text-[32px] lg:pt-[20px] xl:pt-[163px] lg:pb-[10px] xl:pb-[139px] mb-5 mx-auto flex flex-col lg:justify-center `}
+        className={`visitTypePage screen-520:my-[0] screen-1440:w-[1360px] screen-1920:w-[1420px] screen-520:mx-[auto] min-h-[600px] h-fit lg:w-[944px]  sm:mb-[10px] xl:mb-0 sm:mt-[20px] xl:mt-[0px] sm:m-0 sm:w-auto sm:text-[20px] lg:text-[32px] lg:pt-[20px] xl:pt-[163px] lg:pb-[10px] xl:pb-[139px] mb-5 mx-auto flex flex-col lg:justify-center `}
         ref={mainBlock}
         style={{ width: window.innerWidth < 600 ? "w-auto" : widthBlock }}
       >

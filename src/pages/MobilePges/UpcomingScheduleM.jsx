@@ -188,12 +188,15 @@ const {auth} = useAuth();
         <div className="flex flex-col gap-[12px]">
           {doctorsWithEvents?.map((item, i) => (
             <DoctorBlock
+            item={item}
               name={item.name}
               img={item.avatar}
               speciality={item.speciality}
               key={i}
               doctorId={item.id}
               date={item.time}
+              informationWithSorage={informationWithSorage}
+              setSesionStorage={setSesionStorage}
             />
           ))}
         </div>
@@ -505,7 +508,7 @@ const Dropdown = ({
   return <div className={``}>{dropdown}</div>;
 };
 
-const DoctorBlock = ({ name, img, speciality, key, doctorId, date }) => {
+const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSesionStorage , informationWithSorage }) => {
   let dateArr = [];
   const options = { weekday: "long", day: "numeric", month: "long" };
   if (date[0]) {
@@ -554,6 +557,21 @@ const DoctorBlock = ({ name, img, speciality, key, doctorId, date }) => {
               return (
                 <button
                   key={i}
+                  onClick={() => {
+                     setAppPage("for who mobile");
+                        setSesionStorage({
+                          ...informationWithSorage,
+                          doctor: {
+                            avatar: item.avatar,
+                            name: item.name,
+                            speciality: item.speciality,
+                            id: item.id,
+                            eventStartDateTime:
+                             item.dateStart,
+                            eventEnd: e.event._def.extendedProps.dateEnd,
+                          },
+                        });
+                  }}
                   className="w-[100px] text-[#364153] active:text-white active:bg-[#8380FF] h-[53px] rounded-[10px] flex items-center justify-center shadow-[0_2px_10px_0_rgba(0,0,0,0.06),_0_1px_2px_-1px_rgba(0,0,0,0.05)]"
                 >
                  
@@ -568,17 +586,6 @@ const DoctorBlock = ({ name, img, speciality, key, doctorId, date }) => {
           </div>
         </div>
       </div>
-      <button
-        onClick={() => {
-          setChosenDoctor({
-            id: doctorId,
-          });
-          setAppPage("choose a convenient time");
-        }}
-        className="rounded-[12px] bg-[#7C67FF] h-[40px] w-[full] text-center text-white"
-      >
-        Detail
-      </button>
     </div>
   );
 };

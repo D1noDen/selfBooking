@@ -6,6 +6,7 @@ module.exports = {
   ],
   theme: {
     fontFamily: {
+      sans: ['Open Sans', 'sans-serif'],
       roboto: ["Roboto"],
       comforta: ["Comfortaa"],
       inter: ["Inter"],

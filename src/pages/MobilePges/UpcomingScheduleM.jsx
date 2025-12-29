@@ -12,7 +12,7 @@ import moment from "moment";
 //import useAuth from "../../../Routes/useAuth";
 import useAuth from "../../store/useAuth";
 import Spinner from "../helpers/Spinner";
-
+import LanguageSelector from "./LanguageSelector";
 import googleTranslate from "../../assets/images/self-booking/googleTranslate.png";
 import geoPoint from "../../assets/images/self-booking/geoPoint.svg";
 import clock from "../../assets/images/self-booking/clock.png";
@@ -144,40 +144,35 @@ const {auth} = useAuth();
   return (
     <div>
       {/* {doctorsWithEvents.length === 0 ? <Spinner /> : null} */}
-      <section className="mobileBG h-[75px]">
-        <div className="flex h-full items-center justify-center">
-          <div className="relative w-[290px]">
-            <p className="text-[24px] text-white text-center leading-normal">
-              Upcoming schedule
-            </p>
-            <img
+      <section className="mobileBG h-[120px] p-[16px]">
+        <div className="flex h-fit ">
+          <div className="relative flex gap-[12px] items-center h-fit w-[290px]">
+             <img
               onClick={() => {
                 setAppPage("visit type mobile");
               }}
-              className="absolute top-[10px] left-[-18px] h-[16px] w-[16px]"
+              className=" top-[10px] left-[-18px] h-[16px] w-[16px]"
               src={chevronLeft}
             />
+            <p className="text-[24px] text-white text-center leading-normal">
+              Upcoming schedule
+            </p>
+           
           </div>
+          
         </div>
+        <div className="flex gap-[12px] mt-[16px]">
+          <div className="px-[12px] h-[35px]  bg-[rgba(255,255,255,0.10)] flex items-center  gap-[8px]  rounded-[10px] w-[242px]">
+           <img className="h-[20px] w-[14px]" src={geoPoint} />
+              <p className="text-[14px] text-white font-hebrew ">Warsaw</p>
+            </div>
+          <LanguageSelector/>
+        </div>
+        
       </section>
       <section className="px-[16px] pt-[24px] flex flex-col gap-[20px]">
-        <div className="flex flex-col gap-[12px]">
-          <div className="flex justify-between">
-            <div className="px-[12px] py-[13px] flex justify-between border border-solid  rounded-[4px] w-[165px]">
-              <p className="text-[15px] text-[#111113] ">Warsaw</p>
-              <img className="h-[20px] w-[14px]" src={geoPoint} />
-            </div>
-            <Dropdown
-              options={languages}
-              isIconNeeded={true}
-              icon={googleTranslate}
-              iconWidth="24px"
-              activeOption="English"
-              dropdownWidth={"160px"}
-              setSesionStorage={setSesionStorage}
-              setSelectedAppointment={setSelectedAppointment}
-            />
-          </div>
+        <div className="flex flex-col gap-[8px]">
+          <label className="text-[12px] font-hebrew text-[#6A7282]">Service</label>
           <Dropdown
             options={types}
             isIconNeeded={false}

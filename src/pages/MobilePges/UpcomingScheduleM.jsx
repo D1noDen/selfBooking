@@ -129,7 +129,7 @@ const {auth} = useAuth();
               const month = date.split(".")[1];
               const year = date.split(".")[2];
               return {
-                title: formatAMPM(time),
+                title: time.slice(0, -3),
                 date: dateFormat(Date.parse(date), "yyyy-dd-mm"),
                 dateStart: apoiment.startTime,
                 dateEnd: apoiment.endTime,
@@ -172,7 +172,7 @@ const {auth} = useAuth();
       </section>
       <section className="px-[16px] pt-[24px] flex flex-col gap-[20px]">
         <div className="flex flex-col gap-[8px]">
-          <label className="text-[12px] font-hebrew text-[#6A7282]">Service</label>
+          <label className="text-[12px] text-[#6A7282]">Service</label>
           <Dropdown
             options={types}
             isIconNeeded={false}
@@ -184,6 +184,7 @@ const {auth} = useAuth();
             setSelectedAppointment={setSelectedAppointment}
           />
         </div>
+        <DateSwiper selectedDate={startDate} onDateChange={setStartDay} />
         <div className="flex flex-col gap-[12px]">
           {doctorsWithEvents?.map((item, i) => (
             <DoctorBlock
@@ -202,6 +203,113 @@ const {auth} = useAuth();
 };
 
 export default UpcomingScheduleM;
+
+const DateSwiper = ({ selectedDate, onDateChange }) => {
+  const [currentWeekStart, setCurrentWeekStart] = useState(
+    moment(selectedDate).startOf('day')
+  );
+  
+  const generateWeekDays = (startDate) => {
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      days.push(moment(startDate).add(i, 'days'));
+    }
+    return days;
+  };
+
+  const weekDays = generateWeekDays(currentWeekStart);
+
+  const canGoPrev = currentWeekStart.isAfter(moment().startOf('day'));
+
+  const handlePrevWeek = () => {
+    if (canGoPrev) {
+      const newStart = moment(currentWeekStart).subtract(1, 'days');
+      setCurrentWeekStart(newStart);
+      onDateChange(newStart.toDate());
+    }
+  };
+
+  const handleNextWeek = () => {
+    const newStart = moment(currentWeekStart).add(1, 'days');
+    setCurrentWeekStart(newStart);
+    onDateChange(newStart.toDate());
+  };
+
+  const handleDateClick = (date) => {
+    onDateChange(date.toDate());
+  };
+
+  const isToday = (date) => {
+    return moment().isSame(date, 'day');
+  };
+
+  const isSelected = (date) => {
+    return moment(selectedDate).isSame(date, 'day');
+  };
+
+  return (
+    <div className="flex flex-col gap-[12px]">
+      <div className="flex justify-between items-center">
+        <p className="text-[12px] text-[#6A7282]">Select date:</p>
+        <button 
+          onClick={() => onDateChange(new Date())}
+          className="text-[12px] text-[#7D99FB]"
+        >
+          📅 Calendar
+        </button>
+      </div>
+      
+      <div className="relative flex items-center gap-[8px]">
+        <button
+          onClick={handlePrevWeek}
+          disabled={!canGoPrev}
+          className={`flex-shrink-0 w-[32px] h-[32px] rounded-[8px] border border-[#E8E8E9] flex items-center justify-center ${
+            canGoPrev ? 'bg-white hover:bg-[#F3F3FF] cursor-pointer' : 'bg-[#F5F5F5] cursor-not-allowed opacity-50'
+          }`}
+        >
+          <img src={chevronRight} className="w-[10px] h-[10px] rotate-180" />
+        </button>
+
+        <div className="flex-1 overflow-hidden">
+          <div className="flex gap-[8px] justify-between">
+            {weekDays.map((day, index) => {
+              const selected = isSelected(day);
+              const today = isToday(day);
+              
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleDateClick(day)}
+                  className={`flex flex-col items-center justify-center w-[59.999px] h-[75.969px] rounded-[12px] transition-all ${
+                    selected
+                      ? 'bg-[#7D99FB] text-white shadow-md'
+                      : today
+                      ? 'bg-[#F0F4FF] text-[#7D99FB] border border-[#7D99FB]'
+                      : 'bg-white text-[#64697E] border border-[#E8E8E9]'
+                  }`}
+                >
+                  <span className={`text-[10px] font-medium uppercase ${selected ? 'text-white' : 'text-[#8696BB]'}`}>
+                    {day.format('dd')}
+                  </span>
+                  <span className={`text-[18px] font-semibold mt-[2px] ${selected ? 'text-white' : 'text-[#0D1B34]'}`}>
+                    {day.format('D')}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <button
+          onClick={handleNextWeek}
+          className="flex-shrink-0 w-[32px] h-[32px] rounded-[8px] border border-[#E8E8E9] bg-white flex items-center justify-center hover:bg-[#F3F3FF]"
+        >
+          <img src={chevronRight} className="w-[10px] h-[10px]" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const Dropdown = ({
   options,
@@ -417,42 +525,46 @@ const DoctorBlock = ({ name, img, speciality, key, doctorId, date }) => {
       className="px-[12px] doctorBlock py-[16px] rounded-[12px] flex flex-col gap-[12px]"
       key={key}
     >
-      <div className="flex gap-[10px]">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-[10px] items-center">
         <img
           className="rounded-[50%] h-[48px] w-[48px]"
           src={img || WithoutAvatar}
         />
         <div className="flex flex-col gap-[4px]">
-          <p className="text-[#0D1B34] text-[16px]">{name}</p>
-          <p className="text-[#8696BB] text-[14px]">{speciality}</p>
+          <p className="text-[#101828] text-[18px] font-hebrew">{name}</p>
+          
         </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[#6A7282] font-hebrew text-[12px]">slots {dateArr?.length}</span>
+         <img className="h-[18px] w-[18px] rotate-90" src={chevronRight} />
+      </div>
       </div>
       <div className="h-[1px] background-[#F5F5F5] w-full"></div>
       <div className="flex flex-col gap-[8px]">
-        <p className="text-[11px] text-[#8696BB]">Next available slots:</p>
-        <div className="flex justify-between    ">
+        <div className="flex flex-col   ">
           <div className="flex gap-[8px] items-center">
-            <img src={calendar} className="h-[16px] w-[16px]" />
-            <p className="text-[#8696BB] text-[11px]">
+            <p className="font-hebrew text-[14px] text-[#4A5565]">
               {new Date(slotDate).toLocaleDateString("en-US", options)}
             </p>
           </div>
           <div className="flex gap-[4px] items-center">
             {dateArr.map((item, i) => {
               return (
-                <div
+                <button
                   key={i}
-                  className="py-[4px] px-[6px] flex gap-[4px] items-center rounded-[20px] bg-[#7D99FB]"
+                  className="w-[100px] text-[#364153] active:text-white active:bg-[#8380FF] h-[53px] rounded-[10px] flex items-center justify-center shadow-[0_2px_10px_0_rgba(0,0,0,0.06),_0_1px_2px_-1px_rgba(0,0,0,0.05)]"
                 >
-                  <img src={clock} className="h-[14px] w-[14px]" />
-                  <p className="text-[#fff] text-[11px]">
+                 
+                  <p className=" text-[16px] font-hebrew ">
                     {item.title.toUpperCase()}
                   </p>
-                </div>
+                </button>
               );
             })}
 
-            <img className="h-[18px] w-[18px]" src={chevronRight} />
+           
           </div>
         </div>
       </div>

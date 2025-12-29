@@ -37,13 +37,48 @@ const MainLayout = () => {
     UseClinicInfo(auth)
     }
   }, [auth]);
+
+  const pageMapping = {
+   
+    "visit type": "visit type mobile",
+    "scheduler": "upcoming schedule",
+    "continue as": "continue as mobile",
+    "for who": "for who mobile",
+    "for guest page": "patient exact information",
+    "for someone else": "guardian exact information",
+    "for user": "patient exact information",
+    "final page": "final page",
+    
+    "visit type mobile": "visit type",
+    "upcoming schedule": "scheduler",
+    "choose a convenient time": "scheduler",
+    "continue as mobile": "continue as",
+    "for who mobile": "for who",
+    "patient exact information": "for guest page",
+    "guardian exact information": "for someone else",
+    "appointment information": "scheduler",
+  };
+
   useEffect(() => {
-    if (pageSize[0] < 1024) {
-      setAppPage("visit type mobile");
-    } else {
-      setAppPage("visit type");
+   
+    const isMobile = pageSize[0] < 1024;
+    const currentPageIsMobile = appPage.includes("mobile") || 
+                                appPage === "upcoming schedule" || 
+                                appPage === "choose a convenient time" ||
+                                appPage === "patient exact information" ||
+                                appPage === "guardian exact information" ||
+                                appPage === "appointment information";
+    
+
+    if (isMobile && !currentPageIsMobile) {
+     
+      const mappedPage = pageMapping[appPage] || "visit type mobile";
+      setAppPage(mappedPage);
+    } else if (!isMobile && currentPageIsMobile) {
+     
+      const mappedPage = pageMapping[appPage] || "visit type";
+      setAppPage(mappedPage);
     }
-    setHeaderPage(0);
   }, [pageSize[0]]);
   
   useEffect(() => {

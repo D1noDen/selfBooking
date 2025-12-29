@@ -137,6 +137,7 @@ const {auth} = useAuth();
             })
           ),
       }));
+      console.log(newArrayDoctors , 'newArrayDoctors');
       setDoctorsWithEvents(newArrayDoctors);
     }
   }, [doctors, events]);
@@ -511,13 +512,7 @@ const Dropdown = ({
 const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSesionStorage , informationWithSorage }) => {
   let dateArr = [];
   const options = { weekday: "long", day: "numeric", month: "long" };
-  if (date[0]) {
-    if (date[0]?.date === date[1]?.date) {
-      dateArr = [date[0], date[1]];
-    } else {
-      dateArr = [date[0]];
-    }
-  }
+ 
 
   const slotDate = dateFormat(Date.parse(dateArr[0]?.date), "yyyy-mm-dd");
 
@@ -540,7 +535,7 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-[#6A7282] font-hebrew text-[12px]">slots {dateArr?.length}</span>
+        <span className="text-[#6A7282] font-hebrew text-[12px]">slots {item.time?.length}</span>
          <img className="h-[18px] w-[18px] rotate-90" src={chevronRight} />
       </div>
       </div>
@@ -552,8 +547,8 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
               {new Date(slotDate).toLocaleDateString("en-US", options)}
             </p>
           </div>
-          <div className="flex gap-[4px] items-center">
-            {dateArr.map((item, i) => {
+          <div className="flex gap-[4px] flex-wrap items-center">
+            {item.time.map((item, i) => {
               return (
                 <button
                   key={i}
@@ -568,7 +563,7 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
                             id: item.id,
                             eventStartDateTime:
                              item.dateStart,
-                            eventEnd: e.event._def.extendedProps.dateEnd,
+                            eventEnd: item.dateEnd,
                           },
                         });
                   }}

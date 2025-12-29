@@ -11,7 +11,7 @@ const ForWhoM = ({ setSesionStorage }) => {
       <img
         src={chevronLeft}
         onClick={() => {
-          setAppPage("choose a convenient time");
+          setAppPage("upcoming schedule");
         }}
         className="absolute z-[10] top-[30px] left-[auto] h-[16px] w-[16px]"
       />

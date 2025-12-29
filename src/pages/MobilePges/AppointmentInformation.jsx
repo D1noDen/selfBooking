@@ -37,7 +37,7 @@ const AppointmentInformation = () => {
   const [doctor, setDoctor] = useState([]);
   const [submit, setSubmit] = useState(false);
   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
-console.log("chosenDoctor:", chosenDoctor);
+console.log("informationWithSorage", informationWithSorage);
   let start = moment(
     dateHelper(informationWithSorage.doctor?.eventStartDateTime)
   );

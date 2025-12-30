@@ -222,6 +222,17 @@ const DateSwiper = ({ selectedDate, onDateChange, setStartDay }) => {
   const [currentWeekStart, setCurrentWeekStart] = useState(
     moment(selectedDate).startOf('day')
   );
+
+  
+  useEffect(() => {
+   
+    const selected = moment(selectedDate).startOf('day');
+    const weekStart = moment(currentWeekStart).startOf('day');
+    const weekEnd = moment(weekStart).add(4, 'days').endOf('day');
+    if (!selected.isBetween(weekStart.clone().subtract(1, 'ms'), weekEnd.clone().add(1, 'ms'))) {
+      setCurrentWeekStart(selected);
+    }
+  }, [selectedDate]);
   
   const generateWeekDays = (startDate) => {
     const days = [];

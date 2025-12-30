@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect ,forwardRef } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { useOnClickOutside } from "../helpers/helpers";
 import {
@@ -20,7 +20,17 @@ import calendar from "../../assets/images/self-booking/calendar.png";
 import chevronRight from "../../assets/images/self-booking/chevronRight.png";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
-
+import DatePicker from "react-datepicker";
+const CalendarButton = forwardRef(({ onClick }, ref) => (
+  <button
+    ref={ref}
+    onClick={onClick}
+    type="button"
+    className="text-[12px] text-[#7D99FB]"
+  >
+    📅 Calendar
+  </button>
+));
 const UpcomingScheduleM = ({ setSesionStorage }) => {
 const {auth} = useAuth();
   const languages = [
@@ -185,7 +195,7 @@ const {auth} = useAuth();
             setSelectedAppointment={setSelectedAppointment}
           />
         </div>
-        <DateSwiper selectedDate={startDate} onDateChange={setStartDay} />
+        <DateSwiper selectedDate={startDate} setStartDay={setStartDay}  onDateChange={setStartDay} />
         <div className="flex flex-col gap-[12px]">
           {doctorsWithEvents?.map((item, i) => (
             <DoctorBlock
@@ -208,7 +218,7 @@ const {auth} = useAuth();
 
 export default UpcomingScheduleM;
 
-const DateSwiper = ({ selectedDate, onDateChange }) => {
+const DateSwiper = ({ selectedDate, onDateChange, setStartDay }) => {
   const [currentWeekStart, setCurrentWeekStart] = useState(
     moment(selectedDate).startOf('day')
   );
@@ -255,12 +265,12 @@ const DateSwiper = ({ selectedDate, onDateChange }) => {
     <div className="flex flex-col gap-[12px]">
       <div className="flex justify-between items-center">
         <p className="text-[12px] text-[#6A7282]">Select date:</p>
-        <button 
-          onClick={() => onDateChange(new Date())}
-          className="text-[12px] text-[#7D99FB]"
-        >
-          📅 Calendar
-        </button>
+        <DatePicker
+        startDate={selectedDate}
+        onChange={(date) => setStartDay(date)}
+        customInput={<CalendarButton />}
+        />
+        
       </div>
       
       <div className="relative flex items-center gap-[8px]">
@@ -512,7 +522,7 @@ const Dropdown = ({
 const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSesionStorage , informationWithSorage }) => {
   let dateArr = [];
   const options = { weekday: "long", day: "numeric", month: "long" };
- 
+  const [open , setOpen] = useState(false);
 
   const slotDate = dateFormat(Date.parse(dateArr[0]?.date), "yyyy-mm-dd");
 
@@ -536,11 +546,14 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
       </div>
       <div className="flex items-center gap-2">
         <span className="text-[#6A7282] font-hebrew text-[12px]">slots {item.time?.length}</span>
-         <img className="h-[18px] w-[18px] rotate-90" src={chevronRight} />
+         <img onClick={() => {
+          setOpen(!open)
+         }} className={`h-[18px] w-[18px] duration-300 ${open ? '-rotate-90' :'rotate-90'}`} src={chevronRight} />
       </div>
       </div>
       <div className="h-[1px] background-[#F5F5F5] w-full"></div>
-      <div className="flex flex-col gap-[8px]">
+      {
+        open  && <div className="flex flex-col gap-[8px]">
         <div className="flex flex-col   ">
           <div className="flex gap-[8px] items-center">
             <p className="font-hebrew text-[14px] text-[#4A5565]">
@@ -581,6 +594,7 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
           </div>
         </div>
       </div>
+      }
     </div>
   );
 };

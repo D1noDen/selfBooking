@@ -128,6 +128,7 @@ const {auth} = useAuth();
         id: item.userId,
         avatar: item.profilePicture,
         name: `${item.firstName + " " + item.lastName}`,
+        gender: item.gender,
         speciality: item.specializationLabel,
         time: events
           .filter((filter) => filter.shift.userId == item.userId)
@@ -531,6 +532,7 @@ const Dropdown = ({
 };
 
 const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSesionStorage , informationWithSorage }) => {
+  console.log(item , 'item in doctor block');
   let dateArr = [];
   const options = { weekday: "long", day: "numeric", month: "long" };
   const [open , setOpen] = useState(false);
@@ -546,10 +548,9 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
     >
       <div className="flex items-center justify-between">
         <div className="flex gap-[10px] items-center">
-        <img
-          className="rounded-[50%] h-[48px] w-[48px]"
-          src={img || WithoutAvatar}
-        />
+       <div className="w-[47px] h-[47px] flex items-center justify-center rounded-full bg-[#E8E5FF]">
+         <span className="text-[24px]">{item.gender == 'Female' ? "👩‍⚕️" : '👨‍⚕️'}</span>
+       </div>
         <div className="flex flex-col gap-[4px]">
           <p className="text-[#101828] text-[18px] font-hebrew">{name}</p>
           

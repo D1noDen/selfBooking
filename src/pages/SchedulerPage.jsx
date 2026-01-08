@@ -185,7 +185,7 @@ const {auth} = useAuth();
     );
   };
 
-  const DatePickerButton = forwardRef(({ onClick }, ref) => (
+  const DatePickerButton = forwardRef(({ onClick ,value  }, ref) => (
     <div
       className={`relative pt-[15px] pb-3 px-[25px] w-[176px] rounded-[10px] border-[1px] border-solid border-[#E8E8E9] hover:border-[#CACACA] flex items-center justify-start ml-[10px] ${
         calendarHover
@@ -197,7 +197,7 @@ const {auth} = useAuth();
       onClick={onClick}
       ref={ref}
     >
-      <span className={`mr-[15px]`}>Select Date</span>
+      <span className={`mr-[15px]`}>{value}</span>
     </div>
   ));
 
@@ -390,6 +390,7 @@ const {auth} = useAuth();
              <div className="relative z-[20]">
               <DatePicker
               selected={startDate}
+              dateFormat={'DD/MM/yyyy'}
                 onChange={(date) => {
                   setStartDay(date);
                   calendarRef.current

@@ -425,17 +425,17 @@ console.log("chosenDoctor:", chosenDoctor);
               <div className={`flex mb-10`}>
                 <InfoBlock
                   title={"Patient Name"}
-                  value={"Jack Smith"}
+                  value={""}
                   first={true}
                 />
                 <InfoBlock
                   title={"Date of birth"}
-                  value={"10/21/2010"}
+                  value={""}
                   first={_width <= 1400 || _height < 900 ? true : false}
                 />
                 <InfoBlock
                   title={"Gender"}
-                  value={"Male"}
+                  value={""}
                   first={_width <= 1400 || _height < 900 ? true : false}
                 />
                 <InfoBlock />
@@ -443,22 +443,22 @@ console.log("chosenDoctor:", chosenDoctor);
               <div className={`flex`}>
                 <InfoBlock
                   title={"Guardian"}
-                  value={"Olga Brown"}
+                  value={""}
                   first={true}
                 />
                 <InfoBlock
                   title={"Date of birth"}
-                  value={"10/21/2000"}
+                  value={""}
                   first={_width <= 1400 || _height < 900 ? true : false}
                 />
                 <InfoBlock
                   title={"Gender"}
-                  value={"Female"}
+                  value={""}
                   first={_width <= 1400 || _height < 900 ? true : false}
                 />
                 <InfoBlock
                   title={"Zip code"}
-                  value={"99950"}
+                  value={""}
                   first={_width <= 1400 || _height < 900 ? true : false}
                 />
               </div>
@@ -476,12 +476,12 @@ console.log("chosenDoctor:", chosenDoctor);
             >
               <InfoBlock
                 title={"Phone"}
-                value={"(000) 000 0000"}
+                value={""}
                 first={true}
               />
               <InfoBlock
                 title={"email"}
-                value={"jack.smith@gmail.com"}
+                value={""}
                 first={_width <= 1400 || _height < 900 ? true : false}
               />
             </div>

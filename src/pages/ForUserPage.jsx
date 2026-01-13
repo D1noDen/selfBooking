@@ -503,7 +503,7 @@ const ForUserPage = () => {
           <div className={` `}>
             <Title text={"contacts"} style={"text-center"} />
             <div
-              className={`flex ${
+              className={`flex w-full gap-[10px] ${
                 _width <= 1280
                   ? "flex-col justify-between h-[120px]"
                   : "flex-row"
@@ -541,7 +541,7 @@ const InfoBlock = ({ title, value, first }) => {
   const width = GlobalHookWindowSummary();
 
   return (
-    <div className={`${first ? "" : " items-center"} w-[160px] flex flex-col`}>
+    <div className={`${first ? "" : " items-center"} min-w-[160px] flex flex-col`}>
       <div
         className={`text-[16px]/[22px] text-[#D2D2D2] text-center font-nunito font-bold tracking-[0.72px] uppercase mb-[5px]`}
       >

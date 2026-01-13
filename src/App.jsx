@@ -18,15 +18,15 @@ const client = new QueryClient({
     queryCache: new QueryCache({
       onError: (error) => {
         if( error?.response?.data?.DisplayMessage === 'Shift Not Found') {
-          GlobalToast(
-            error?.response?.data?.DisplayMessage || "Something went wrong",
-            "warning"
-          );
+          // GlobalToast(
+          //   error?.response?.data?.DisplayMessage || "Something went wrong",
+          //   "warning"
+          // );
         }else {
-        GlobalToast(
-          error?.response?.data?.DisplayMessage || "Something went wrong",
-          "error"
-        );
+        // GlobalToast(
+        //   error?.response?.data?.DisplayMessage || "Something went wrong",
+        //   "error"
+        // );
         }
       },
     }),

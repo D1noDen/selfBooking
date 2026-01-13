@@ -131,11 +131,17 @@ const {auth} = useAuth();
 
   useEffect(() => {
     if (doctors && events) {
+      console.log( events, 'doctors , events');
+   
+     
       const newArrayDoctors = doctors.map((item) => ({
         id: item.userId,
         avatar: item.profilePicture,
         name: `${item.firstName + " " + item.lastName}`,
         speciality: item.specializationLabel,
+        cabinetId: events.find(
+          (filter) => filter.shift.userId == item.userId 
+        )?.shift.cabinetId,
         time: events
           .filter((filter) => filter.shift.userId == item.userId)
           .flatMap((event) =>
@@ -524,6 +530,7 @@ const {auth} = useAuth();
                       ref={calendarRefs[i]}
                       initialDate={startDate}
                       eventClick={(e) => {
+                        console.log(item , 'eventClick');
                         setAppPage("for who");
                         setHeaderPage(3);
                         setSesionStorage({
@@ -533,6 +540,7 @@ const {auth} = useAuth();
                             name: item.name,
                             speciality: item.speciality,
                             id: item.id,
+                            cabinetId: item.cabinetId,
                             eventStartDateTime:
                               e.event._def.extendedProps.dateStart,
                             eventEnd: e.event._def.extendedProps.dateEnd,

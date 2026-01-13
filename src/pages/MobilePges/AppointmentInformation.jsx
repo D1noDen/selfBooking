@@ -170,7 +170,7 @@ console.log("informationWithSorage", informationWithSorage);
       token:auth,
     });
   };
-
+console.log("patientInfo", patientInfo);
   const createPatient = async () => {
 
     CreatePatientMutate({
@@ -179,11 +179,11 @@ console.log("informationWithSorage", informationWithSorage);
        title: "",
       firstName: patientInfo.firstName,
       lastName: patientInfo.lastName,
-      email: "",
-      cellPhone: "",
+      email: patientInfo.email,
+      cellPhone: patientInfo.phoneNumber,
       businessPhone: "",
       nip: "",
-      mailingStreet: "",
+      mailingStreet: patientInfo.adress,
       mailingHouseNumber: "",
       mailingCityId: 0,
       mailingRegionId: 0,
@@ -192,7 +192,7 @@ console.log("informationWithSorage", informationWithSorage);
       isBlackListed: false,
       dateOfBirth: patientInfo.dateOfBirth,
       gender: patientInfo.gender,
-      pesel: "",
+      pesel: patientInfo.pesel,
       maidenName: "",
       nationality: "",
       allergies: [],
@@ -227,9 +227,10 @@ console.log("informationWithSorage", informationWithSorage);
       eventEndDateTime: newEndDate,
       appointmentDescription: CreatePatientData.data.comments,
       appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
-      userId: chosenDoctor?.id,
+      userId: informationWithSorage?.doctor.id,
       patientId: CreatePatientData.data.patientId,
       patientContactPersonId: CreatePatientData.data.patientContactPersonId,
+      cabinetId: informationWithSorage?.doctor.cabinetId,
      },
       token:auth,
     });

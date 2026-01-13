@@ -117,6 +117,7 @@ const ForUserPage = () => {
         eventEndDateTime: newEndDate,
         appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
         userId: informationWithSorage?.doctor.id,
+        cabinetId: informationWithSorage?.doctor.cabinetId,
         patientContactPersonId: null,
         patientId: CreatePatientData.data.patientId,
         appointmentDescription: getValues("comment"),

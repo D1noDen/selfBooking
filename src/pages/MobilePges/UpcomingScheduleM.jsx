@@ -130,6 +130,9 @@ const {auth} = useAuth();
         name: `${item.firstName + " " + item.lastName}`,
         gender: item.gender,
         speciality: item.specializationLabel,
+        cabinetId: events.find(
+          (filter) => filter.shift.userId == item.userId 
+        )?.shift.cabinetId,
         time: events
           .filter((filter) => filter.shift.userId == item.userId)
           .flatMap((event) =>
@@ -573,7 +576,9 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
             </p>
           </div>
           <div className="flex gap-[4px] flex-wrap items-center">
-            {item.time.map((item, i) => {
+           
+            {item.time.map((time, i) => {
+              console.log(item , 'item in time map');
               return (
                 <button
                   key={i}
@@ -586,9 +591,10 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
                             name: item.name,
                             speciality: item.speciality,
                             id: item.id,
+                            cabinetId: item.cabinetId,
                             eventStartDateTime:
-                             item.dateStart,
-                            eventEnd: item.dateEnd,
+                             time.dateStart,
+                            eventEnd: time.dateEnd,
                           },
                         });
                   }}
@@ -596,7 +602,7 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
                 >
                  
                   <p className=" text-[16px] font-hebrew ">
-                    {item.title.toUpperCase()}
+                    {time.title.toUpperCase()}
                   </p>
                 </button>
               );

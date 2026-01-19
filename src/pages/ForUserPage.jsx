@@ -66,9 +66,9 @@ const ForUserPage = () => {
       cellPhone: data.cellPhone,
       businessPhone: "",
       nip: "",
-      mailingStreet: "",
+      mailingStreet: data.address,
       mailingHouseNumber: "",
-      mailingCityId: 0,
+      mailingCity: data.city,
       mailingRegionId: 0,
       mailingZipCode: "",
       mailingCountry: "",
@@ -492,11 +492,7 @@ const ForUserPage = () => {
                   value={selectedGender}
                   first={_width < 1400 ? true : false}
                 />
-                <InfoBlock
-                  title={"Zip code"}
-                  value={"99950"}
-                  first={_width < 1400 ? true : false}
-                />
+                
               </div>
             </div>
           </div>

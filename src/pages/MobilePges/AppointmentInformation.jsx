@@ -185,7 +185,7 @@ console.log("patientInfo", patientInfo);
       nip: "",
       mailingStreet: patientInfo.adress,
       mailingHouseNumber: "",
-      mailingCityId: 0,
+      mailingCity: patient.city,
       mailingRegionId: 0,
       mailingZipCode: "",
       mailingCountry: "",

@@ -272,7 +272,7 @@ const auth = {
             )}
           </div>
 
-          <div className={`w-[340px] flex flex-col relative`}>
+          {/* <div className={`w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
               Name insurance company
             </div>
@@ -296,8 +296,8 @@ const auth = {
                   </p>
                 )
               : null}
-          </div>
-          <div className={`w-[340px] flex flex-col relative`}>
+          </div> */}
+          {/* <div className={`w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
               Number insurance policy
             </div>
@@ -321,8 +321,33 @@ const auth = {
                   </p>
                 )
               : null}
+          </div> */}
+          <div className={`w-[340px] flex flex-col relative`}>
+            <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
+              City
+            </div>
+            {
+              <input
+                type="text"
+                placeholder="City"
+                id={"city"}
+                className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px] "
+                {...register("city", {
+                  required: true,
+                })}
+              />
+            }
+            {errors
+              ? Object.keys(errors).includes("city") && (
+                  <p
+                    className={` absolute top-[70px]  bg-white  text-red-500 text-[12px]/[14px]`}
+                  >
+                    Field is requaired!
+                  </p>
+                )
+              : null}
           </div>
-          <div className="w-[340px] flex flex-col relative">
+          {/* <div className="w-[340px] flex flex-col relative">
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>City</div>
             <Dropdown
               id="City"
@@ -331,7 +356,7 @@ const auth = {
               options={["City1", "Warshaw", "City2"]}
               activeOption={activeCity}
             />
-          </div>
+          </div> */}
 
           <div className={`w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
@@ -358,7 +383,7 @@ const auth = {
                 )
               : null}
           </div>
-          <div className={`w-[340px] flex flex-col relative`}>
+          {/* <div className={`w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
               Problem
             </div>
@@ -382,7 +407,7 @@ const auth = {
                   </p>
                 )
               : null}
-          </div>
+          </div> */}
 
           <div className={`w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>

@@ -128,14 +128,15 @@ console.log("chosenDoctor:", chosenDoctor);
       eventEndDateTime: newEndDate,
       appointmentDescription: CreatePatientData.data.comments,
       appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
-      userId: chosenDoctor?.id,
+      userId: informationWithSorage?.doctor.id,
       patientId: CreatePatientData.data.patientId,
       patientContactPersonId: CreatePatientData.data.patientContactPersonId,
+      cabinetId: informationWithSorage?.doctor.cabinetId,
       },
       token:auth
     });
   };
-  console.log("formData:", formData);
+  
   const CreateContactPerson = async () => {
    
     CreateContactPersonMutate({

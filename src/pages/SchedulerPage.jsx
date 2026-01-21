@@ -50,7 +50,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
 
   const curDate = new Date();
-  const curWeekStart = moment(curDate).startOf("week").format("YYYY-MM-DD");
+  const curWeekStart = moment(curDate).format("YYYY-MM-DD");
 const {auth} = useAuth();
 
   const {
@@ -66,8 +66,10 @@ const {auth} = useAuth();
   let calendarRef = useRef(null);
   useEffect(() => {
     if (informationWithSorage) {
-      const start = moment(startDate).startOf("week").format("YYYY-MM-DD");
-      const endDate = moment(startDate).endOf("week").format("YYYY-MM-DD");
+      const start = moment(startDate).format("YYYY-MM-DD");
+      const endDate = moment(startDate)
+  .add(6, 'days')
+  .format('YYYY-MM-DD');
 
       if (curWeekStart === start) {
         setPrevButton("");
@@ -427,7 +429,7 @@ const {auth} = useAuth();
             </div>
             <FullCalendar
               ref={calendarRef}
-              firstDay={0}
+              firstDay={new Date().getDay() }
               headerToolbar={{
                 left: prevButton,
                 right: "myCustomButtonNext",
@@ -519,7 +521,7 @@ const {auth} = useAuth();
                     className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%]  bg-[#FBFCFF]`}
                   >
                     <FullCalendar
-                      firstDay={0}
+                      firstDay={new Date().getDay() }
                       headerToolbar={false}
                       dayHeaders={false}
                       plugins={[dayGridPlugin]}
@@ -530,7 +532,7 @@ const {auth} = useAuth();
                       ref={calendarRefs[i]}
                       initialDate={startDate}
                       eventClick={(e) => {
-                        console.log(item , 'eventClick');
+                      
                         setAppPage("for who");
                         setHeaderPage(3);
                         setSesionStorage({

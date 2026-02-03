@@ -1,4 +1,4 @@
-import { useState, useRef, createRef, forwardRef, useEffect } from "react";
+import { useState, useRef, createRef, forwardRef, useEffect , useMemo, useCallback } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -168,10 +168,17 @@ const {auth} = useAuth();
   }, [doctors, events]);
 
   const TimeAppointment = (eventInfo) => {
-   
+    if (eventInfo.event.extendedProps.isEmpty) {
+      return (
+        <div className="flex items-center justify-center h-full text-gray-500 text-[24px]">
+          —
+        </div>
+      );
+    }
+
     return (
       <div
-        className={`bg-white text-[14px]/[19px] text-[#6674F3] font-hebrew tracking-[0.63px] w-24 lg:h-[30px] xl:h-[35px] flex justify-center items-center border-[1px] border-solid border-[#E8E8E9] rounded-[5px] hover:bg-[#F2F3FF] cursor-pointer mb-[10px] active:border-[#8380FF] active:bg-[#F2F3FF]`}
+        className={`bg-gray-100 text-[14px]/[19px] text-black font-hebrew tracking-[0.63px] w-24 lg:h-[30px] xl:h-[35px] flex justify-center items-center border-[1px] border-solid border-[#E8E8E9] rounded-[5px] hover:bg-[#F2F3FF] cursor-pointer mb-[10px] active:border-[#8380FF] active:bg-[#F2F3FF]`}
       >
         {eventInfo.event.title}
       </div>
@@ -245,12 +252,73 @@ const {auth} = useAuth();
       }
     }
   }, [calendarRefs[0]]);
-  if (doctorsWithEvents.length === 0) {
-    <Spinner />;
-  }
-  console.log(doctorsWithEvents);
+
+
+  const memoizedDoctorsWithEvents = useMemo(() => {
+    return doctorsWithEvents?.map((item) => ({
+      ...item,
+      events: item.time 
+    }));
+  }, [doctorsWithEvents])
+
+  const memoizedDoctorsWithProcessedEvents = useMemo(() => {
+    return memoizedDoctorsWithEvents?.map((item) => {
+      const filledEvents = [];
+      const weekStart = new Date(startDate);
+      
+      for (let day = 0; day < 7; day++) {
+        const currentDay = new Date(weekStart);
+        currentDay.setDate(weekStart.getDate() + day);
+        const dayString = currentDay.toISOString().split('T')[0];
+        
+        const hasEventsForDay = item.time?.some(event => 
+          event.start?.startsWith(dayString)
+        );
+        
+        if (!hasEventsForDay) {
+          filledEvents.push({
+            start: dayString,
+            display: 'background',
+            classNames: ['empty-day-placeholder'],
+            extendedProps: {
+              isEmpty: true
+            }
+          });
+        }
+      }
+      
+      return {
+        ...item,
+        processedEvents: [...(item.time || []), ...filledEvents]
+      };
+    });
+  }, [memoizedDoctorsWithEvents, startDate]);
+  const createEventClickHandler = useCallback((item) => {
+    return (e) => {
+      if (e.event.extendedProps.isEmpty) {
+        return;
+      }
+      
+      setAppPage("for who");
+      setHeaderPage(3);
+      setSesionStorage({
+        ...informationWithSorage,
+        doctor: {
+          avatar: item.avatar,
+          name: item.name,
+          speciality: item.speciality,
+          id: item.id,
+          cabinetId: item.cabinetId,
+          eventStartDateTime: e.event._def.extendedProps.dateStart,
+          eventEnd: e.event._def.extendedProps.dateEnd,
+        },
+      });
+    };
+  }, [informationWithSorage]);
+ 
   return (
     <>
+    {GetSlotApoimentLoading && <Spinner/>}
       <div
         className={`pt-[30px] pr-[53px] lg:pl-4 xl:pl-[46px] pb-[30px] bg-white mx-auto shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]`}
         style={{
@@ -486,74 +554,57 @@ const {auth} = useAuth();
           thumbYProps={{ className: "thumbY" }}
         >
           <div className={`shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]`}>
-            {doctorsWithEvents?.map((item, i) => {
-              return (
-                <div
-                  className={`flex border-b-[2px] border-b-[#E8E8E9]`}
-                  key={i}
-                >
-                  <div
-                    className={`flex lg:flex-col xl:flex-row lg:justify-center xl:justify-normal lg:items-start xl:items-center lg:py-3 xl:py-10 lg:pl-5 xl:pl-10 lg:w-[260px] xl:w-[30%] border-r-[2px] border-r-[#E8E8E9] items-center`}
-                  >
-                    <div
-                      className={` bg-white  w-[50px] h-[50px] mr-[25px] lg:mb-3 xl:mb-0`}
-                    >
-                      <img
-                        className={`rounded-[25px]`}
-                        src={item.avatar || WithoutAvatar}
-                        alt="avatar"
-                      />
-                    </div>
-                    <div className={`flex flex-col`}>
-                      <span
-                        className={`uppercase text-[16px]/[22px] text-[#D2D2D2] font-nunito font-bold tracking-[0.72px] lg:mb-3 xl:mb-0`}
-                      >
-                        {item.speciality}
-                      </span>
-                      <span
-                        className={`text-[18px]/[25px] text-[#6C6C6C] font-nunito font-semibold tracking-[0.81px]`}
-                      >
-                        {item.name}
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%]  bg-[#FBFCFF]`}
-                  >
-                    <FullCalendar
-                      firstDay={new Date().getDay() }
-                      headerToolbar={false}
-                      dayHeaders={false}
-                      plugins={[dayGridPlugin]}
-                      initialView="dayGridWeek"
-                      events={item.time}
-                      eventContent={TimeAppointment}
-                      height={"auto"}
-                      ref={calendarRefs[i]}
-                      initialDate={startDate}
-                      eventClick={(e) => {
-                      
-                        setAppPage("for who");
-                        setHeaderPage(3);
-                        setSesionStorage({
-                          ...informationWithSorage,
-                          doctor: {
-                            avatar: item.avatar,
-                            name: item.name,
-                            speciality: item.speciality,
-                            id: item.id,
-                            cabinetId: item.cabinetId,
-                            eventStartDateTime:
-                              e.event._def.extendedProps.dateStart,
-                            eventEnd: e.event._def.extendedProps.dateEnd,
-                          },
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+          {memoizedDoctorsWithProcessedEvents?.map((item, i) => {
+  return (
+    <div
+      className={`flex border-b-[2px] border-b-[#E8E8E9]`}
+      key={item.id || i} 
+    >
+      <div
+        className={`flex lg:flex-col xl:flex-row lg:justify-center xl:justify-normal lg:items-start xl:items-center lg:py-3 xl:py-10 lg:pl-5 xl:pl-10 lg:w-[260px] xl:w-[30%] border-r-[2px] border-r-[#E8E8E9] items-center`}
+      >
+        <div
+          className={` bg-white  w-[50px] h-[50px] mr-[25px] lg:mb-3 xl:mb-0`}
+        >
+          <img
+            className={`rounded-[25px]`}
+            src={item.avatar || WithoutAvatar}
+            alt="avatar"
+          />
+        </div>
+        <div className={`flex flex-col`}>
+          <span
+            className={`uppercase text-[16px]/[22px] text-[#D2D2D2] font-nunito font-bold tracking-[0.72px] lg:mb-3 xl:mb-0`}
+          >
+            {item.speciality}
+          </span>
+          <span
+            className={`text-[18px]/[25px] text-[#6C6C6C] font-nunito font-semibold tracking-[0.81px]`}
+          >
+            {item.name}
+          </span>
+        </div>
+      </div>
+      <div
+        className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%]  bg-[#FBFCFF]`}
+      >
+        <FullCalendar
+          firstDay={new Date().getDay()}
+          headerToolbar={false}
+          dayHeaders={false}
+          plugins={[dayGridPlugin]}
+          initialView="dayGridWeek"
+          events={item.processedEvents} // Використовуємо готові мемоізовані події
+          eventContent={TimeAppointment}
+          height={"auto"}
+          ref={calendarRefs[i]}
+          initialDate={startDate}
+          eventClick={createEventClickHandler(item)}
+        />
+      </div>
+    </div>
+  );
+})}
           </div>
         </Scrollbar>
       </div>

@@ -18,6 +18,7 @@ export const get_Slot_Apoiment = () => {
   const { data, isLoading, isSuccess, error } = useQuery({
     queryKey: [`getSlotApoiment`, text],
     queryFn: () => text && helper.getSlotApoimet(text),
+    cacheTime: 0,
   });
   return { data, isLoading, isSuccess, error, setText };
 };

@@ -398,7 +398,7 @@ const {auth} = useAuth();
              <div className="relative z-[20]">
               <DatePicker
               selected={startDate}
-              dateFormat={'DD/MM/yyyy'}
+              dateFormat={'dd/MM/yyyy'}
                 onChange={(date) => {
                   setStartDay(date);
                   calendarRef.current

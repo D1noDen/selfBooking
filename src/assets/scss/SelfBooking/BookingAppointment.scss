@@ -1,6 +1,15 @@
  .fc-daygrid-day.fc-day-today {
             background-color: transparent !important;
         }
+     .fc-col-header-cell.fc-day.fc-day-tue.fc-day-today{
+        background-color: #8380FF !important;
+        color: white !important;
+        border-radius: 10px;
+        span {
+            color: white !important;
+
+        }
+     }
 .bookingAppointmentPage {
    
 

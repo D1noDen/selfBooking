@@ -12,7 +12,6 @@ import {
   get_Apoiment_Types_Self_Booking,
   get_Doctor_By_Type_Id,
 } from "./request/requestSelfBooking";
-//import useAuth from "../../Routes/useAuth";
 import dateFormat from "dateformat";
 import Spinner from "./helpers/Spinner";
 import WithoutAvatar from "../assets/images/svg/NoAvatar.svg";
@@ -24,7 +23,9 @@ import { createInstance } from "i18next";
 import useAuth from "../store/useAuth";
 
 import "react-datepicker/dist/react-datepicker.css"
+
 const sity = ["Warsaw", "Lublin", "Alwernia"];
+
 const SchedulerPage = ({ setSesionStorage }) => {
   const informationWithSorage = JSON.parse(
     sessionStorage.getItem("BookingInformation")
@@ -48,59 +49,83 @@ const SchedulerPage = ({ setSesionStorage }) => {
   const [startDate, setStartDay] = useState(new Date());
   const [prevButton, setPrevButton] = useState("");
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
-
+  const [isLoadingData, setIsLoadingData] = useState(false);
   const curDate = new Date();
   const curWeekStart = moment(curDate).format("YYYY-MM-DD");
-const {auth} = useAuth();
+  const {auth} = useAuth();
+
+  // ДодаємоRef для відстеження поточного запиту
+  const requestIdRef = useRef(0);
 
   const {
     data: GetSlotApoimentData,
     isLoading: GetSlotApoimentLoading,
     setText: GetSlotApoimentInformation,
   } = get_Slot_Apoiment();
+  
   const {
     data: GetDoctorByTypeIdData,
     isLoading: GetDoctorByTypeIdLoading,
     setText: GetDoctorByTypeIdInformation,
   } = get_Doctor_By_Type_Id();
+  
   let calendarRef = useRef(null);
-  useEffect(() => {
-    if (informationWithSorage) {
-      const start = moment(startDate).format("YYYY-MM-DD");
-      const endDate = moment(startDate)
-  .add(6, 'days')
-  .format('YYYY-MM-DD');
 
-      if (curWeekStart === start) {
-        setPrevButton("");
-      } else {
-        setPrevButton("myCustomButtonPrev");
-      }
-      GetSlotApoimentInformation({
-        bookingToken:auth,
-        appointmentTypeId:
-          selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
-        startDate: start,
-        endDate: endDate,
-      });
-      GetDoctorByTypeIdInformation({
-         bookingToken:auth,
-        appointmentTypeId:
-          selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
-      });
+  useEffect(() => {
+    if (!informationWithSorage) return;
+  
+    // Встановлюємо стан завантаження
+    setIsLoadingData(true);
+    
+    // НЕ очищуємо дані одразу - залишаємо старі поки не прийдуть нові
+    // setDoctors(null);
+    // setEvents(null);
+    // setDoctorsWithEvents([]);
+  
+    const currentRequestId = ++requestIdRef.current;
+  
+    const start = moment(startDate).format("YYYY-MM-DD");
+    const endDate = moment(startDate).add(6, 'days').format('YYYY-MM-DD');
+  
+    if (curWeekStart === start) {
+      setPrevButton("");
+    } else {
+      setPrevButton("myCustomButtonPrev");
     }
-  }, [selectedAppointment, startDate]);
+  
+    const timer = setTimeout(() => {
+      if (currentRequestId === requestIdRef.current) {
+        GetSlotApoimentInformation({
+          bookingToken: auth,
+          appointmentTypeId: selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
+          startDate: start,
+          endDate: endDate,
+        });
+        
+        GetDoctorByTypeIdInformation({
+          bookingToken: auth,
+          appointmentTypeId: selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
+        });
+      }
+    }, 150);
+  
+    return () => clearTimeout(timer);
+  }, [selectedAppointment, startDate, auth]);
 
   const {
     data: GetApoimentTypesSelfBookingData,
     isLoading: GetApoimentTypesSelfBookingLoading,
     setText: GetApoimentTypesSelfBookingInformation,
   } = get_Apoiment_Types_Self_Booking();
+
   useEffect(() => {
-    GetApoimentTypesSelfBookingInformation({
-      bookingToken:auth,
-    });
+    if (auth) {
+      GetApoimentTypesSelfBookingInformation({
+        bookingToken: auth,
+      });
+    }
   }, [auth]);
+
   useEffect(() => {
     if (GetApoimentTypesSelfBookingData) {
       setTypes(GetApoimentTypesSelfBookingData?.data?.result);
@@ -108,63 +133,75 @@ const {auth} = useAuth();
         (item) => item.id === informationWithSorage.apoimentTypeId.id
       );
 
-      setSelectedAppointment({ id: selected[0].id, label: selected[0].label });
+      if (selected && selected.length > 0) {
+        setSelectedAppointment({ id: selected[0].id, label: selected[0].label });
+      }
     }
   }, [GetApoimentTypesSelfBookingData]);
+
   useEffect(() => {
-    if (GetDoctorByTypeIdData) {
+    if (GetDoctorByTypeIdData?.data?.result) {
       setDoctors(GetDoctorByTypeIdData.data.result);
     }
-    if (GetSlotApoimentData) {
+    if (GetSlotApoimentData?.data?.result?.shifts) {
       setEvents(GetSlotApoimentData.data.result.shifts);
     }
+    
+    // Знімаємо стан завантаження тільки коли обидва запити завершилися
+    if (GetDoctorByTypeIdData && GetSlotApoimentData) {
+      setIsLoadingData(false);
+    }
   }, [GetDoctorByTypeIdData, GetSlotApoimentData]);
+
   function formatAMPM(date) {
     let hours = +date?.split(":")[0];
     let minutes = +date?.split(":")[1];
     let ampm = hours >= 12 ? "pm" : "am";
     hours = hours % 12;
     hours = hours ? hours : 12;
-    minutes =
-      minutes === 0 ? "" : minutes < 10 ? ":0" + minutes : ":" + minutes;
+    minutes = minutes === 0 ? "" : minutes < 10 ? ":0" + minutes : ":" + minutes;
     let strTime = hours + minutes + " " + ampm;
     return strTime;
   }
 
+  // Виправлений useEffect для обробки doctors і events
   useEffect(() => {
-    if (doctors && events) {
-      console.log( events, 'doctors , events');
-   
-     
-      const newArrayDoctors = doctors.map((item) => ({
-        id: item.userId,
-        avatar: item.profilePicture,
-        name: `${item.firstName + " " + item.lastName}`,
-        speciality: item.specializationLabel,
-        cabinetId: events.find(
-          (filter) => filter.shift.userId == item.userId 
-        )?.shift.cabinetId,
-        time: events
-          .filter((filter) => filter.shift.userId == item.userId)
-          .flatMap((event) =>
-            event.appointmentSlot.map((apoiment) => {
-              const date = apoiment.startTime.split(" ")[0];
-              const time = apoiment.startTime.split(" ")[1];
-              const day = date.split(".")[0];
-              const month = date.split(".")[1];
-              const year = date.split(".")[2];
-
-              return {
-                title: moment(time, "HH:mm:ss").format("HH:mm "),
-                date: year + "-" + month + "-" + day,
-                dateStart: apoiment.startTime,
-                dateEnd: apoiment.endTime,
-              };
-            })
-          ),
-      }));
-      setDoctorsWithEvents(newArrayDoctors);
+    if (!doctors || !events || doctors.length === 0 || events.length === 0) {
+      setDoctorsWithEvents([]);
+      return;
     }
+
+    console.log(events, 'doctors , events');
+     
+    const newArrayDoctors = doctors.map((item) => ({
+      id: item.userId,
+      avatar: item.profilePicture,
+      name: `${item.firstName + " " + item.lastName}`,
+      speciality: item.specializationLabel,
+      cabinetId: events.find(
+        (filter) => filter.shift.userId == item.userId 
+      )?.shift.cabinetId,
+      time: events
+        .filter((filter) => filter.shift.userId == item.userId)
+        .flatMap((event) =>
+          event.appointmentSlot.map((apoiment) => {
+            const date = apoiment.startTime.split(" ")[0];
+            const time = apoiment.startTime.split(" ")[1];
+            const day = date.split(".")[0];
+            const month = date.split(".")[1];
+            const year = date.split(".")[2];
+
+            return {
+              title: moment(time, "HH:mm:ss").format("HH:mm "),
+              date: year + "-" + month + "-" + day,
+              dateStart: apoiment.startTime,
+              dateEnd: apoiment.endTime,
+            };
+          })
+        ),
+    }));
+    
+    setDoctorsWithEvents(newArrayDoctors);
   }, [doctors, events]);
 
   const TimeAppointment = (eventInfo) => {
@@ -200,7 +237,7 @@ const {auth} = useAuth();
     );
   };
 
-  const DatePickerButton = forwardRef(({ onClick ,value  }, ref) => (
+  const DatePickerButton = forwardRef(({ onClick, value }, ref) => (
     <div
       className={`relative pt-[15px] pb-3 px-[25px] w-[176px] rounded-[10px] border-[1px] border-solid border-[#E8E8E9] hover:border-[#CACACA] flex items-center justify-start ml-[10px] ${
         calendarHover
@@ -219,7 +256,6 @@ const {auth} = useAuth();
   const dayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
   const sitySelect = useRef(null);
-
   const appointmentList = useRef(null);
 
   let _height = window.innerHeight;
@@ -237,31 +273,33 @@ const {auth} = useAuth();
   });
 
   useEffect(() => {
-    if (doctorsWithEvents.length !== 0) {
-      console.log(calendarRefs , 'calendarRefs');
-      if (calendarRefs[0].current !== null) {
-        queueMicrotask(() => {
-          calendarRefs.forEach((item) => {
+    if (doctorsWithEvents.length !== 0 && calendarRefs[0]?.current !== null) {
+      queueMicrotask(() => {
+        calendarRefs.forEach((item) => {
+          if (item.current) {
             item.current
               .getApi()
               .gotoDate(
                 startDate.toLocaleDateString().split(".").reverse().join("-")
               );
-          });
+          }
         });
-      }
+      });
     }
-  }, [calendarRefs[0]]);
-
+  }, [doctorsWithEvents, calendarRefs]);
 
   const memoizedDoctorsWithEvents = useMemo(() => {
     return doctorsWithEvents?.map((item) => ({
       ...item,
       events: item.time 
     }));
-  }, [doctorsWithEvents])
+  }, [doctorsWithEvents]);
 
   const memoizedDoctorsWithProcessedEvents = useMemo(() => {
+    if (!memoizedDoctorsWithEvents || memoizedDoctorsWithEvents.length === 0) {
+      return [];
+    }
+
     return memoizedDoctorsWithEvents?.map((item) => {
       const filledEvents = [];
       const weekStart = new Date(startDate);
@@ -272,7 +310,7 @@ const {auth} = useAuth();
         const dayString = currentDay.toISOString().split('T')[0];
         
         const hasEventsForDay = item.time?.some(event => 
-          event.start?.startsWith(dayString)
+          event.date === dayString
         );
         
         if (!hasEventsForDay) {
@@ -293,6 +331,7 @@ const {auth} = useAuth();
       };
     });
   }, [memoizedDoctorsWithEvents, startDate]);
+
   const createEventClickHandler = useCallback((item) => {
     return (e) => {
       if (e.event.extendedProps.isEmpty) {
@@ -318,7 +357,7 @@ const {auth} = useAuth();
  
   return (
     <>
-    {GetSlotApoimentLoading && <Spinner/>}
+      {(GetSlotApoimentLoading || GetDoctorByTypeIdLoading) && <Spinner/>}
       <div
         className={`pt-[30px] pr-[53px] lg:pl-4 xl:pl-[46px] pb-[30px] bg-white mx-auto shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]`}
         style={{
@@ -360,19 +399,19 @@ const {auth} = useAuth();
                       label: e.label,
                     },
                   });
+                  setRotate(false);
+                  setVisibleAppList(false);
                 }}
                 className={`relative`}
                 ref={appointmentList}
-                onFocus={() => console.log("focus")}
               >
                 <Listbox.Button
-                  className={`lg:w-[230px] xl:w-[265px] h-[49px] lg:px-[10px] xl:px-[25px] border-[1px] border-[#E8E8E9] rounded-[10px] text-left relative z-[10] hover:border-[#CACACA] hover: bg-no-repeat bg-[90%_20px] bg-white`}
+                  className={`lg:w-[230px] xl:w-[265px] h-[49px] lg:px-[10px] xl:px-[25px] border-[1px] border-[#E8E8E9] rounded-[10px] text-left relative z-[10] hover:border-[#CACACA] bg-no-repeat bg-[90%_20px] bg-white`}
                   onMouseEnter={() => setHover(true)}
                   onMouseLeave={() => setHover(false)}
                   onClick={(e) => {
                     setRotate(!rotate);
                     setVisibleAppList(!visibleAppList);
-                    // e.stopPropagation();
                   }}
                 >
                   {selectedAppointment?.label}
@@ -387,7 +426,7 @@ const {auth} = useAuth();
                 <Transition
                   as={"div"}
                   show={rotate}
-                  className={`relative -top-[50px] z-[1] `}
+                  className={`relative -top-[50px] z-[1]`}
                   enter="transition duration-500 ease-out"
                   enterFrom="transform scale-95 opacity-0"
                   enterTo="transform scale-100 opacity-100"
@@ -404,10 +443,6 @@ const {auth} = useAuth();
                           key={i}
                           value={item}
                           className={`h-[49px] lg:px-[10px] xl:px-[25px] flex items-center cursor-pointer hover:bg-[#F3F3FF]`}
-                          onClick={() => {
-                            setRotate(!rotate);
-                            setVisibleAppList(false);
-                          }}
                         >
                           {item.label}
                         </Listbox.Option>
@@ -463,41 +498,27 @@ const {auth} = useAuth();
                   })}
                 </div>
               </span>
-             <div className="relative z-[20]">
-              <DatePicker
-              selected={startDate}
-              dateFormat={'dd/MM/yyyy'}
-                onChange={(date) => {
-                  setStartDay(date);
-                  calendarRef.current
-                    .getApi()
-                    .gotoDate(
-                      date.toLocaleDateString().split(".").reverse().join("-")
-                    );
-                }}
-              customInput={<DatePickerButton />}
-              />
-               {/* <DatePicker
-                selected={startDate}
-                onChange={(date) => {
-                  setStartDay(date);
-                  calendarRef.current
-                    .getApi()
-                    .gotoDate(
-                      date.toLocaleDateString().split(".").reverse().join("-")
-                    );
-                }}
-                customInput={<DatePickerButton />}
-                calendarStartDay={0}
-              /> */}
-               
-               
-            
-             </div>
+              <div className="relative z-[20]">
+                <DatePicker
+                  selected={startDate}
+                  dateFormat={'dd/MM/yyyy'}
+                  onChange={(date) => {
+                    setStartDay(date);
+                    if (calendarRef.current) {
+                      calendarRef.current
+                        .getApi()
+                        .gotoDate(
+                          date.toLocaleDateString().split(".").reverse().join("-")
+                        );
+                    }
+                  }}
+                  customInput={<DatePickerButton />}
+                />
+              </div>
             </div>
             <FullCalendar
               ref={calendarRef}
-              firstDay={new Date().getDay() }
+              firstDay={new Date().getDay()}
               headerToolbar={{
                 left: prevButton,
                 right: "myCustomButtonNext",
@@ -514,7 +535,9 @@ const {auth} = useAuth();
                   click: () => {
                     calendarRef.current.getApi().prev();
                     calendarRefs.forEach((item) => {
-                      item.current.getApi().prev();
+                      if (item.current) {
+                        item.current.getApi().prev();
+                      }
                     });
                     let num = startDate.getTime() - 604800000;
                     setStartDay(new Date(num));
@@ -524,7 +547,9 @@ const {auth} = useAuth();
                   click: () => {
                     calendarRef.current.getApi().next();
                     calendarRefs.forEach((item) => {
-                      item.current.getApi().next();
+                      if (item.current) {
+                        item.current.getApi().next();
+                      }
                     });
                     let num = startDate.getTime() + 604800000;
                     setStartDay(new Date(num));
@@ -535,78 +560,88 @@ const {auth} = useAuth();
           </div>
         </div>
         <Scrollbar
-          style={{
-            height:
-              _height >= 1080
-                ? _width > 1280
-                  ? 740
-                  : 740
-                : _width < 1280
-                ? _height >= 1000
-                  ? _height - 340
-                  : _height - 340
-                : _height >= 1000
-                ? _height - 330
-                : _height - 300,
-            minHeight: 439,
-          }}
-          trackYProps={{ className: "trackY" }}
-          thumbYProps={{ className: "thumbY" }}
-        >
-          <div className={`shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]`}>
-          {memoizedDoctorsWithProcessedEvents?.map((item, i) => {
-  return (
-    <div
-      className={`flex border-b-[2px] border-b-[#E8E8E9]`}
-      key={item.id || i} 
-    >
-      <div
-        className={`flex lg:flex-col xl:flex-row lg:justify-center xl:justify-normal lg:items-start xl:items-center lg:py-3 xl:py-10 lg:pl-5 xl:pl-10 lg:w-[260px] xl:w-[30%] border-r-[2px] border-r-[#E8E8E9] items-center`}
-      >
-        <div
-          className={` bg-white  w-[50px] h-[50px] mr-[25px] lg:mb-3 xl:mb-0`}
-        >
-          <img
-            className={`rounded-[25px]`}
-            src={item.avatar || WithoutAvatar}
-            alt="avatar"
-          />
-        </div>
-        <div className={`flex flex-col`}>
-          <span
-            className={`uppercase text-[16px]/[22px] text-[#D2D2D2] font-nunito font-bold tracking-[0.72px] lg:mb-3 xl:mb-0`}
-          >
-            {item.speciality}
-          </span>
-          <span
-            className={`text-[18px]/[25px] text-[#6C6C6C] font-nunito font-semibold tracking-[0.81px]`}
-          >
-            {item.name}
-          </span>
-        </div>
+  style={{
+    height:
+      _height >= 1080
+        ? _width > 1280
+          ? 740
+          : 740
+        : _width < 1280
+        ? _height >= 1000
+          ? _height - 340
+          : _height - 340
+        : _height >= 1000
+        ? _height - 330
+        : _height - 300,
+    minHeight: 439,
+  }}
+  trackYProps={{ className: "trackY" }}
+  thumbYProps={{ className: "thumbY" }}
+>
+  <div className={`shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]`}>
+    {(isLoadingData || GetSlotApoimentLoading || GetDoctorByTypeIdLoading) ? (
+      <div className="flex items-center justify-center py-20">
+        <Spinner />
       </div>
-      <div
-        className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%]  bg-[#FBFCFF]`}
-      >
-        <FullCalendar
-          firstDay={new Date().getDay()}
-          headerToolbar={false}
-          dayHeaders={false}
-          plugins={[dayGridPlugin]}
-          initialView="dayGridWeek"
-          events={item.processedEvents} // Використовуємо готові мемоізовані події
-          eventContent={TimeAppointment}
-          height={"auto"}
-          ref={calendarRefs[i]}
-          initialDate={startDate}
-          eventClick={createEventClickHandler(item)}
-        />
-      </div>
-    </div>
-  );
-})}
+    ) : memoizedDoctorsWithProcessedEvents && memoizedDoctorsWithProcessedEvents.length > 0 ? (
+      memoizedDoctorsWithProcessedEvents.map((item, i) => {
+        return (
+          <div
+            className={`flex border-b-[2px] border-b-[#E8E8E9]`}
+            key={item.id || i} 
+          >
+            <div
+              className={`flex lg:flex-col xl:flex-row lg:justify-center xl:justify-normal lg:items-start xl:items-center lg:py-3 xl:py-10 lg:pl-5 xl:pl-10 lg:w-[260px] xl:w-[30%] border-r-[2px] border-r-[#E8E8E9] items-center`}
+            >
+              <div
+                className={` bg-white  w-[50px] h-[50px] mr-[25px] lg:mb-3 xl:mb-0`}
+              >
+                <img
+                  className={`rounded-[25px]`}
+                  src={item.avatar || WithoutAvatar}
+                  alt="avatar"
+                />
+              </div>
+              <div className={`flex flex-col`}>
+                <span
+                  className={`uppercase text-[16px]/[22px] text-[#D2D2D2] font-nunito font-bold tracking-[0.72px] lg:mb-3 xl:mb-0`}
+                >
+                  {item.speciality}
+                </span>
+                <span
+                  className={`text-[18px]/[25px] text-[#6C6C6C] font-nunito font-semibold tracking-[0.81px]`}
+                >
+                  {item.name}
+                </span>
+              </div>
+            </div>
+            <div
+              className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%]  bg-[#FBFCFF]`}
+            >
+              <FullCalendar
+                firstDay={new Date().getDay()}
+                headerToolbar={false}
+                dayHeaders={false}
+                plugins={[dayGridPlugin]}
+                initialView="dayGridWeek"
+                events={item.processedEvents}
+                eventContent={TimeAppointment}
+                height={"auto"}
+                ref={calendarRefs[i]}
+                initialDate={startDate}
+                eventClick={createEventClickHandler(item)}
+              />
+            </div>
           </div>
-        </Scrollbar>
+        );
+      })
+    ) : (
+      <div className="flex items-center justify-center py-10 text-gray-500">
+        No appointments available
+      </div>
+    )}
+  </div>
+</Scrollbar>
       </div>
     </>
   );

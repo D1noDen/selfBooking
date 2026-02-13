@@ -2,24 +2,29 @@ import SelfBookingStore from "../store/SelfBookingStore";
 
 const Header = () => {
   const headerPage = SelfBookingStore((state) => state.headerPage);
+  const appPage = SelfBookingStore((state) => state.appPage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
+  const confirmationData = SelfBookingStore((state) => state.confirmationData);
+  const forSomeoneElseConsent = SelfBookingStore(
+    (state) => state.forSomeoneElseConsent
+  );
 
   const pageByHeaderStep = [
     "visit type",
     "scheduler",
-    "continue as",
     "for who",
+    "appointment confirmation",
     "complete",
   ];
 
   let pointPositions = [
-    "left-[calc(16%-6px)]",
-    "left-[calc(33%-6px)]",
-    "left-[calc(50%-6px)]",
-    "left-[calc(67%-6px)]",
-    "left-[calc(84%-6px)]",
+    "left-[calc(20%-6px)]",
+    "left-[calc(40%-6px)]",
+    "left-[calc(60%-6px)]",
+    "left-[calc(80%-6px)]",
+    "left-[calc(92%-6px)]",
   ];
 
   const points = pointPositions.map((item, i) => {
@@ -39,7 +44,54 @@ const Header = () => {
     setAppPage(pageByHeaderStep[nextStep]);
   };
 
+  const handleBack = () => {
+    if (headerPage <= 0) return;
+
+    if (
+      appPage === "for user" ||
+      appPage === "for someone else" ||
+      appPage === "for guest page"
+    ) {
+      setHeaderPage(2);
+      setAppPage("for who");
+      return;
+    }
+
+    if (appPage === "appointment confirmation") {
+      const previousBookingPage =
+        confirmationData?.source === "for someone else"
+          ? "for someone else"
+          : "for user";
+      setHeaderPage(2);
+      setAppPage(previousBookingPage);
+      return;
+    }
+
+    navigateToStep(headerPage - 1);
+  };
+
   const isBackDisabled = headerPage === 0;
+  const isForUserPage = appPage === "for user";
+  const isForWhoPage = appPage === "for who";
+  const isForSomeoneElsePage = appPage === "for someone else";
+  const isContinueDisabled = isForSomeoneElsePage && !forSomeoneElseConsent;
+
+  const handleContinue = () => {
+    const formId = isForUserPage
+      ? "for-user-form"
+      : isForWhoPage
+      ? "for-who-form"
+      : isForSomeoneElsePage
+      ? "for-someone-else-form"
+      : "";
+    const form = formId ? document.getElementById(formId) : null;
+    if (!form) return;
+    if (typeof form.requestSubmit === "function") {
+      form.requestSubmit();
+      return;
+    }
+    form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+  };
   // const isContinueDisabled = headerPage === 4;
 
   return (
@@ -55,7 +107,7 @@ const Header = () => {
               ? "cursor-not-allowed text-gray-400"
               : "text-[#0A0A0A]"
           } duration-300`}
-          onClick={() => navigateToStep(headerPage - 1)}
+          onClick={handleBack}
           disabled={isBackDisabled}
         >
           <svg className="my-auto" width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -68,13 +120,13 @@ const Header = () => {
           <div
             className={`absolute h-2 ${
               headerPage === 0
-                ? "w-[16%]"
+                ? "w-[20%]"
                 : headerPage === 1
-                ? "w-[33%]"
+                ? "w-[40%]"
                 : headerPage === 2
-                ? "w-[50%]"
+                ? "w-[60%]"
                 : headerPage === 3
-                ? "w-[67%]"
+                ? "w-[80%]"
                 : headerPage === 4
                 ? "w-[100%]"
                 : ""
@@ -83,15 +135,15 @@ const Header = () => {
           <div
             className={`absolute sm:w-[90px] sm:text-[12px] xl:text-[15px] xl:w-[125px] h-9 -top-[14px] ${
               headerPage === 0
-                ? "left-[calc(16%-64px)]"
+                ? "left-[calc(20%-64px)]"
                 : headerPage === 1
-                ? "left-[calc(33%-64px)]"
+                ? "left-[calc(40%-64px)]"
                 : headerPage === 2
-                ? "left-[calc(50%-64px)]"
+                ? "left-[calc(60%-64px)]"
                 : headerPage === 3
-                ? "left-[calc(67%-64px)]"
+                ? "left-[calc(80%-64px)]"
                 : headerPage === 4
-                ? "left-[calc(84%-64px)]"
+                ? "left-[calc(92%-64px)]"
                 : ""
             } duration-700 bg-[#7C67FF] rounded-[18px] flex justify-center items-center text-white text-[15px]/[20px] font-medium font-hebrew tracking-[0.675px]`}
           >
@@ -100,14 +152,28 @@ const Header = () => {
               : headerPage === 1
               ? "Schelude"
               : headerPage === 2
-              ? "Continue as"
-              : headerPage === 3
               ? "Booking"
+              : headerPage === 3
+              ? "Confirmation"
               : headerPage === 4
               ? "Complete"
               : ""}
           </div>
         </div>
+        {(isForUserPage || isForWhoPage || isForSomeoneElsePage) && (
+          <button
+            type="button"
+            className={`h-[40px] px-4 rounded-[8px] text-white text-[14px]/[18px] font-semibold duration-150 ${
+              isContinueDisabled
+                ? "bg-[#B9B4E9] cursor-not-allowed"
+                : "bg-[#7C67FF] hover:bg-[#7059F6]"
+            }`}
+            onClick={handleContinue}
+            disabled={isContinueDisabled}
+          >
+            Continue
+          </button>
+        )}
         {/* <button
           type="button"
           className={`min-w-[90px] h-9 rounded-md text-[14px]/[18px] font-semibold ${

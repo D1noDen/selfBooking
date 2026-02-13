@@ -175,7 +175,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
 
     return (
       <div
-        className={`bg-white text-[18px]/[24px] text-[#7275FF] font-hebrew tracking-[0.63px] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center border border-solid border-[#E8E8E9] rounded-[10px] hover:bg-[#F2F3FF] cursor-pointer mb-[12px] active:border-[#8380FF] active:bg-[#7A7BF2] active:text-white`}
+        className={`bg-white text-[18px]/[24px] text-[#8380FF] font-hebrew tracking-[0.63px] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center border border-solid border-[#E8E8E9] rounded-[10px] hover:bg-[#8380FF] hover:text-white cursor-pointer mb-[12px] active:border-[#8380FF] active:bg-[#8380FF] active:text-white`}
         style={{
           boxShadow: "0 2px 8px 0 rgba(0, 0, 0, 0.10)"
         }}
@@ -258,7 +258,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
       }
       
       setAppPage("for who");
-      setHeaderPage(3);
+      setHeaderPage(2);
       setSesionStorage({
         ...informationWithSorage,
         doctor: {

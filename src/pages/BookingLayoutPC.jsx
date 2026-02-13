@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from "react";
-import useResize from "./pageSize";
+import { useEffect, useRef } from "react";
 
 import Header from "./Header";
 import Footer from "./Footer";
 import VisiteTypePage from "./VisiteTypePage";
 import SchedulerPage from "./SchedulerPage";
-import ContinueAsPage from "./ContinueAsPage";
 import ForWhoPage from "./ForWhoPage";
 import ForSomeoneElsePage from "./ForSomeoneElsePage";
 import ForUserPage from "./ForUserPage";
 import ForGuestPage from "./ForGuestPage";
 import FinalPage from "./FinalPage";
+import AppointmentConfirmationPage from "./AppointmentConfirmationPage";
+import SelfBookingStore from "../store/SelfBookingStore";
 
 const BookingLayoutPC = ({
   types,
@@ -20,9 +20,17 @@ const BookingLayoutPC = ({
   headerPage,
 }) => {
   const mainBlock = useRef(0);
-  const pageSize = useResize();
+  const setAppPage = SelfBookingStore((state) => state.setAppPage);
+  const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   let _width = window.innerWidth;
   let _height = window.innerHeight;
+
+  useEffect(() => {
+    if (appPage === "continue as") {
+      setAppPage("for who");
+      setHeaderPage(2);
+    }
+  }, [appPage, setAppPage, setHeaderPage]);
 
   return (
     <div
@@ -38,7 +46,7 @@ const BookingLayoutPC = ({
     >
      
       <div className="bookingAppointmentWrapper max-w-[1420px] mx-auto  h-full">
-        <Header />
+        {appPage !== "complete" && <Header />}
         {appPage === "visit type" ? (
           <VisiteTypePage
             visitTypeArr={types}
@@ -49,8 +57,6 @@ const BookingLayoutPC = ({
             setSesionStorage={setSesionStorage}
             visitTypeArr={types}
           />
-        ) : appPage === "continue as" ? (
-          <ContinueAsPage />
         ) : appPage === "for who" ? (
           <ForWhoPage />
         ) : appPage === "for guest page" ? (
@@ -59,14 +65,14 @@ const BookingLayoutPC = ({
           <ForSomeoneElsePage />
         ) : appPage === "for user" ? (
           <ForUserPage />
+        ) : appPage === "appointment confirmation" ? (
+          <AppointmentConfirmationPage />
         ) : appPage === "complete" ? (
           <FinalPage />
         ) : (
           ""
         )}
-        {(headerPage === 0 ||
-          headerPage === 2 ||
-          (headerPage === 3 && appPage === "for who")) && <Footer />}
+        {headerPage === 0 && <Footer />}
       </div>
     </div>
   );

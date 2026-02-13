@@ -47,6 +47,7 @@ const MainLayout = () => {
     "for guest page": "patient exact information",
     "for someone else": "guardian exact information",
     "for user": "patient exact information",
+    "appointment confirmation": "appointment information",
     "final page": "final page",
     
     "visit type mobile": "visit type",
@@ -56,7 +57,7 @@ const MainLayout = () => {
     "for who mobile": "for who",
     "patient exact information": "for guest page",
     "guardian exact information": "for someone else",
-    "appointment information": "scheduler",
+    "appointment information": "appointment confirmation",
   };
 
   useEffect(() => {

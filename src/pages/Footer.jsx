@@ -11,7 +11,7 @@ const Footer = () => {
 
   const footerForBigScreen = (
     <div
-      className={`flex sm:w-auto sm:flex-col lg:flex-row bg-white items-center mx-auto z-10 shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]`}
+      className={`flex sm:w-auto sm:flex-col lg:flex-row bg-white items-center mt-[10px] mx-auto z-10 shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)] rounded-[10px]`}
       style={{ width: innerWidth < 600 ? "w-auto" : widthBlock }}
     >
       <div

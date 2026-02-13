@@ -26,7 +26,7 @@ const BookingLayoutPC = ({
 
   return (
     <div
-      className={`bookingAppointmentPage  pt-[0px] w-screen ${
+      className={`bookingAppointmentPage  pt-[33px] pb-[35px] w-screen ${
         _width < 1024 ? "bg-[#FFF]" : "bg-[#F4F7FF]"
       } ${paddingB ? "pb-[260px]" : ""}`}
       style={{

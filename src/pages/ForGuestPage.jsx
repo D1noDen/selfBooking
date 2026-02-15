@@ -12,6 +12,12 @@ import WithoutAvatar from "../assets/images/svg/NoAvatar.svg";
 import useAuth from "../store/useAuth";
 // import useAuth from "../../Routes/useAuth";
 import { dateHelper } from "./helpers/dateHelper";
+import PhoneNumberField from "./components/PhoneNumberField";
+import {
+  DEFAULT_COUNTRY_CODE,
+  joinPhoneByCountryCode,
+  splitPhoneByCountryCode,
+} from "./helpers/phoneCountry";
 
 const ForGuestPage = () => {
   const {
@@ -19,6 +25,7 @@ const ForGuestPage = () => {
     formState: { errors },
     handleSubmit,
     trigger,
+    setValue,
   } = useForm({ mode: "all" });
   const informationWithSorage = JSON.parse(
     sessionStorage.getItem("BookingInformation")
@@ -39,6 +46,9 @@ const ForGuestPage = () => {
 console.log("chosenDoctor:", chosenDoctor);
   const [submit, setSubmit] = useState(false);
   const [formData, setFormData] = useState(null);
+  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(
+    DEFAULT_COUNTRY_CODE
+  );
   // const auth = {
   //   clinicId: 1,
   //   companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
@@ -61,9 +71,16 @@ console.log("chosenDoctor:", chosenDoctor);
     data: createContactPersonData,
   } = create_Contact_Person();
   const onSubmit = async (data) => {
-   
+    const { phoneNumberCountryCode, ...rest } = data;
+    const payload = {
+      ...rest,
+      phoneNumber: joinPhoneByCountryCode(
+        phoneNumberCountryCode || selectedPhoneCountryCode,
+        data.phoneNumber
+      ),
+    };
     setSubmit(!submit);
-    setFormData(data);
+    setFormData(payload);
   };
 
   const onError = (errors) => {
@@ -204,6 +221,13 @@ console.log("chosenDoctor:", chosenDoctor);
     }
   }, [CreateBookingData]);
 
+  useEffect(() => {
+    const parsedPhone = splitPhoneByCountryCode(appointmentData?.phoneNumber || "");
+    setSelectedPhoneCountryCode(parsedPhone.countryCode);
+    setValue("phoneNumber", parsedPhone.localNumber || "");
+    setValue("phoneNumberCountryCode", parsedPhone.countryCode);
+  }, [appointmentData, setValue]);
+
   let _width = window.innerWidth;
   let _height = window.innerHeight;
 
@@ -274,14 +298,19 @@ console.log("chosenDoctor:", chosenDoctor);
             errors={errors}
             type={"email"}
           />
-          <InputBlock
-            label={"Phone number"}
-            placeholder={"(000) 000 0000"}
-            width={"[265px]"}
-            id={"phoneNumber"}
+          <PhoneNumberField
+            label="Phone number *"
+            widthClass="w-[265px]"
+            phoneFieldName="phoneNumber"
+            countryFieldName="phoneNumberCountryCode"
+            placeholder="608484004"
             register={register}
+            setValue={setValue}
+            trigger={trigger}
             errors={errors}
-            type={"number"}
+            selectedCountryCode={selectedPhoneCountryCode}
+            setSelectedCountryCode={setSelectedPhoneCountryCode}
+            className="mb-[15px]"
           />
           <div className={`flex flex-col w-full mb-[30px]`}>
             <label
@@ -340,7 +369,7 @@ console.log("chosenDoctor:", chosenDoctor);
               <div
                 className={`text-[#3F4455] font-hebrew tracking-[0.72px] mb-[3px]`}
               >
-                {informationWithSorage?.apoimentTypeId?.label}
+                {informationWithSorage?.apoimentTypeId?.lebel}
               </div>
               <div className={`text-[#3F4455] font-hebrew tracking-[0.72px]`}>
                 {moment(

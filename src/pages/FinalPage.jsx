@@ -18,6 +18,8 @@ const FinalPage = () => {
   let _width = window.innerWidth;
   let _height = window.innerHeight;
 
+  const whatsNewList = [{text: "You'll receive a confirmation email with all appointment details"}, {text: "Please arrive 10 minutes before your scheduled time"}, {text:"Bring a valid ID and insurance card (if applicable)"}, {text:"You can reschedule or cancel up to 24 hours before your appointment"}]
+
   useEffect(() => {
     setGuardianInfo({});
     setPatientInfo({});
@@ -27,7 +29,7 @@ const FinalPage = () => {
 
   return (
     <div
-      className={`pb-[30px] mx-auto flex justify-center`}
+      className={`pb-[30px] mx-auto`}
       style={{
         width: widthBlock,
         height: _height >= 1080 ? 1080 - 114 : 780,
@@ -35,19 +37,9 @@ const FinalPage = () => {
       }}
     >
       <div
-        className={`bg-white ${
-          _width < 1024
-            ? "shadow-none"
-            : "shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]"
-        } w-full h-full flex flex-col ${
-          _height <= 850 ? "justify-around" : "justify-center"
-        } `}
+        className={`bg-white shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]
+        rounded-[10px] w-full h-full flex flex-col`}
       >
-        <div
-          className={`text-[36px]/[49px] text-[#7C67FF] font-hebrew font-semibold tracking-[1.62px] text-center`}
-        >
-          Thank you for your booking!
-        </div>
         <div className={`flex justify-center`}>
           <img
             src={FinalPageImage}
@@ -58,17 +50,30 @@ const FinalPage = () => {
           />
         </div>
         <div
-          className={`max-w-[600px] mx-auto text-center text-[18px]/[25px] text-[#5E5E5E] font-hebrew tracking-[0.81px] ${
+          className={`text-[30px] text-[#8380FF] font-sans font-medium tracking-[1.62px] text-center`}
+        >
+          Appointment Confirmed!
+        </div>
+        <div
+          className={`max-w-[600px] mx-auto text-center text-[18px] text-[#4A5565] font-sans font-[400] tracking-[0.81px] ${
             _height <= 850 ? "mb-0" : "mb-[25px]"
           } `}
         >
-          Your appointment request has been received. Our team will be in touch
-          with you to confirm details and finalize the process.
+          Your appointment has been successfully booked. A confirmation email has been sent to your inbox.
+        </div>
+        <div style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.06)"}} className='p-[25px] w-full max-w-[600px] mx-auto rounded-[10px] bg-white mb-[25px] mt-[30px] flex flex-col justify-start items-start'>
+          <p className="text-[#101828] font-sans text-[18px]">What's Next?</p>
+          <div className="flex flex-col text-[#4A5565] text-[13px] mt-[14px] font-sans">
+            {whatsNewList?.map((content, index) => (
+              <div className="flex gap-2" key={index}>
+                <span className="text-[#8380FF] text-[16px] font-sans">•</span>
+                <span>{content.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
         <div
-          className={`${
-            _width < 620 ? "w-full" : "w-[540px]"
-          }  h-[50px] rounded-[5px] bg-[#7C67FF] hover:bg-[#7059F6] duration-300 mx-auto flex justify-center items-center text-[16px]/[22px] text-white font-nunito font-bold tracking-[0.72px] cursor-pointer`}
+          className={`w-full max-w-[600px] p-[16px] rounded-[8px] bg-[#8380FF] hover:bg-[#7059F6] duration-300 mx-auto flex justify-center items-center text-[14px] text-white font-sans font-medium tracking-[0.72px] cursor-pointer`}
           onClick={() => {
             if (_width < 1000) {
               setAppPage("visit type mobile");
@@ -80,7 +85,7 @@ const FinalPage = () => {
             sessionStorage.removeItem("selfBooking-storage");
           }}
         >
-          Complete
+          Book another appointment
         </div>
       </div>
     </div>

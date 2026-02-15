@@ -1,4 +1,12 @@
-import { useState, useRef, createRef, useEffect, useMemo, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  createRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  forwardRef,
+} from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import { Scrollbar } from "react-scrollbars-custom";
@@ -12,6 +20,26 @@ import Spinner from "./helpers/Spinner";
 import WithoutAvatar from "../assets/images/svg/NoAvatar.svg";
 import moment from "moment";
 import useAuth from "../store/useAuth";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+const MonthYearPickerButton = forwardRef(({ value, onClick, isOpen }, ref) => (
+  <button
+    type="button"
+    ref={ref}
+    onClick={onClick}
+    className="bg-white text-[16px]/[20px] flex items-center justify-between gap-2 text-[#333] font-sans font-semibold"
+  >
+    <span>{value}</span>
+    <span className={`${isOpen ? "rotate-180" : ""} duration-200`}>
+      <svg width="20" height="19" viewBox="0 0 20 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 6.90039L10 11.5004L15 6.90039" stroke="#0A0A0A" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </span>
+  </button>
+));
+
+MonthYearPickerButton.displayName = "MonthYearPickerButton";
 
 const SchedulerPage = ({ setSesionStorage }) => {
   const informationWithSorage = JSON.parse(
@@ -25,8 +53,18 @@ const SchedulerPage = ({ setSesionStorage }) => {
   const [events, setEvents] = useState(null);
   const [doctors, setDoctors] = useState(null);
   const [doctorsWithEvents, setDoctorsWithEvents] = useState([]);
-  const [startDate, setStartDay] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const todayDate = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+  const maxSelectableDate = useMemo(() => {
+    const date = new Date(todayDate);
+    date.setFullYear(date.getFullYear() + 1);
+    return date;
+  }, [todayDate]);
+  const [startDate, setStartDay] = useState(todayDate);
+  const [selectedDate, setSelectedDate] = useState(todayDate);
   const [isMonthYearOpen, setIsMonthYearOpen] = useState(false);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const [isLoadingData, setIsLoadingData] = useState(false);
@@ -35,7 +73,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
   // ДодаємоRef для відстеження поточного запиту
   const requestIdRef = useRef(0);
   const touchStartXRef = useRef(null);
-  const monthYearDropdownRef = useRef(null);
 
   const {
     data: GetSlotApoimentData,
@@ -278,75 +315,56 @@ const SchedulerPage = ({ setSesionStorage }) => {
     return Array.from({ length: 7 }).map((_, index) => {
       const day = new Date(startDate);
       day.setDate(day.getDate() + index);
+      day.setHours(0, 0, 0, 0);
+      const isDisabled = day < todayDate || day > maxSelectableDate;
 
       return {
         date: day,
         iso: moment(day).format("YYYY-MM-DD"),
         dayNumber: day.getDate(),
         dayName: moment(day).format("ddd"),
+        isDisabled,
       };
     });
-  }, [startDate]);
+  }, [startDate, todayDate, maxSelectableDate]);
 
   const activeDay = moment(selectedDate).format("YYYY-MM-DD");
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
 
   const changeWeek = (direction) => {
-    const nextWeekDate = new Date(startDate.getTime() + direction * 604800000);
-    setStartDay(nextWeekDate);
-    setSelectedDate(nextWeekDate);
+    const nextDate = new Date(startDate.getTime() + direction * weekMs);
+    nextDate.setHours(0, 0, 0, 0);
+
+    if (direction < 0 && nextDate < todayDate) {
+      setStartDay(todayDate);
+      setSelectedDate(todayDate);
+      return;
+    }
+
+    if (direction > 0 && nextDate > maxSelectableDate) {
+      setStartDay(maxSelectableDate);
+      setSelectedDate(maxSelectableDate);
+      return;
+    }
+
+    setStartDay(nextDate);
+    setSelectedDate(nextDate);
   };
 
-  const monthOptions = useMemo(() => moment.months(), []);
-  const yearOptions = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    return Array.from({ length: 141 }, (_, index) => currentYear - 70 + index);
-  }, []);
-  const [pickerViewDate, setPickerViewDate] = useState(new Date());
-
   const handleDayClick = (day) => {
+    if (day.isDisabled) return;
     setSelectedDate(day.date);
     setStartDay(day.date);
   };
 
-  const monthYearLabel = moment(startDate).format("MMMM YYYY");
-  const pickerMonth = pickerViewDate.getMonth();
-  const pickerYear = pickerViewDate.getFullYear();
-
-  const calendarDays = useMemo(() => {
-    const startOfMonth = moment(pickerViewDate).startOf("month");
-    const endOfMonth = moment(pickerViewDate).endOf("month");
-    const startGrid = startOfMonth.clone().startOf("isoWeek");
-    const endGrid = endOfMonth.clone().endOf("isoWeek");
-    const days = [];
-    const cursor = startGrid.clone();
-
-    while (cursor.isSameOrBefore(endGrid, "day")) {
-      days.push({
-        iso: cursor.format("YYYY-MM-DD"),
-        day: cursor.date(),
-        isCurrentMonth: cursor.month() === startOfMonth.month(),
-        isSelected: cursor.isSame(selectedDate, "day"),
-        value: cursor.toDate(),
-      });
-      cursor.add(1, "day");
-    }
-
-    return days;
-  }, [pickerViewDate, selectedDate]);
-
-  useEffect(() => {
-    const onMouseDown = (event) => {
-      if (
-        monthYearDropdownRef.current &&
-        !monthYearDropdownRef.current.contains(event.target)
-      ) {
-        setIsMonthYearOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", onMouseDown);
-    return () => document.removeEventListener("mousedown", onMouseDown);
-  }, []);
+  const handlePickerDateChange = (date) => {
+    if (!date) return;
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+    if (normalizedDate < todayDate || normalizedDate > maxSelectableDate) return;
+    setSelectedDate(normalizedDate);
+    setStartDay(normalizedDate);
+  };
 
   const handleDatesTouchStart = (event) => {
     touchStartXRef.current = event.touches[0].clientX;
@@ -402,141 +420,21 @@ const SchedulerPage = ({ setSesionStorage }) => {
               <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="#333333" stroke-width="2.33" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M3 10H21" stroke="#333333" stroke-width="2.33" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              <div className="relative" ref={monthYearDropdownRef}>
-                <button
-                  type="button"
-                  className="bg-white text-[16px]/[20px] flex items-center justify-between gap-2 text-[#333] font-sans font-semibold"
-                  onClick={() => {
-                    setPickerViewDate(new Date(startDate));
-                    setIsMonthYearOpen((prev) => !prev);
-                  }}
-                >
-                  <span>{monthYearLabel}</span>
-                  <span className={`${isMonthYearOpen ? "rotate-180" : ""} duration-200`}>
-                    <svg width="20" height="19" viewBox="0 0 20 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 6.90039L10 11.5004L15 6.90039" stroke="#0A0A0A" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </span>
-                </button>
-                {isMonthYearOpen && (
-                  <div className="absolute top-[44px] left-1/2 -translate-x-1/2 z-20 w-[670px] rounded-[12px]  bg-white p-4"
-                  style={{boxShadow: "0px 2px 4px -2px #0000001A"}}>
-                    <div className="flex gap-4">
-                      <div className="w-[190px] max-h-[360px] scrollmainContent overflow-y-auto pr-2 border-r border-[#E3E4EA]">
-                        {monthOptions.map((month, index) => (
-                          <button
-                            type="button"
-                            key={month}
-                            className={`w-full px-3 flex justify-center items-center text-center py-2 rounded-[8px] text-[15px] font-sans ${
-                              index === pickerMonth
-                                ? "bg-[#F5F3FF] text-[#2B2B2F]"
-                                : "text-[#8D8D8D] hover:bg-[#F0F1F7]"
-                            }`}
-                            onClick={() =>
-                              setPickerViewDate(
-                                new Date(pickerYear, index, pickerViewDate.getDate())
-                              )
-                            }
-                          >
-                            {month}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="w-[120px] max-h-[360px] scrollmainContent overflow-y-auto pr-2">
-                        {yearOptions.map((year) => (
-                          <button
-                            type="button"
-                            key={year}
-                            className={`w-full px-3 flex justify-center items-center text-center py-2 rounded-[8px] text-[15px] font-sans ${
-                              year === pickerYear
-                                ? "bg-[#F5F3FF] text-[#2B2B2F]"
-                                : "text-[#8D8D8D] hover:bg-[#F0F1F7]"
-                            }`}
-                            onClick={() =>
-                              setPickerViewDate(
-                                new Date(year, pickerMonth, pickerViewDate.getDate())
-                              )
-                            }
-                          >
-                            {year}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="flex-1 pl-2">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-[17px] font-semibold text-[#333333]">
-                            {moment(pickerViewDate).format("MMMM YYYY")}
-                          </h4>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#ECEEFF]"
-                              onClick={() =>
-                                setPickerViewDate(
-                                  new Date(pickerYear, pickerMonth - 1, 1)
-                                )
-                              }
-                            >
-                              <svg width="16" height="16" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M11.4999 15L6.8999 10L11.4999 5" stroke="#7C67FF" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </button>
-                            <button
-                              type="button"
-                              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#ECEEFF]"
-                              onClick={() =>
-                                setPickerViewDate(
-                                  new Date(pickerYear, pickerMonth + 1, 1)
-                                )
-                              }
-                            >
-                              <svg width="16" height="16" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M6.8999 15L11.4999 10L6.8999 5" stroke="#7C67FF" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-7 gap-y-2 mb-3">
-                          {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((dayName) => (
-                            <span
-                              key={dayName}
-                              className="text-center text-[14px] text-[#33333366] font-semibold font-sans"
-                            >
-                              {dayName}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="grid grid-cols-7 gap-y-2">
-                          {calendarDays.map((day) => (
-                            <button
-                              type="button"
-                              key={day.iso}
-                              className={`h-[46px] rounded-[10px] text-[14px] font-medium ${
-                                day.isSelected
-                                  ? "bg-[#7C67FF] text-white"
-                                  : day.isCurrentMonth
-                                  ? "text-[#333333] hover:bg-[#F5F3FF]"
-                                  : "text-[#C9CBD4]"
-                              }`}
-                              onClick={() => {
-                                setSelectedDate(day.value);
-                                setStartDay(day.value);
-                                setIsMonthYearOpen(false);
-                              }}
-                            >
-                              {day.day}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <DatePicker
+                selected={selectedDate}
+                onChange={handlePickerDateChange}
+                minDate={todayDate}
+                maxDate={maxSelectableDate}
+                dateFormat="MMMM yyyy"
+                open={isMonthYearOpen}
+                onInputClick={() => setIsMonthYearOpen(true)}
+                onClickOutside={() => setIsMonthYearOpen(false)}
+                onSelect={() => setIsMonthYearOpen(false)}
+                customInput={<MonthYearPickerButton isOpen={isMonthYearOpen} />}
+                popperPlacement="bottom"
+                popperClassName="scheduler-monthyear-popper"
+                className="hidden"
+              />
             </div>
             <div
               className="flex items-start gap-3 relative w-[calc(100%-50px)] mx-auto"
@@ -547,8 +445,11 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 type="button"
                 className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute left-0 top-1/2 transform -translate-y-1/2 z-10"
                 onClick={() => changeWeek(-1)}
+                disabled={startDate <= todayDate}
                 style={{
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.10)"
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.10)",
+                  opacity: startDate <= todayDate ? 0.4 : 1,
+                  cursor: startDate <= todayDate ? "not-allowed" : "pointer",
                 }}
               >
                 <svg width="19" height="20" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -562,8 +463,9 @@ const SchedulerPage = ({ setSesionStorage }) => {
                     <button
                       key={day.iso}
                       type="button"
+                      disabled={day.isDisabled}
                       onClick={() => handleDayClick(day)}
-                      className="flex flex-col items-center gap-2"
+                      className={`flex flex-col items-center gap-2 ${day.isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
                     >
                       <span
                         className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-[20px] ${
@@ -588,8 +490,14 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 type="button"
                 className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute top-1/2 transform -translate-y-1/2 z-10 right-0"
                 onClick={() => changeWeek(1)}
+                disabled={startDate >= maxSelectableDate}
                 style={{
-                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.10)"
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.10)",
+                  opacity: startDate >= maxSelectableDate ? 0.4 : 1,
+                  cursor:
+                    startDate >= maxSelectableDate
+                      ? "not-allowed"
+                      : "pointer",
                 }}
               >
                 <svg width="19" height="20" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -8,13 +8,14 @@ import {
   joinPhoneByCountryCode,
   splitPhoneByCountryCode,
 } from "./helpers/phoneCountry";
+import DatePickerField from "./components/DatePickerField";
 
 const genderOptions = ["Male", "Female", "Other"];
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
 
 const ForUserPage = () => {
-  const { register, handleSubmit, setValue, trigger, formState: { errors } } = useForm({
+  const { register, control, handleSubmit, setValue, trigger, formState: { errors } } = useForm({
     mode: "all",
   });
 
@@ -133,15 +134,15 @@ const ForUserPage = () => {
             errors={errors}
             rules={{ required: "Field is required" }}
           />
-          <InputBlock
+          <DatePickerField
             label="Date of Birth *"
             placeholder="dd.mm.yyyy"
-            type="date"
             width="w-[calc(50%-8px)]"
             id="dateOfBirth"
-            register={register}
+            control={control}
             errors={errors}
             rules={{ required: "Select date" }}
+            maxDate={new Date()}
           />
 
           <div className="flex flex-col w-[calc(50%-8px)] mb-[22px] relative z-50">

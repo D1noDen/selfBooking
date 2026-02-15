@@ -8,6 +8,7 @@ import {
   joinPhoneByCountryCode,
   splitPhoneByCountryCode,
 } from "./helpers/phoneCountry";
+import DatePickerField from "./components/DatePickerField";
 
 const genderOptions = ["Male", "Female", "Other"];
 const emailRegExp =
@@ -16,6 +17,7 @@ const emailRegExp =
 const ForSomeoneElsePage = () => {
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     trigger,
@@ -149,16 +151,16 @@ const ForSomeoneElsePage = () => {
               rules={{ required: "Field is required" }}
             />
           </Field>
-          <Field label="Date of Birth *" width="w-[calc(50%-8px)]">
-            <Input
-              register={register}
-              id="dateOfBirth"
-              type="date"
-              placeholder="dd.mm.yyyy"
-              errors={errors}
-              rules={{ required: "Select date" }}
-            />
-          </Field>
+          <DatePickerField
+            label="Date of Birth *"
+            width="w-[calc(50%-8px)]"
+            id="dateOfBirth"
+            placeholder="dd.mm.yyyy"
+            control={control}
+            errors={errors}
+            rules={{ required: "Select date" }}
+            maxDate={new Date()}
+          />
           <Field label="Gender *" width="w-[calc(50%-8px)]">
             <GenderDropdown
               value={patientGender}
@@ -266,20 +268,20 @@ const ForSomeoneElsePage = () => {
               }}
             />
           </Field>
-          <Field label="Date of Birth *" width="w-[calc(50%-8px)]">
-            <Input
-              register={register}
-              id="guardianDateOfBirth"
-              type="date"
-              placeholder="dd.mm.yyyy"
-              disabled={isGuardianDisabled}
-              errors={errors}
-              rules={{
-                validate: (value) =>
-                  isGuardianDisabled || value ? true : "Select date",
-              }}
-            />
-          </Field>
+          <DatePickerField
+            label="Date of Birth *"
+            width="w-[calc(50%-8px)]"
+            id="guardianDateOfBirth"
+            placeholder="dd.mm.yyyy"
+            control={control}
+            disabled={isGuardianDisabled}
+            errors={errors}
+            rules={{
+              validate: (value) =>
+                isGuardianDisabled || value ? true : "Select date",
+            }}
+            maxDate={new Date()}
+          />
 
           <SectionTitle text="Contact Information" />
           <PhoneNumberField

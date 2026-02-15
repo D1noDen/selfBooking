@@ -2,17 +2,23 @@ import { useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import SelfBookingStore from "../store/SelfBookingStore";
 import { useOnClickOutside } from "./helpers/helpers";
+import PhoneNumberField from "./components/PhoneNumberField";
+import {
+  DEFAULT_COUNTRY_CODE,
+  joinPhoneByCountryCode,
+  splitPhoneByCountryCode,
+} from "./helpers/phoneCountry";
 
 const genderOptions = ["Male", "Female", "Other"];
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
-const phoneRegExp = /^\+?[0-9]{9,15}$/;
 
 const ForSomeoneElsePage = () => {
   const {
     register,
     handleSubmit,
     setValue,
+    trigger,
     formState: { errors },
   } = useForm({ mode: "all" });
 
@@ -22,6 +28,9 @@ const ForSomeoneElsePage = () => {
   const [showGuardianGender, setShowGuardianGender] = useState(false);
   const [activePatientGuardian, setActivePatientGuardian] = useState("Yes");
   const [consentChecked, setConsentChecked] = useState(false);
+  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(
+    DEFAULT_COUNTRY_CODE
+  );
 
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
@@ -54,9 +63,13 @@ const ForSomeoneElsePage = () => {
     setValue("lastName", appointmentData.lastName || "");
     setValue("guardianFirstName", appointmentData.guardianFirstName || "");
     setValue("guardianLastName", appointmentData.guardianLastName || "");
+    setValue("guardianPesel", appointmentData.guardianPesel || "");
     setValue("guardianDateOfBirth", appointmentData.guardianDateOfBirth || "");
     setValue("email", appointmentData.email || "");
-    setValue("phoneNumber", appointmentData.phoneNumber || "");
+    const parsedPhone = splitPhoneByCountryCode(appointmentData.phoneNumber || "");
+    setSelectedPhoneCountryCode(parsedPhone.countryCode);
+    setValue("phoneNumber", parsedPhone.localNumber || "");
+    setValue("phoneNumberCountryCode", parsedPhone.countryCode);
     setValue("city", appointmentData.city || "");
     setValue("address", appointmentData.address || "");
     setValue("comment", appointmentData.comment || "");
@@ -72,12 +85,17 @@ const ForSomeoneElsePage = () => {
   }, []);
 
   const onSubmit = (data) => {
+    const { phoneNumberCountryCode, ...rest } = data;
     const payload = {
-      ...data,
+      ...rest,
       gender: patientGender,
       guardianGender,
       activePatientGuardian,
       consent: consentChecked,
+      phoneNumber: joinPhoneByCountryCode(
+        phoneNumberCountryCode || selectedPhoneCountryCode,
+        data.phoneNumber
+      ),
     };
     setAppointmentData(payload);
     setConfirmationData({
@@ -90,7 +108,7 @@ const ForSomeoneElsePage = () => {
 
   return (
     <div className="pb-3 relative mx-auto" style={{ width: widthBlock }}>
-      <div className="bg-white rounded-[10px] p-6 overflow-auto shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)] h-[calc(100vh-200px)]">
+      <div className="bg-white rounded-[10px] p-6 overflow-auto scrollmainContent shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)] h-max">
         <div className="text-[24px] font-sans text-[#333] font-semibold mb-1">
           Who are you scheduling for?
         </div>
@@ -104,7 +122,7 @@ const ForSomeoneElsePage = () => {
           className="max-w-[1040px] mx-auto flex flex-wrap justify-between"
         >
           <SectionTitle text="Patient details" />
-          <Field label="PESEL *" width="w-full">
+          <Field label="Pesel/Passport*" width="w-full">
             <Input
               register={register}
               id="pesel"
@@ -160,7 +178,7 @@ const ForSomeoneElsePage = () => {
             )}
           </Field>
 
-          <SectionTitle text="Parent/Guardian details" />
+          <SectionTitle text="Booking person" />
           <Field label="First Name *" width="w-[calc(50%-8px)]">
             <Input
               register={register}
@@ -188,20 +206,6 @@ const ForSomeoneElsePage = () => {
                   isGuardianDisabled || value?.trim()
                     ? true
                     : "Field is required",
-              }}
-            />
-          </Field>
-          <Field label="Date of Birth *" width="w-[calc(50%-8px)]">
-            <Input
-              register={register}
-              id="guardianDateOfBirth"
-              type="date"
-              placeholder="dd.mm.yyyy"
-              disabled={isGuardianDisabled}
-              errors={errors}
-              rules={{
-                validate: (value) =>
-                  isGuardianDisabled || value ? true : "Select date",
               }}
             />
           </Field>
@@ -247,7 +251,50 @@ const ForSomeoneElsePage = () => {
             </label>
           </div>
 
+          <Field label="Passport/pesel *" width="w-[calc(50%-8px)]">
+            <Input
+              register={register}
+              id="guardianPesel"
+              placeholder="00000000"
+              disabled={isGuardianDisabled}
+              errors={errors}
+              rules={{
+                validate: (value) =>
+                  isGuardianDisabled || value?.trim()
+                    ? true
+                    : "Field is required",
+              }}
+            />
+          </Field>
+          <Field label="Date of Birth *" width="w-[calc(50%-8px)]">
+            <Input
+              register={register}
+              id="guardianDateOfBirth"
+              type="date"
+              placeholder="dd.mm.yyyy"
+              disabled={isGuardianDisabled}
+              errors={errors}
+              rules={{
+                validate: (value) =>
+                  isGuardianDisabled || value ? true : "Select date",
+              }}
+            />
+          </Field>
+
           <SectionTitle text="Contact Information" />
+          <PhoneNumberField
+            label="Phone Number *"
+            widthClass="w-[calc(50%-8px)]"
+            phoneFieldName="phoneNumber"
+            countryFieldName="phoneNumberCountryCode"
+            placeholder="608484004"
+            register={register}
+            setValue={setValue}
+            trigger={trigger}
+            errors={errors}
+            selectedCountryCode={selectedPhoneCountryCode}
+            setSelectedCountryCode={setSelectedPhoneCountryCode}
+          />
           <Field label="Email *" width="w-[calc(50%-8px)]">
             <Input
               register={register}
@@ -257,18 +304,6 @@ const ForSomeoneElsePage = () => {
               rules={{
                 required: "Field is required",
                 pattern: { value: emailRegExp, message: "Enter valid email" },
-              }}
-            />
-          </Field>
-          <Field label="Phone Number *" width="w-[calc(50%-8px)]">
-            <Input
-              register={register}
-              id="phoneNumber"
-              placeholder="+380608484004"
-              errors={errors}
-              rules={{
-                required: "Field is required",
-                pattern: { value: phoneRegExp, message: "Phone must be 9-15 digits" },
               }}
             />
           </Field>
@@ -375,7 +410,11 @@ const GenderDropdown = ({ value, open, setOpen, onSelect, dropdownRef, disabled 
     }}
   >
     <span className="text-[15px]/[18px] font-sans tracking-[0.675px]">{value}</span>
-    <span className={`${open ? "rotate-180" : ""} duration-200`}>v</span>
+    <span className={`${open ? "rotate-180" : ""} duration-200`}>
+      <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 1L6 6L1 1" stroke="#99A1AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
     {open && !disabled && (
       <div className="absolute top-[48px] left-0 w-full z-20 border border-[#D8DBE2] rounded-[8px] bg-white overflow-hidden">
         {genderOptions.map((item) => (

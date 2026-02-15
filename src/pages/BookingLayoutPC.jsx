@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 import Header from "./Header";
 import Footer from "./Footer";
+import StepNavigationFooter from "./StepNavigationFooter";
 import VisiteTypePage from "./VisiteTypePage";
 import SchedulerPage from "./SchedulerPage";
 import ForWhoPage from "./ForWhoPage";
@@ -34,11 +35,11 @@ const BookingLayoutPC = ({
 
   return (
     <div
-      className={`bookingAppointmentPage  pt-[33px] pb-[35px] w-screen ${
+      className={`bookingAppointmentPage  pt-[33px] pb-[35px] h-full w-screen ${
         _width < 1024 ? "bg-[#FFF]" : "bg-[#F4F7FF]"
       } ${paddingB ? "pb-[260px]" : ""}`}
       style={{
-        height: _height < mainBlock.current.scrollHeight ? `100%` : `100vh`,
+        // height: _height < mainBlock.current.scrollHeight ? `100%` : `100vh`,
         minHeight: 768,
       }}
       ref={mainBlock}
@@ -73,6 +74,7 @@ const BookingLayoutPC = ({
           ""
         )}
         {headerPage === 0 && <Footer />}
+        {appPage !== "complete" && appPage !== "visit type" && <StepNavigationFooter />}
       </div>
     </div>
   );

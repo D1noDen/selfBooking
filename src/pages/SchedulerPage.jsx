@@ -299,31 +299,40 @@ const SchedulerPage = ({ setSesionStorage }) => {
   const monthOptions = useMemo(() => moment.months(), []);
   const yearOptions = useMemo(() => {
     const currentYear = new Date().getFullYear();
-    return Array.from({ length: 11 }, (_, index) => currentYear - 5 + index);
+    return Array.from({ length: 141 }, (_, index) => currentYear - 70 + index);
   }, []);
-  const monthYearOptions = useMemo(
-    () =>
-      yearOptions.flatMap((year) =>
-        monthOptions.map((month, index) => ({
-          label: `${month} ${year}`,
-          value: `${year}-${String(index + 1).padStart(2, "0")}`,
-        }))
-      ),
-    [monthOptions, yearOptions]
-  );
+  const [pickerViewDate, setPickerViewDate] = useState(new Date());
 
   const handleDayClick = (day) => {
     setSelectedDate(day.date);
     setStartDay(day.date);
   };
 
-  const handleMonthYearChange = (newMonth, newYear) => {
-    const nextDate = new Date(newYear, newMonth, 1);
-    setStartDay(nextDate);
-    setSelectedDate(nextDate);
-  };
-  const monthYearValue = moment(startDate).format("YYYY-MM");
   const monthYearLabel = moment(startDate).format("MMMM YYYY");
+  const pickerMonth = pickerViewDate.getMonth();
+  const pickerYear = pickerViewDate.getFullYear();
+
+  const calendarDays = useMemo(() => {
+    const startOfMonth = moment(pickerViewDate).startOf("month");
+    const endOfMonth = moment(pickerViewDate).endOf("month");
+    const startGrid = startOfMonth.clone().startOf("isoWeek");
+    const endGrid = endOfMonth.clone().endOf("isoWeek");
+    const days = [];
+    const cursor = startGrid.clone();
+
+    while (cursor.isSameOrBefore(endGrid, "day")) {
+      days.push({
+        iso: cursor.format("YYYY-MM-DD"),
+        day: cursor.date(),
+        isCurrentMonth: cursor.month() === startOfMonth.month(),
+        isSelected: cursor.isSame(selectedDate, "day"),
+        value: cursor.toDate(),
+      });
+      cursor.add(1, "day");
+    }
+
+    return days;
+  }, [pickerViewDate, selectedDate]);
 
   useEffect(() => {
     const onMouseDown = (event) => {
@@ -397,7 +406,10 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 <button
                   type="button"
                   className="bg-white text-[16px]/[20px] flex items-center justify-between gap-2 text-[#333] font-sans font-semibold"
-                  onClick={() => setIsMonthYearOpen((prev) => !prev)}
+                  onClick={() => {
+                    setPickerViewDate(new Date(startDate));
+                    setIsMonthYearOpen((prev) => !prev);
+                  }}
                 >
                   <span>{monthYearLabel}</span>
                   <span className={`${isMonthYearOpen ? "rotate-180" : ""} duration-200`}>
@@ -407,23 +419,121 @@ const SchedulerPage = ({ setSesionStorage }) => {
                   </span>
                 </button>
                 {isMonthYearOpen && (
-                  <div className="absolute top-[44px] left-0 z-20 w-auto max-h-[260px] overflow-auto rounded-md border border-[#DDDEE2] bg-white shadow-sm">
-                    {monthYearOptions.map((option) => (
-                      <button
-                        type="button"
-                        key={option.value}
-                        className={`w-full text-left px-3 py-2 text-[15px]/[20px] hover:bg-[#F2F3FF] ${
-                          option.value === monthYearValue ? "bg-[#EEF0FF]" : ""
-                        }`}
-                        onClick={() => {
-                          const [year, month] = option.value.split("-").map(Number);
-                          handleMonthYearChange(month - 1, year);
-                          setIsMonthYearOpen(false);
-                        }}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                  <div className="absolute top-[44px] left-1/2 -translate-x-1/2 z-20 w-[670px] rounded-[12px]  bg-white p-4"
+                  style={{boxShadow: "0px 2px 4px -2px #0000001A"}}>
+                    <div className="flex gap-4">
+                      <div className="w-[190px] max-h-[360px] scrollmainContent overflow-y-auto pr-2 border-r border-[#E3E4EA]">
+                        {monthOptions.map((month, index) => (
+                          <button
+                            type="button"
+                            key={month}
+                            className={`w-full px-3 flex justify-center items-center text-center py-2 rounded-[8px] text-[15px] font-sans ${
+                              index === pickerMonth
+                                ? "bg-[#F5F3FF] text-[#2B2B2F]"
+                                : "text-[#8D8D8D] hover:bg-[#F0F1F7]"
+                            }`}
+                            onClick={() =>
+                              setPickerViewDate(
+                                new Date(pickerYear, index, pickerViewDate.getDate())
+                              )
+                            }
+                          >
+                            {month}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="w-[120px] max-h-[360px] scrollmainContent overflow-y-auto pr-2">
+                        {yearOptions.map((year) => (
+                          <button
+                            type="button"
+                            key={year}
+                            className={`w-full px-3 flex justify-center items-center text-center py-2 rounded-[8px] text-[15px] font-sans ${
+                              year === pickerYear
+                                ? "bg-[#F5F3FF] text-[#2B2B2F]"
+                                : "text-[#8D8D8D] hover:bg-[#F0F1F7]"
+                            }`}
+                            onClick={() =>
+                              setPickerViewDate(
+                                new Date(year, pickerMonth, pickerViewDate.getDate())
+                              )
+                            }
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex-1 pl-2">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-[17px] font-semibold text-[#333333]">
+                            {moment(pickerViewDate).format("MMMM YYYY")}
+                          </h4>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#ECEEFF]"
+                              onClick={() =>
+                                setPickerViewDate(
+                                  new Date(pickerYear, pickerMonth - 1, 1)
+                                )
+                              }
+                            >
+                              <svg width="16" height="16" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11.4999 15L6.8999 10L11.4999 5" stroke="#7C67FF" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#ECEEFF]"
+                              onClick={() =>
+                                setPickerViewDate(
+                                  new Date(pickerYear, pickerMonth + 1, 1)
+                                )
+                              }
+                            >
+                              <svg width="16" height="16" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6.8999 15L11.4999 10L6.8999 5" stroke="#7C67FF" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-y-2 mb-3">
+                          {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((dayName) => (
+                            <span
+                              key={dayName}
+                              className="text-center text-[14px] text-[#33333366] font-semibold font-sans"
+                            >
+                              {dayName}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-y-2">
+                          {calendarDays.map((day) => (
+                            <button
+                              type="button"
+                              key={day.iso}
+                              className={`h-[46px] rounded-[10px] text-[14px] font-medium ${
+                                day.isSelected
+                                  ? "bg-[#7C67FF] text-white"
+                                  : day.isCurrentMonth
+                                  ? "text-[#333333] hover:bg-[#F5F3FF]"
+                                  : "text-[#C9CBD4]"
+                              }`}
+                              onClick={() => {
+                                setSelectedDate(day.value);
+                                setStartDay(day.value);
+                                setIsMonthYearOpen(false);
+                              }}
+                            >
+                              {day.day}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

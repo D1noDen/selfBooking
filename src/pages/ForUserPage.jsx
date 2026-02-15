@@ -2,18 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import SelfBookingStore from "../store/SelfBookingStore";
 import { useOnClickOutside } from "./helpers/helpers";
+import PhoneNumberField from "./components/PhoneNumberField";
+import {
+  DEFAULT_COUNTRY_CODE,
+  joinPhoneByCountryCode,
+  splitPhoneByCountryCode,
+} from "./helpers/phoneCountry";
 
 const genderOptions = ["Male", "Female", "Other"];
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
-const phoneRegExp = /^\+?[0-9]{9,15}$/;
 
 const ForUserPage = () => {
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, trigger, formState: { errors } } = useForm({
     mode: "all",
   });
 
   const [selectedGender, setSelectedGender] = useState(genderOptions[0]);
+  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(
+    DEFAULT_COUNTRY_CODE
+  );
   const [showList, setShowList] = useState(false);
   const [arrowHover, setArrowHover] = useState(false);
 
@@ -40,7 +48,10 @@ const ForUserPage = () => {
     setValue("lastName", savedData.lastName || "");
     setValue("dateOfBirth", savedData.dateOfBirth || "");
     setValue("email", savedData.email || "");
-    setValue("cellPhone", savedData.cellPhone || "");
+    const parsedPhone = splitPhoneByCountryCode(savedData.cellPhone || "");
+    setSelectedPhoneCountryCode(parsedPhone.countryCode);
+    setValue("cellPhone", parsedPhone.localNumber || "");
+    setValue("cellPhoneCountryCode", parsedPhone.countryCode);
     setValue("city", savedData.city || "");
     setValue("address", savedData.address || "");
     setValue("comment", savedData.comment || "");
@@ -49,9 +60,14 @@ const ForUserPage = () => {
   }, [appointmentData, confirmationData, setValue]);
 
   const onSubmit = (data) => {
+    const { cellPhoneCountryCode, ...rest } = data;
     const payload = {
-      ...data,
+      ...rest,
       gender: selectedGender,
+      cellPhone: joinPhoneByCountryCode(
+        cellPhoneCountryCode || selectedPhoneCountryCode,
+        data.cellPhone
+      ),
     };
     setAppointmentData(payload);
     setConfirmationData({
@@ -67,11 +83,11 @@ const ForUserPage = () => {
 
   return (
     <div
-      className="forUserPageWrapper pb-[21px] mx-auto h-[calc(100vh-200px)]"
+      className="forUserPageWrapper pb-[21px] mx-auto"
       style={{ width: widthBlock }}
     >
       <div
-        className="bg-white p-6 h-full overflow-auto rounded-[10px]"
+        className="bg-white p-6 h-max overflow-auto scrollmainContent rounded-[10px]"
         style={{ boxShadow: "0 4px 20px -1px rgba(0, 0, 0, 0.06)" }}
       >
         <div className="text-[24px] text-[#30343F] font-semibold mb-1">
@@ -85,7 +101,7 @@ const ForUserPage = () => {
           className="max-w-[1120px] mx-auto flex flex-wrap justify-between"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <div className="text-[18px] text-[#2D3340] font-medium mb-4 w-full">
+          <div className="text-[18px] text-[#101828] font-medium mb-4 w-full">
             Personal Information
           </div>
           <InputBlock
@@ -183,35 +199,6 @@ const ForUserPage = () => {
               </p>
             )}
           </div>
-
-          <div className="text-[18px] text-[#2D3340] w-full font-medium mb-4 mt-1">
-            Contact Information
-          </div>
-          <InputBlock
-            label="Email *"
-            placeholder="svitlanatyshchenko95@gmail.com"
-            width="w-[calc(50%-8px)]"
-            id="email"
-            register={register}
-            errors={errors}
-            type="email"
-            rules={{
-              required: "Field is required",
-              pattern: { value: emailRegExp, message: "Enter valid email" },
-            }}
-          />
-          <InputBlock
-            label="Phone Number *"
-            placeholder="+380608484004"
-            width="w-[calc(50%-8px)]"
-            id="cellPhone"
-            register={register}
-            errors={errors}
-            rules={{
-              required: "Field is required",
-              pattern: { value: phoneRegExp, message: "Phone must be 9-15 digits" },
-            }}
-          />
           <InputBlock
             label="City *"
             width="w-[calc(50%-8px)]"
@@ -227,6 +214,36 @@ const ForUserPage = () => {
             register={register}
             errors={errors}
             rules={{ required: "Field is required" }}
+          />
+
+          <div className="text-[18px] text-[#101828] w-full font-medium mb-4 mt-2">
+            Contact Information
+          </div>
+          <PhoneNumberField
+            label="Phone Number *"
+            widthClass="w-[calc(50%-8px)]"
+            phoneFieldName="cellPhone"
+            countryFieldName="cellPhoneCountryCode"
+            placeholder="608484004"
+            register={register}
+            setValue={setValue}
+            trigger={trigger}
+            errors={errors}
+            selectedCountryCode={selectedPhoneCountryCode}
+            setSelectedCountryCode={setSelectedPhoneCountryCode}
+          />
+          <InputBlock
+            label="Email *"
+            placeholder="svitlanatyshchenko95@gmail.com"
+            width="w-[calc(50%-8px)]"
+            id="email"
+            register={register}
+            errors={errors}
+            type="email"
+            rules={{
+              required: "Field is required",
+              pattern: { value: emailRegExp, message: "Enter valid email" },
+            }}
           />
 
           <div className="flex flex-col w-full mb-[24px]">

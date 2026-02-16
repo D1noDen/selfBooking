@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 
 const SelfBookingStore = create(
   persist(
-    (set, get) => ({
+    (set) => ({
       headerPage: 0,
       setHeaderPage: (page) => set({ headerPage: page }),
 
@@ -45,6 +45,12 @@ const SelfBookingStore = create(
 
       guardianInfo: {},
       setGuardianInfo: (dataObj) => set({ guardianInfo: dataObj }),
+
+      forSomeoneElseConsent: false,
+      setForSomeoneElseConsent: (bool) => set({ forSomeoneElseConsent: bool }),
+
+      confirmationData: null,
+      setConfirmationData: (data) => set({ confirmationData: data }),
       
     }),
   

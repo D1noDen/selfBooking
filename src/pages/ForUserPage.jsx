@@ -106,7 +106,7 @@ const ForUserPage = () => {
             Personal Information
           </div>
           <InputBlock
-            label="PESEL *"
+            label="PESEL/PASSPORT *"
             placeholder="00000000"
             width="w-full"
             id="pesel"

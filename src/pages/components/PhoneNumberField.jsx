@@ -101,7 +101,15 @@ const PhoneNumberField = ({
           type="tel"
           id={phoneFieldName}
           placeholder={placeholder}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={currentCountry.maxLength}
           className="flex-1 h-full outline-none text-[15px]/[20px] text-[#333] font-sans tracking-[0.2px] pr-2"
+          onInput={(event) => {
+            event.target.value = event.target.value
+              .replace(/\D/g, "")
+              .slice(0, currentCountry.maxLength);
+          }}
           {...register(phoneFieldName, {
             required: "Field is required",
             setValueAs: (value) => sanitizePhoneLocal(value),

@@ -586,10 +586,20 @@ const InputBlock = ({
       </div>
 
       <input
-        type={type || "text"}
+        type={id === "phoneNumber" ? "tel" : type || "text"}
         id={id}
         placeholder={placeholder}
+        inputMode={id === "phoneNumber" ? "numeric" : undefined}
+        pattern={id === "phoneNumber" ? "[0-9]*" : undefined}
+        maxLength={id === "phoneNumber" ? 9 : undefined}
         className={` border-[2px] border-[#E8E8E9] bg-white h-9 rounded-[10px] pl-[15px] text-[15px]/[18px] text-[#5E5E5E] font-inter tracking-[0.675px]`}
+        onInput={
+          id === "phoneNumber"
+            ? (event) => {
+                event.target.value = event.target.value.replace(/\D/g, "").slice(0, 9);
+              }
+            : undefined
+        }
         {...register(id, {
           required: !optional,
           pattern: id === "email" ? emailRegExp : null,

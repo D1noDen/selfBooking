@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useState,
   useRef,
   createRef,
@@ -10,6 +11,7 @@ import {
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import { Scrollbar } from "react-scrollbars-custom";
+import { Listbox, Transition } from "@headlessui/react";
 import SelfBookingStore from "../store/SelfBookingStore";
 import {
   get_Slot_Apoiment,
@@ -212,7 +214,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
     const shouldRefreshCachedWeek = missingDates.length === 0;
     const shouldShowSpinner = shouldFetchDoctors || shouldFetchMissingSlots;
 
-    if (shouldFetchMissingSlots && selectedSlot) {
+    if (shouldFetchMissingSlots) {
       clearSelectedSlot();
     }
 
@@ -271,7 +273,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
     clearSelectedSlot,
     getWeekDates,
     getMissingDatesForWeek,
-    selectedSlot,
     updateVisibleEventsFromCache,
   ]);
 
@@ -280,6 +281,11 @@ const SchedulerPage = ({ setSesionStorage }) => {
     isLoading: GetApoimentTypesSelfBookingLoading,
     setText: GetApoimentTypesSelfBookingInformation,
   } = get_Apoiment_Types_Self_Booking();
+
+  const appointmentTypeOptions = useMemo(
+    () => GetApoimentTypesSelfBookingData?.data?.result || [],
+    [GetApoimentTypesSelfBookingData]
+  );
 
   useEffect(() => {
     if (auth) {
@@ -290,18 +296,45 @@ const SchedulerPage = ({ setSesionStorage }) => {
   }, [auth]);
 
   useEffect(() => {
-    if (!storedAppointmentTypeId || !GetApoimentTypesSelfBookingData) return;
+    if (!storedAppointmentTypeId || appointmentTypeOptions.length === 0) return;
 
-    if (GetApoimentTypesSelfBookingData) {
-      const selected = GetApoimentTypesSelfBookingData?.data?.result.filter(
-        (item) => item.id === storedAppointmentTypeId
-      );
+    const selected = appointmentTypeOptions.find(
+      (item) => item.id === storedAppointmentTypeId
+    );
 
-      if (selected && selected.length > 0) {
-        setSelectedAppointment({ id: selected[0].id, label: selected[0].label });
-      }
+    if (selected) {
+      setSelectedAppointment({ id: selected.id, label: selected.label });
     }
-  }, [GetApoimentTypesSelfBookingData, storedAppointmentTypeId]);
+  }, [appointmentTypeOptions, storedAppointmentTypeId]);
+
+  const handleVisitTypeChange = useCallback(
+    (nextId) => {
+      const parsedNextId = Number(nextId);
+      const nextType = appointmentTypeOptions.find(
+        (item) => item.id === parsedNextId
+      );
+      if (!nextType) return;
+
+      clearSelectedSlot();
+      setSelectedAppointment({ id: nextType.id, label: nextType.label });
+
+      const currentInfo = JSON.parse(sessionStorage.getItem("BookingInformation")) || {};
+      setSesionStorage({
+        ...currentInfo,
+        apoimentTypeId: {
+          id: parsedNextId,
+          lebel: nextType.label,
+        },
+      });
+    },
+    [appointmentTypeOptions, clearSelectedSlot, setSesionStorage]
+  );
+
+  const selectedAppointmentLabel = useMemo(() => {
+    const currentId = selectedAppointment?.id || storedAppointmentTypeId;
+    const currentType = appointmentTypeOptions.find((item) => item.id === currentId);
+    return currentType?.label || "Select visit type";
+  }, [appointmentTypeOptions, selectedAppointment, storedAppointmentTypeId]);
 
   useEffect(() => {
     const pendingDoctorRequest = pendingDoctorRequestRef.current;
@@ -556,6 +589,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
         iso: moment(day).format("YYYY-MM-DD"),
         dayNumber: day.getDate(),
         dayName: moment(day).format("ddd"),
+        isToday: day.getTime() === todayDate.getTime(),
         isDisabled,
       };
     });
@@ -666,9 +700,51 @@ const SchedulerPage = ({ setSesionStorage }) => {
         }}
       >
         <div className={`flex relative bg-white border-b border-[#E5E5EA]`}>
-          <div className={`lg:w-[260px] xl:w-[30%] flex items-center lg:px-4 xl:px-10`}>
-            <div className={`text-[22px]/[30px] text-[#333] w-full mx-auto flex justify-center text-center font-semibold font-sans`}>
+          <div className={`lg:w-[260px] xl:w-[30%] flex flex-col items-start gap-4 text-start lg:p-4 xl:px-10`}>
+            <div className={`text-[30px] text-[#333] font-semibold font-sans`}>
               Select date and time
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-[16px] font-sans text-[#333333] font-[600]">Visit type</span>
+              <Listbox
+                value={selectedAppointment?.id || storedAppointmentTypeId || ""}
+                onChange={handleVisitTypeChange}
+              >
+                <div className="relative w-[260px] font-sans text-[14px] text-[#333333] font-[400]">
+                  <Listbox.Button className="h-[40px] w-full rounded-[8px] border border-[#0000001F] px-3 bg-white focus:outline-none focus:border-[#8380FF] flex items-center justify-between">
+                    <span className="truncate">{selectedAppointmentLabel}</span>
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 7.5L10 12.5L15 7.5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </Listbox.Button>
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="scrollmainContent absolute mt-1 max-h-60 w-full overflow-auto rounded-[8px] bg-white border border-[#DADCE5] py-1 shadow-lg z-20">
+                      {appointmentTypeOptions.map((item) => (
+                        <Listbox.Option
+                          key={item.id}
+                          value={item.id}
+                          className={({ active }) =>
+                            `cursor-pointer select-none px-3 py-2 text-[14px] ${
+                              active ? "bg-[#F3F4FF] text-[#2A2C33]" : "text-[#2A2C33]"
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <span className={selected ? "font-semibold" : "font-normal"}>
+                              {item.label}
+                            </span>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
           </div>
           <div className={`lg:w-[76%] xl:w-[70%] px-4 lg:pt-5 lg:pb-4 xl:pt-7 xl:pb-5`}>
@@ -725,10 +801,15 @@ const SchedulerPage = ({ setSesionStorage }) => {
                   return (
                     <div
                       key={day.iso}
-                      className={`flex flex-col items-center gap-2 ${day.isDisabled ? "opacity-40" : ""}`}
+                      className={`relative flex flex-col items-center gap-1 ${day.isDisabled ? "opacity-40" : ""}`}
                     >
+                      {day.isToday && (
+                        <span className="absolute top-[10px] right-0 rounded-[4px] bg-[#8380FF] px-[8px] py-[4px] text-[10px] font-[400] font-sans leading-none text-white">
+                          Today
+                        </span>
+                      )}
                       <span
-                        className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-[20px] bg-[#F3F4F6] text-[#101828]
+                        className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-[20px] text-[#101828]
                         }`}
                         // style={isActive ? {
                           // boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -4px rgba(0, 0, 0, 0.10)"
@@ -764,7 +845,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
             </div>
           </div>
         </div>
-        <div className="w-full bg-[#F5F5FF] px-8 py-4 flex items-center justify-between gap-4 border-b border-[#E5E5EA]">
+        {/* <div className="w-full bg-[#F5F5FF] px-8 py-4 flex items-center justify-between gap-4 border-b border-[#E5E5EA]">
           <div className="flex items-center gap-8 text-[#5A5A65]">
             <div className="flex items-center gap-2">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -798,7 +879,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
         <Scrollbar
   style={{
     height:

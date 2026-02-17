@@ -74,7 +74,7 @@ const BookingLayoutPC = ({
           ""
         )}
         {headerPage === 0 && <Footer />}
-        {appPage !== "complete" && appPage !== "visit type" && <StepNavigationFooter />}
+        {appPage !== "complete" && <StepNavigationFooter />}
       </div>
     </div>
   );

@@ -44,9 +44,10 @@ MonthYearPickerButton.displayName = "MonthYearPickerButton";
 const SchedulerPage = ({ setSesionStorage }) => {
   const informationWithSorage = JSON.parse(
     sessionStorage.getItem("BookingInformation")
-  );
+  ) || {};
+  const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
   const [selectedAppointment, setSelectedAppointment] = useState(
-    informationWithSorage.apoimentTypeId.id
+    storedAppointmentTypeId
   );
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
@@ -87,7 +88,12 @@ const SchedulerPage = ({ setSesionStorage }) => {
   } = get_Doctor_By_Type_Id();
   
   useEffect(() => {
-    if (!informationWithSorage) return;
+    const appointmentTypeId = selectedAppointment?.id || storedAppointmentTypeId;
+    if (!appointmentTypeId || !auth) {
+      setDoctorsWithEvents([]);
+      setIsLoadingData(false);
+      return;
+    }
   
     // Встановлюємо стан завантаження
     setIsLoadingData(true);
@@ -106,20 +112,20 @@ const SchedulerPage = ({ setSesionStorage }) => {
       if (currentRequestId === requestIdRef.current) {
         GetSlotApoimentInformation({
           bookingToken: auth,
-          appointmentTypeId: selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
+          appointmentTypeId,
           startDate: start,
           endDate: endDate,
         });
         
         GetDoctorByTypeIdInformation({
           bookingToken: auth,
-          appointmentTypeId: selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
+          appointmentTypeId,
         });
       }
     }, 150);
   
     return () => clearTimeout(timer);
-  }, [selectedAppointment, startDate, auth]);
+  }, [selectedAppointment, startDate, auth, storedAppointmentTypeId]);
 
   const {
     data: GetApoimentTypesSelfBookingData,
@@ -136,16 +142,18 @@ const SchedulerPage = ({ setSesionStorage }) => {
   }, [auth]);
 
   useEffect(() => {
+    if (!storedAppointmentTypeId || !GetApoimentTypesSelfBookingData) return;
+
     if (GetApoimentTypesSelfBookingData) {
       const selected = GetApoimentTypesSelfBookingData?.data?.result.filter(
-        (item) => item.id === informationWithSorage.apoimentTypeId.id
+        (item) => item.id === storedAppointmentTypeId
       );
 
       if (selected && selected.length > 0) {
         setSelectedAppointment({ id: selected[0].id, label: selected[0].label });
       }
     }
-  }, [GetApoimentTypesSelfBookingData]);
+  }, [GetApoimentTypesSelfBookingData, storedAppointmentTypeId]);
 
   useEffect(() => {
     if (GetDoctorByTypeIdData?.data?.result) {

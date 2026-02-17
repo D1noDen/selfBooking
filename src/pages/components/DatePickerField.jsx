@@ -12,8 +12,13 @@ const toIsoDate = (date) => {
 const toDisplayDate = (date) =>
   `${`${date.getDate()}`.padStart(2, "0")}.${`${date.getMonth() + 1}`.padStart(2, "0")}.${date.getFullYear()}`;
 
+const partialDateInputPattern =
+  /^$|^\d{1,2}$|^\d{1,2}[./]$|^\d{1,2}[./]\d{1,2}$|^\d{1,2}[./]\d{1,2}[./]$|^\d{1,2}[./]\d{1,2}[./]\d{1,4}$/;
+
+const isValidPartialDateInput = (value) => partialDateInputPattern.test(value);
+
 const parseDisplayDate = (value) => {
-  const match = value.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  const match = value.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
   if (!match) return null;
   const [, day, month, year] = match;
   const parsed = new Date(Number(year), Number(month) - 1, Number(day));
@@ -52,6 +57,8 @@ const DatePickerField = ({
   disabled = false,
   minDate,
   maxDate,
+  minYearsFromToday,
+  maxYearsFromToday,
 }) => {
   const pickerRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -76,17 +83,51 @@ const DatePickerField = ({
     return date;
   }, [maxDate]);
 
+  const normalizedMinYearsFromTodayDate = useMemo(() => {
+    if (typeof minYearsFromToday !== "number") return null;
+    const currentYear = new Date().getFullYear();
+    const date = new Date(currentYear - minYearsFromToday, 0, 1);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, [minYearsFromToday]);
+
+  const effectiveMinDate = useMemo(() => {
+    if (normalizedMinDate && normalizedMinYearsFromTodayDate) {
+      return normalizedMinDate > normalizedMinYearsFromTodayDate
+        ? normalizedMinDate
+        : normalizedMinYearsFromTodayDate;
+    }
+    return normalizedMinDate || normalizedMinYearsFromTodayDate || null;
+  }, [normalizedMinDate, normalizedMinYearsFromTodayDate]);
+
+  const normalizedMaxYearsFromTodayDate = useMemo(() => {
+    if (typeof maxYearsFromToday !== "number") return null;
+    const currentYear = new Date().getFullYear();
+    const date = new Date(currentYear - maxYearsFromToday, 11, 31);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, [maxYearsFromToday]);
+
+  const effectiveMaxDate = useMemo(() => {
+    if (normalizedMaxDate && normalizedMaxYearsFromTodayDate) {
+      return normalizedMaxDate < normalizedMaxYearsFromTodayDate
+        ? normalizedMaxDate
+        : normalizedMaxYearsFromTodayDate;
+    }
+    return normalizedMaxDate || normalizedMaxYearsFromTodayDate || null;
+  }, [normalizedMaxDate, normalizedMaxYearsFromTodayDate]);
+
   const startYear = useMemo(() => {
-    if (normalizedMinDate) return normalizedMinDate.getFullYear();
-    if (normalizedMaxDate) return normalizedMaxDate.getFullYear() - 120;
+    if (effectiveMinDate) return effectiveMinDate.getFullYear();
+    if (effectiveMaxDate) return effectiveMaxDate.getFullYear() - 120;
     return new Date().getFullYear() - 120;
-  }, [normalizedMinDate, normalizedMaxDate]);
+  }, [effectiveMinDate, effectiveMaxDate]);
 
   const endYear = useMemo(() => {
-    if (normalizedMaxDate) return normalizedMaxDate.getFullYear();
-    if (normalizedMinDate) return normalizedMinDate.getFullYear() + 120;
+    if (effectiveMaxDate) return effectiveMaxDate.getFullYear();
+    if (effectiveMinDate) return effectiveMinDate.getFullYear() + 120;
     return new Date().getFullYear() + 20;
-  }, [normalizedMinDate, normalizedMaxDate]);
+  }, [effectiveMinDate, effectiveMaxDate]);
 
   const yearOptions = useMemo(
     () => Array.from({ length: endYear - startYear + 1 }, (_, index) => startYear + index),
@@ -98,8 +139,8 @@ const DatePickerField = ({
   const inputValue = typedValue || displayValue;
 
   const isOutOfRange = (date) => {
-    if (normalizedMinDate && date < normalizedMinDate) return true;
-    if (normalizedMaxDate && date > normalizedMaxDate) return true;
+    if (effectiveMinDate && date < effectiveMinDate) return true;
+    if (effectiveMaxDate && date > effectiveMaxDate) return true;
     return false;
   };
 
@@ -121,16 +162,23 @@ const DatePickerField = ({
             value={inputValue}
             onFocus={() => {
               if (disabled) return;
-              setPickerViewDate(selectedDate || normalizedMaxDate || new Date());
+              setPickerViewDate(selectedDate || effectiveMaxDate || new Date());
               setIsOpen(true);
             }}
             onChange={(event) => {
               if (disabled) return;
-              const value = event.target.value;
+              const value = event.target.value.replace(/[^\d./]/g, "");
+              if (!isValidPartialDateInput(value)) return;
+
               setTypedValue(value);
+              if (value === "") {
+                field.onChange("");
+                return;
+              }
               const parsedDate = parseDisplayDate(value);
               if (parsedDate && !isOutOfRange(parsedDate)) {
                 field.onChange(toIsoDate(parsedDate));
+                setPickerViewDate(parsedDate);
               }
             }}
             onBlur={() => {
@@ -163,7 +211,7 @@ const DatePickerField = ({
             className="absolute top-1/2 right-3 -translate-y-1/2"
             onClick={() => {
               if (disabled) return;
-              setPickerViewDate(selectedDate || normalizedMaxDate || new Date());
+              setPickerViewDate(selectedDate || effectiveMaxDate || new Date());
               setIsOpen((prev) => !prev);
             }}
           >
@@ -198,8 +246,8 @@ const DatePickerField = ({
                   const dayDate = new Date(cursor);
                   dayDate.setHours(0, 0, 0, 0);
                   const isCurrentMonth = dayDate.getMonth() === pickerMonth;
-                  const isBeforeMin = normalizedMinDate && dayDate < normalizedMinDate;
-                  const isAfterMax = normalizedMaxDate && dayDate > normalizedMaxDate;
+                  const isBeforeMin = effectiveMinDate && dayDate < effectiveMinDate;
+                  const isAfterMax = effectiveMaxDate && dayDate > effectiveMaxDate;
 
                   calendarDays.push({
                     iso: toIsoDate(dayDate),

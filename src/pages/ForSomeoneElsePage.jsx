@@ -159,6 +159,7 @@ const ForSomeoneElsePage = () => {
             control={control}
             errors={errors}
             rules={{ required: "Select date" }}
+            maxYearsFromToday={10}
             maxDate={new Date()}
           />
           <Field label="Gender *" width="w-[calc(50%-8px)]">
@@ -280,6 +281,7 @@ const ForSomeoneElsePage = () => {
               validate: (value) =>
                 isGuardianDisabled || value ? true : "Select date",
             }}
+            maxYearsFromToday={10}
             maxDate={new Date()}
           />
 

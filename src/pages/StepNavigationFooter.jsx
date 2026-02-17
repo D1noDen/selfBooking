@@ -52,6 +52,8 @@ const StepNavigationFooter = () => {
   };
 
   const isBackDisabled = headerPage === 0;
+  const isStepBackDisabled = headerPage === 0;
+  const isStepNextDisabled = headerPage === 4;
   const isForUserPage = appPage === "for user";
   const isForWhoPage = appPage === "for who";
   const isForSomeoneElsePage = appPage === "for someone else";
@@ -72,6 +74,10 @@ const StepNavigationFooter = () => {
       return;
     }
     form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+  };
+
+  const handleTempStepSwitch = (direction) => {
+    navigateToStep(headerPage + direction);
   };
 
   return (
@@ -113,6 +119,34 @@ const StepNavigationFooter = () => {
           </svg>
           <span>Back</span>
         </button>
+
+        {/* Temp without pick time */}
+        {/* <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={`h-[36px] px-3 rounded-[8px] text-[13px] font-sans font-[500] duration-150 ${
+              isStepBackDisabled
+                ? "bg-[#F6F7FB] text-gray-400 cursor-not-allowed"
+                : "bg-[#FFFFFF] text-[#0A0A0A] shadow-[0_1px_2px_0_rgba(0,0,0,0.08)]"
+            }`}
+            onClick={() => handleTempStepSwitch(-1)}
+            disabled={isStepBackDisabled}
+          >
+            Prev step
+          </button>
+          <button
+            type="button"
+            className={`h-[36px] px-3 rounded-[8px] text-[13px] font-sans font-[500] duration-150 ${
+              isStepNextDisabled
+                ? "bg-[#F6F7FB] text-gray-400 cursor-not-allowed"
+                : "bg-[#FFFFFF] text-[#0A0A0A] shadow-[0_1px_2px_0_rgba(0,0,0,0.08)]"
+            }`}
+            onClick={() => handleTempStepSwitch(1)}
+            disabled={isStepNextDisabled}
+          >
+            Next step
+          </button>
+        </div> */}
 
         {(isForUserPage || isForSomeoneElsePage) && (
           <button

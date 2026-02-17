@@ -142,6 +142,7 @@ const ForUserPage = () => {
             control={control}
             errors={errors}
             rules={{ required: "Select date" }}
+            maxYearsFromToday={10}
             maxDate={new Date()}
           />
 

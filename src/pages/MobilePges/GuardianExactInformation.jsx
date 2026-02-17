@@ -174,10 +174,16 @@ const GuardianExactInformation = () => {
             </div>
             {
               <input
-                type="number"
+                type="tel"
                 placeholder="(000) 000 0000"
                 id={"phoneNumber"}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={9}
                 className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px] "
+                onInput={(event) => {
+                  event.target.value = event.target.value.replace(/\D/g, "").slice(0, 9);
+                }}
                 {...register("phoneNumber", {
                   required: true,
                   minLength: 9,

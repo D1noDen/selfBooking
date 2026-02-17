@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useState,
   useRef,
   createRef,
@@ -10,6 +11,7 @@ import {
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import { Scrollbar } from "react-scrollbars-custom";
+import { Listbox, Transition } from "@headlessui/react";
 import SelfBookingStore from "../store/SelfBookingStore";
 import {
   get_Slot_Apoiment,
@@ -44,12 +46,14 @@ MonthYearPickerButton.displayName = "MonthYearPickerButton";
 const SchedulerPage = ({ setSesionStorage }) => {
   const informationWithSorage = JSON.parse(
     sessionStorage.getItem("BookingInformation")
-  );
+  ) || {};
+  const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
   const [selectedAppointment, setSelectedAppointment] = useState(
-    informationWithSorage.apoimentTypeId.id
+    storedAppointmentTypeId
   );
-  const setAppPage = SelfBookingStore((state) => state.setAppPage);
-  const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
+  const setSchedulerHasSelection = SelfBookingStore(
+    (state) => state.setSchedulerHasSelection
+  );
   const [events, setEvents] = useState(null);
   const [doctors, setDoctors] = useState(null);
   const [doctorsWithEvents, setDoctorsWithEvents] = useState([]);
@@ -65,67 +69,223 @@ const SchedulerPage = ({ setSesionStorage }) => {
   }, [todayDate]);
   const [startDate, setStartDay] = useState(todayDate);
   const [selectedDate, setSelectedDate] = useState(todayDate);
+  const [selectedSlot, setSelectedSlot] = useState(() => {
+    const storedDoctor = informationWithSorage?.doctor;
+    if (!storedDoctor?.id || !storedDoctor?.eventStartDateTime) {
+      return null;
+    }
+
+    return {
+      slotKey: null,
+      doctor: storedDoctor,
+      dateStart: storedDoctor.eventStartDateTime,
+      time: moment(storedDoctor.eventStartDateTime, "DD.MM.YYYY HH:mm:ss").format("HH:mm"),
+    };
+  });
   const [isMonthYearOpen, setIsMonthYearOpen] = useState(false);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const {auth} = useAuth();
 
-  // ДодаємоRef для відстеження поточного запиту
-  const requestIdRef = useRef(0);
+  const doctorCacheRef = useRef({});
+  const slotCacheRef = useRef({});
+  const pendingDoctorRequestRef = useRef(null);
+  const pendingSlotRequestRef = useRef(null);
   const touchStartXRef = useRef(null);
 
   const {
     data: GetSlotApoimentData,
-    isLoading: GetSlotApoimentLoading,
     setText: GetSlotApoimentInformation,
   } = get_Slot_Apoiment();
   
   const {
     data: GetDoctorByTypeIdData,
-    isLoading: GetDoctorByTypeIdLoading,
     setText: GetDoctorByTypeIdInformation,
   } = get_Doctor_By_Type_Id();
+
+  const getWeekDates = useCallback((weekStartDate) => {
+    return Array.from({ length: 7 }).map((_, index) =>
+      moment(weekStartDate).add(index, "days").format("YYYY-MM-DD")
+    );
+  }, []);
+
+  const getCacheBucket = useCallback((appointmentTypeId) => {
+    if (!slotCacheRef.current[appointmentTypeId]) {
+      slotCacheRef.current[appointmentTypeId] = {
+        loadedDates: new Set(),
+        shiftsByDate: {},
+      };
+    }
+    return slotCacheRef.current[appointmentTypeId];
+  }, []);
+
+  const updateVisibleEventsFromCache = useCallback(
+    (appointmentTypeId, weekStartDate) => {
+      const weekDates = getWeekDates(weekStartDate);
+      const cacheBucket = getCacheBucket(appointmentTypeId);
+      const weekShifts = weekDates.flatMap(
+        (day) => cacheBucket.shiftsByDate[day] || []
+      );
+      setEvents(weekShifts);
+    },
+    [getCacheBucket, getWeekDates]
+  );
+
+  const getMissingDatesForWeek = useCallback(
+    (appointmentTypeId, weekStartDate) => {
+      const weekDates = getWeekDates(weekStartDate);
+      const cacheBucket = getCacheBucket(appointmentTypeId);
+      return weekDates.filter((day) => !cacheBucket.loadedDates.has(day));
+    },
+    [getCacheBucket, getWeekDates]
+  );
+
+  const getShiftDateKey = useCallback((shift) => {
+    const firstSlotDateTime = shift?.appointmentSlot?.[0]?.startTime;
+    if (!firstSlotDateTime) return null;
+    const [rawDate] = firstSlotDateTime.split(" ");
+    const parsedDate = moment(rawDate, "DD.MM.YYYY", true);
+    return parsedDate.isValid() ? parsedDate.format("YYYY-MM-DD") : null;
+  }, []);
+
+  const getShiftSignature = useCallback((shift) => {
+    const userId = shift?.shift?.userId ?? "";
+    const cabinetId = shift?.shift?.cabinetId ?? "";
+    const slots = (shift?.appointmentSlot || [])
+      .map((slot) => `${slot.startTime}|${slot.endTime}`)
+      .sort()
+      .join(",");
+    return `${userId}|${cabinetId}|${slots}`;
+  }, []);
+
+  const getDaySignature = useCallback(
+    (dayShifts) =>
+      (dayShifts || [])
+        .map((shift) => getShiftSignature(shift))
+        .sort()
+        .join("||"),
+    [getShiftSignature]
+  );
+
+  const updateDoctorInStorage = useCallback(
+    (doctorData) => {
+      const currentInfo = JSON.parse(sessionStorage.getItem("BookingInformation")) || {};
+      const nextInfo = { ...currentInfo };
+
+      if (doctorData) {
+        nextInfo.doctor = doctorData;
+      } else {
+        delete nextInfo.doctor;
+      }
+
+      setSesionStorage(nextInfo);
+    },
+    [setSesionStorage]
+  );
+
+  const clearSelectedSlot = useCallback(() => {
+    setSelectedSlot(null);
+    updateDoctorInStorage(null);
+  }, [updateDoctorInStorage]);
   
   useEffect(() => {
-    if (!informationWithSorage) return;
-  
-    // Встановлюємо стан завантаження
-    setIsLoadingData(true);
-    
-    // НЕ очищуємо дані одразу - залишаємо старі поки не прийдуть нові
-    // setDoctors(null);
-    // setEvents(null);
-    // setDoctorsWithEvents([]);
-  
-    const currentRequestId = ++requestIdRef.current;
-  
-    const start = moment(startDate).format("YYYY-MM-DD");
-    const endDate = moment(startDate).add(6, 'days').format('YYYY-MM-DD');
-  
-    const timer = setTimeout(() => {
-      if (currentRequestId === requestIdRef.current) {
-        GetSlotApoimentInformation({
-          bookingToken: auth,
-          appointmentTypeId: selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
-          startDate: start,
-          endDate: endDate,
-        });
-        
-        GetDoctorByTypeIdInformation({
-          bookingToken: auth,
-          appointmentTypeId: selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
-        });
-      }
-    }, 150);
-  
-    return () => clearTimeout(timer);
-  }, [selectedAppointment, startDate, auth]);
+    const appointmentTypeId = selectedAppointment?.id || storedAppointmentTypeId;
+    if (!appointmentTypeId || !auth) {
+      setDoctorsWithEvents([]);
+      setDoctors(null);
+      setEvents(null);
+      setIsLoadingData(false);
+      return;
+    }
+
+    const cachedDoctors = doctorCacheRef.current[appointmentTypeId];
+    if (cachedDoctors) {
+      setDoctors(cachedDoctors);
+    } else {
+      setDoctors(null);
+    }
+
+    updateVisibleEventsFromCache(appointmentTypeId, startDate);
+
+    const weekDates = getWeekDates(startDate);
+    const missingDates = getMissingDatesForWeek(appointmentTypeId, startDate);
+    const shouldFetchDoctors = !cachedDoctors;
+    const shouldFetchMissingSlots = missingDates.length > 0;
+    const shouldRefreshCachedWeek = missingDates.length === 0;
+    const shouldShowSpinner = shouldFetchDoctors || shouldFetchMissingSlots;
+
+    if (shouldFetchMissingSlots) {
+      clearSelectedSlot();
+    }
+
+    if (!shouldFetchDoctors && !shouldFetchMissingSlots && !shouldRefreshCachedWeek) {
+      setIsLoadingData(false);
+      return;
+    }
+
+    setIsLoadingData(shouldShowSpinner);
+
+    if (shouldFetchDoctors) {
+      pendingDoctorRequestRef.current = { appointmentTypeId };
+      GetDoctorByTypeIdInformation({
+        bookingToken: auth,
+        appointmentTypeId,
+      });
+    }
+
+    if (shouldFetchMissingSlots) {
+      pendingSlotRequestRef.current = {
+        mode: "missing",
+        appointmentTypeId,
+        requestedDates: missingDates,
+        showSpinner: true,
+      };
+      GetSlotApoimentInformation({
+        bookingToken: auth,
+        appointmentTypeId,
+        startDate: missingDates[0],
+        endDate: missingDates[missingDates.length - 1],
+      });
+      return;
+    }
+
+    if (shouldRefreshCachedWeek) {
+      pendingSlotRequestRef.current = {
+        mode: "refresh",
+        appointmentTypeId,
+        requestedDates: weekDates,
+        showSpinner: false,
+      };
+      GetSlotApoimentInformation({
+        bookingToken: auth,
+        appointmentTypeId,
+        startDate: weekDates[0],
+        endDate: weekDates[weekDates.length - 1],
+      });
+    }
+  }, [
+    selectedAppointment,
+    startDate,
+    auth,
+    storedAppointmentTypeId,
+    GetDoctorByTypeIdInformation,
+    GetSlotApoimentInformation,
+    clearSelectedSlot,
+    getWeekDates,
+    getMissingDatesForWeek,
+    updateVisibleEventsFromCache,
+  ]);
 
   const {
     data: GetApoimentTypesSelfBookingData,
     isLoading: GetApoimentTypesSelfBookingLoading,
     setText: GetApoimentTypesSelfBookingInformation,
   } = get_Apoiment_Types_Self_Booking();
+
+  const appointmentTypeOptions = useMemo(
+    () => GetApoimentTypesSelfBookingData?.data?.result || [],
+    [GetApoimentTypesSelfBookingData]
+  );
 
   useEffect(() => {
     if (auth) {
@@ -136,30 +296,109 @@ const SchedulerPage = ({ setSesionStorage }) => {
   }, [auth]);
 
   useEffect(() => {
-    if (GetApoimentTypesSelfBookingData) {
-      const selected = GetApoimentTypesSelfBookingData?.data?.result.filter(
-        (item) => item.id === informationWithSorage.apoimentTypeId.id
-      );
+    if (!storedAppointmentTypeId || appointmentTypeOptions.length === 0) return;
 
-      if (selected && selected.length > 0) {
-        setSelectedAppointment({ id: selected[0].id, label: selected[0].label });
-      }
+    const selected = appointmentTypeOptions.find(
+      (item) => item.id === storedAppointmentTypeId
+    );
+
+    if (selected) {
+      setSelectedAppointment({ id: selected.id, label: selected.label });
     }
-  }, [GetApoimentTypesSelfBookingData]);
+  }, [appointmentTypeOptions, storedAppointmentTypeId]);
+
+  const handleVisitTypeChange = useCallback(
+    (nextId) => {
+      const parsedNextId = Number(nextId);
+      const nextType = appointmentTypeOptions.find(
+        (item) => item.id === parsedNextId
+      );
+      if (!nextType) return;
+
+      clearSelectedSlot();
+      setSelectedAppointment({ id: nextType.id, label: nextType.label });
+
+      const currentInfo = JSON.parse(sessionStorage.getItem("BookingInformation")) || {};
+      setSesionStorage({
+        ...currentInfo,
+        apoimentTypeId: {
+          id: parsedNextId,
+          lebel: nextType.label,
+        },
+      });
+    },
+    [appointmentTypeOptions, clearSelectedSlot, setSesionStorage]
+  );
+
+  const selectedAppointmentLabel = useMemo(() => {
+    const currentId = selectedAppointment?.id || storedAppointmentTypeId;
+    const currentType = appointmentTypeOptions.find((item) => item.id === currentId);
+    return currentType?.label || "Select visit type";
+  }, [appointmentTypeOptions, selectedAppointment, storedAppointmentTypeId]);
 
   useEffect(() => {
-    if (GetDoctorByTypeIdData?.data?.result) {
-      setDoctors(GetDoctorByTypeIdData.data.result);
+    const pendingDoctorRequest = pendingDoctorRequestRef.current;
+    if (!pendingDoctorRequest || !GetDoctorByTypeIdData?.data?.result) return;
+
+    doctorCacheRef.current[pendingDoctorRequest.appointmentTypeId] =
+      GetDoctorByTypeIdData.data.result;
+    setDoctors(GetDoctorByTypeIdData.data.result);
+    pendingDoctorRequestRef.current = null;
+    setIsLoadingData(Boolean(pendingSlotRequestRef.current));
+  }, [GetDoctorByTypeIdData]);
+
+  useEffect(() => {
+    const pendingSlotRequest = pendingSlotRequestRef.current;
+    if (!pendingSlotRequest || !GetSlotApoimentData?.data?.result) return;
+
+    const cacheBucket = getCacheBucket(pendingSlotRequest.appointmentTypeId);
+    const fetchedShifts = GetSlotApoimentData.data.result.shifts || [];
+    const nextShiftsByDate = {};
+
+    pendingSlotRequest.requestedDates.forEach((day) => {
+      nextShiftsByDate[day] = [];
+    });
+
+    fetchedShifts.forEach((shift) => {
+      const dayKey = getShiftDateKey(shift);
+      if (!dayKey) return;
+      if (!nextShiftsByDate[dayKey]) {
+        nextShiftsByDate[dayKey] = [];
+      }
+      nextShiftsByDate[dayKey].push(shift);
+    });
+
+    let hasChanges = false;
+    pendingSlotRequest.requestedDates.forEach((day) => {
+      const prevDayShifts = cacheBucket.shiftsByDate[day] || [];
+      const nextDayShifts = nextShiftsByDate[day] || [];
+      const isSameDay =
+        getDaySignature(prevDayShifts) === getDaySignature(nextDayShifts);
+
+      cacheBucket.loadedDates.add(day);
+      if (!isSameDay) {
+        cacheBucket.shiftsByDate[day] = nextDayShifts;
+        hasChanges = true;
+      }
+    });
+
+    const activeAppointmentTypeId = selectedAppointment?.id || storedAppointmentTypeId;
+    if (hasChanges && activeAppointmentTypeId === pendingSlotRequest.appointmentTypeId) {
+      updateVisibleEventsFromCache(activeAppointmentTypeId, startDate);
     }
-    if (GetSlotApoimentData?.data?.result?.shifts) {
-      setEvents(GetSlotApoimentData.data.result.shifts);
-    }
-    
-    // Знімаємо стан завантаження тільки коли обидва запити завершилися
-    if (GetDoctorByTypeIdData && GetSlotApoimentData) {
-      setIsLoadingData(false);
-    }
-  }, [GetDoctorByTypeIdData, GetSlotApoimentData]);
+
+    pendingSlotRequestRef.current = null;
+    setIsLoadingData(Boolean(pendingDoctorRequestRef.current));
+  }, [
+    GetSlotApoimentData,
+    getCacheBucket,
+    getDaySignature,
+    getShiftDateKey,
+    selectedAppointment,
+    startDate,
+    storedAppointmentTypeId,
+    updateVisibleEventsFromCache,
+  ]);
 
   // Виправлений useEffect для обробки doctors і events
   useEffect(() => {
@@ -193,6 +432,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
               date: year + "-" + month + "-" + day,
               dateStart: apoiment.startTime,
               dateEnd: apoiment.endTime,
+              slotKey: `${item.userId}-${apoiment.startTime}-${apoiment.endTime}`,
             };
           })
         ),
@@ -210,9 +450,17 @@ const SchedulerPage = ({ setSesionStorage }) => {
       );
     }
 
+    const isSelected =
+      selectedSlot &&
+      eventInfo.event.extendedProps.slotKey === selectedSlot.slotKey;
+
     return (
       <div
-        className={`bg-white text-[18px]/[24px] text-[#8380FF] font-hebrew tracking-[0.63px] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center border border-solid border-[#E8E8E9] rounded-[10px] hover:bg-[#8380FF] hover:text-white cursor-pointer mb-[12px] active:border-[#8380FF] active:bg-[#8380FF] active:text-white`}
+        className={`text-[18px]/[24px] font-hebrew tracking-[0.63px] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center border border-solid rounded-[10px] cursor-pointer mb-[12px] ${
+          isSelected
+            ? "bg-[#8380FF] text-white border-[#8380FF]"
+            : "bg-white text-[#8380FF] border-[#E8E8E9] hover:bg-[#8380FF] hover:text-white"
+        }`}
         style={{
           boxShadow: "0 2px 8px 0 rgba(0, 0, 0, 0.10)"
         }}
@@ -288,28 +536,46 @@ const SchedulerPage = ({ setSesionStorage }) => {
     });
   }, [memoizedDoctorsWithEvents, startDate]);
 
+  useEffect(() => {
+    if (!isLoadingData && memoizedDoctorsWithProcessedEvents.length === 0 && selectedSlot) {
+      clearSelectedSlot();
+    }
+  }, [
+    clearSelectedSlot,
+    isLoadingData,
+    memoizedDoctorsWithProcessedEvents,
+    selectedSlot,
+  ]);
+
   const createEventClickHandler = useCallback((item) => {
     return (e) => {
       if (e.event.extendedProps.isEmpty) {
         return;
       }
-      
-      setAppPage("for who");
-      setHeaderPage(2);
-      setSesionStorage({
-        ...informationWithSorage,
+
+      const nextSelectedSlot = {
+        slotKey: e.event.extendedProps.slotKey,
         doctor: {
           avatar: item.avatar,
           name: item.name,
           speciality: item.speciality,
           id: item.id,
           cabinetId: item.cabinetId,
-          eventStartDateTime: e.event._def.extendedProps.dateStart,
-          eventEnd: e.event._def.extendedProps.dateEnd,
+          eventStartDateTime: e.event.extendedProps.dateStart,
+          eventEnd: e.event.extendedProps.dateEnd,
         },
-      });
+        dateStart: e.event.extendedProps.dateStart,
+        time: (e.event.title || "").trim(),
+      };
+
+      setSelectedSlot(nextSelectedSlot);
+      updateDoctorInStorage(nextSelectedSlot.doctor);
     };
-  }, [informationWithSorage]);
+  }, [updateDoctorInStorage]);
+
+  useEffect(() => {
+    setSchedulerHasSelection(Boolean(selectedSlot?.doctor?.id));
+  }, [selectedSlot, setSchedulerHasSelection]);
 
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }).map((_, index) => {
@@ -323,12 +589,12 @@ const SchedulerPage = ({ setSesionStorage }) => {
         iso: moment(day).format("YYYY-MM-DD"),
         dayNumber: day.getDate(),
         dayName: moment(day).format("ddd"),
+        isToday: day.getTime() === todayDate.getTime(),
         isDisabled,
       };
     });
   }, [startDate, todayDate, maxSelectableDate]);
 
-  const activeDay = moment(selectedDate).format("YYYY-MM-DD");
   const weekMs = 7 * 24 * 60 * 60 * 1000;
 
   const changeWeek = (direction) => {
@@ -349,12 +615,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
 
     setStartDay(nextDate);
     setSelectedDate(nextDate);
-  };
-
-  const handleDayClick = (day) => {
-    if (day.isDisabled) return;
-    setSelectedDate(day.date);
-    setStartDay(day.date);
   };
 
   const handlePickerDateChange = (date) => {
@@ -380,10 +640,44 @@ const SchedulerPage = ({ setSesionStorage }) => {
     if (Math.abs(diff) < 40) return;
     changeWeek(diff > 0 ? 1 : -1);
   };
+
+  const selectedWeekStart = useMemo(() => {
+    const date = new Date(startDate);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, [startDate]);
+
+  const selectedWeekEnd = useMemo(() => {
+    const date = new Date(startDate);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + 6);
+    return date;
+  }, [startDate]);
+
+  const getPickerDayClassName = useCallback(
+    (date) => {
+      const currentDate = new Date(date);
+      currentDate.setHours(0, 0, 0, 0);
+
+      if (currentDate < selectedWeekStart || currentDate > selectedWeekEnd) {
+        return "";
+      }
+
+      if (currentDate.getTime() === selectedWeekStart.getTime()) {
+        return "scheduler-week-day scheduler-week-day-start";
+      }
+
+      if (currentDate.getTime() === selectedWeekEnd.getTime()) {
+        return "scheduler-week-day scheduler-week-day-end";
+      }
+
+      return "scheduler-week-day scheduler-week-day-middle";
+    },
+    [selectedWeekEnd, selectedWeekStart]
+  );
  
   return (
     <>
-      {(GetSlotApoimentLoading || GetDoctorByTypeIdLoading) && <Spinner/>}
       <div
       // h-[calc(100vh-200px)] - можна це вкинути
         className={`pt-[20px] pb-[20px] bg-white mx-auto rounded-[10px] overflow-hidden`}
@@ -406,9 +700,51 @@ const SchedulerPage = ({ setSesionStorage }) => {
         }}
       >
         <div className={`flex relative bg-white border-b border-[#E5E5EA]`}>
-          <div className={`lg:w-[260px] xl:w-[30%] flex items-center lg:px-4 xl:px-10`}>
-            <div className={`text-[22px]/[30px] text-[#333] w-full mx-auto flex justify-center text-center font-semibold font-sans`}>
+          <div className={`lg:w-[260px] xl:w-[30%] flex flex-col items-start gap-4 text-start lg:p-4 xl:px-10`}>
+            <div className={`text-[30px] text-[#333] font-semibold font-sans`}>
               Select date and time
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-[16px] font-sans text-[#333333] font-[600]">Visit type</span>
+              <Listbox
+                value={selectedAppointment?.id || storedAppointmentTypeId || ""}
+                onChange={handleVisitTypeChange}
+              >
+                <div className="relative w-[260px] font-sans text-[14px] text-[#333333] font-[400]">
+                  <Listbox.Button className="h-[40px] w-full rounded-[8px] border border-[#0000001F] px-3 bg-white focus:outline-none focus:border-[#8380FF] flex items-center justify-between">
+                    <span className="truncate">{selectedAppointmentLabel}</span>
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 7.5L10 12.5L15 7.5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </Listbox.Button>
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="scrollmainContent absolute mt-1 max-h-60 w-full overflow-auto rounded-[8px] bg-white border border-[#DADCE5] py-1 shadow-lg z-20">
+                      {appointmentTypeOptions.map((item) => (
+                        <Listbox.Option
+                          key={item.id}
+                          value={item.id}
+                          className={({ active }) =>
+                            `cursor-pointer select-none px-3 py-2 text-[14px] ${
+                              active ? "bg-[#F3F4FF] text-[#2A2C33]" : "text-[#2A2C33]"
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <span className={selected ? "font-semibold" : "font-normal"}>
+                              {item.label}
+                            </span>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
           </div>
           <div className={`lg:w-[76%] xl:w-[70%] px-4 lg:pt-5 lg:pb-4 xl:pt-7 xl:pb-5`}>
@@ -426,6 +762,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 minDate={todayDate}
                 maxDate={maxSelectableDate}
                 dateFormat="MMMM yyyy"
+                todayButton="Today"
                 open={isMonthYearOpen}
                 onInputClick={() => setIsMonthYearOpen(true)}
                 onClickOutside={() => setIsMonthYearOpen(false)}
@@ -433,6 +770,8 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 customInput={<MonthYearPickerButton isOpen={isMonthYearOpen} />}
                 popperPlacement="bottom"
                 popperClassName="scheduler-monthyear-popper"
+                calendarClassName="scheduler-monthyear-calendar"
+                dayClassName={getPickerDayClassName}
                 className="hidden"
               />
             </div>
@@ -458,31 +797,30 @@ const SchedulerPage = ({ setSesionStorage }) => {
               </button>
               <div className="grid grid-cols-7 gap-0 flex-1">
                 {weekDays.map((day) => {
-                  const isActive = day.iso === activeDay;
+                  // const isActive = day.iso === activeDay;
                   return (
-                    <button
+                    <div
                       key={day.iso}
-                      type="button"
-                      disabled={day.isDisabled}
-                      onClick={() => handleDayClick(day)}
-                      className={`flex flex-col items-center gap-2 ${day.isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                      className={`relative flex flex-col items-center gap-1 ${day.isDisabled ? "opacity-40" : ""}`}
                     >
+                      {day.isToday && (
+                        <span className="absolute top-[10px] right-0 rounded-[4px] bg-[#8380FF] px-[8px] py-[4px] text-[10px] font-[400] font-sans leading-none text-white">
+                          Today
+                        </span>
+                      )}
                       <span
-                        className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-[20px] ${
-                          isActive
-                            ? "bg-[#8380FF] text-white"
-                            : "bg-[#F3F4F6] text-[#101828]"
+                        className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-[20px] text-[#101828]
                         }`}
-                        style={isActive ? {
-                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -4px rgba(0, 0, 0, 0.10)"
-                        } : {}}
+                        // style={isActive ? {
+                          // boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -4px rgba(0, 0, 0, 0.10)"
+                        // } : {}}
                       >
                         {day.dayNumber}
                       </span>
                       <span className="text-[14px] font-sans text-[#4A5565]">
                         {day.dayName}
                       </span>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -507,6 +845,41 @@ const SchedulerPage = ({ setSesionStorage }) => {
             </div>
           </div>
         </div>
+        {/* <div className="w-full bg-[#F5F5FF] px-8 py-4 flex items-center justify-between gap-4 border-b border-[#E5E5EA]">
+          <div className="flex items-center gap-8 text-[#5A5A65]">
+            <div className="flex items-center gap-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2V6" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 2V6" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 10H21" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M19 4H5C3.9 4 3 4.9 3 6V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4Z" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-[#333333] font-sans font-[400] text-[16px]">
+                {selectedSlot
+                  ? moment(selectedSlot.dateStart, "DD.MM.YYYY HH:mm:ss").format("MMMM D, YYYY")
+                  : "Select date"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 7V12L15 14" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22Z" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-[#333333] font-sans font-[400] text-[16px]">
+                {selectedSlot ? selectedSlot.time : "--:--"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 21V19C20 17.9 19.1 17 18 17H6C4.9 17 4 17.9 4 19V21" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 13C14.2 13 16 11.2 16 9C16 6.8 14.2 5 12 5C9.8 5 8 6.8 8 9C8 11.2 9.8 13 12 13Z" stroke="#6C63FF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="text-[#333333] font-sans font-[400] text-[16px]">
+                {selectedSlot ? selectedSlot.doctor.name : "Select provider"}
+              </span>
+            </div>
+          </div>
+        </div> */}
         <Scrollbar
   style={{
     height:
@@ -527,7 +900,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
   thumbYProps={{ className: "thumbY" }}
 >
   <div>
-    {(isLoadingData || GetSlotApoimentLoading || GetDoctorByTypeIdLoading) ? (
+    {isLoadingData ? (
       <div className="flex items-center justify-center py-20">
         <Spinner />
       </div>

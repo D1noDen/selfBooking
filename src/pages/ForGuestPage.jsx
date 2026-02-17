@@ -38,9 +38,9 @@ const ForGuestPage = () => {
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const newStartDate = dateHelper(
-    informationWithSorage.doctor?.eventStartDateTime
+    informationWithSorage?.doctor?.eventStartDateTime
   );
-  const newEndDate = dateHelper(informationWithSorage?.doctor.eventEnd);
+  const newEndDate = dateHelper(informationWithSorage?.doctor?.eventEnd);
   const someOneElsePage = SelfBookingStore((state) => state.someOneElsePage);
    const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
 console.log("chosenDoctor:", chosenDoctor);
@@ -144,11 +144,11 @@ console.log("chosenDoctor:", chosenDoctor);
         eventStartDateTime: newStartDate,
       eventEndDateTime: newEndDate,
       appointmentDescription: CreatePatientData.data.comments,
-      appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
-      userId: informationWithSorage?.doctor.id,
+      appointmentTypeId: informationWithSorage?.apoimentTypeId?.id,
+      userId: informationWithSorage?.doctor?.id,
       patientId: CreatePatientData.data.patientId,
       patientContactPersonId: CreatePatientData.data.patientContactPersonId,
-      cabinetId: informationWithSorage?.doctor.cabinetId,
+      cabinetId: informationWithSorage?.doctor?.cabinetId,
       },
       token:auth
     });
@@ -372,10 +372,12 @@ console.log("chosenDoctor:", chosenDoctor);
                 {informationWithSorage?.apoimentTypeId?.lebel}
               </div>
               <div className={`text-[#3F4455] font-hebrew tracking-[0.72px]`}>
-                {moment(
-                  informationWithSorage.doctor.eventStartDateTime,
-                  "DD.MM.YYYY HH:mm:ss"
-                ).format("ddd MMM DD YYYY [at] h:mm a")}
+                {informationWithSorage?.doctor?.eventStartDateTime
+                  ? moment(
+                      informationWithSorage?.doctor?.eventStartDateTime,
+                      "DD.MM.YYYY HH:mm:ss"
+                    ).format("ddd MMM DD YYYY [at] h:mm a")
+                  : "Not selected"}
               </div>
             </div>
             <div className={` `}>
@@ -405,7 +407,7 @@ console.log("chosenDoctor:", chosenDoctor);
               <div className={`mr-[17px]`}>
                 <img
                   className={`rounded-[100px]`}
-                  src={informationWithSorage.doctor.avarar || WithoutAvatar}
+                  src={informationWithSorage?.doctor?.avarar || WithoutAvatar}
                   alt="avatar"
                 />
               </div>
@@ -413,12 +415,12 @@ console.log("chosenDoctor:", chosenDoctor);
                 <div
                   className={`text-[20px]/[27px] text-[#3F4455] font-nunito font-semibold tracking-[0.9px]`}
                 >
-                  {informationWithSorage.doctor.name}
+                  {informationWithSorage?.doctor?.name || "Not selected"}
                 </div>
                 <div
                   className={`text-[16px]/[22px] text-[#D9D6EA] font-nunito font-bold tracking-[0.72px]`}
                 >
-                  {informationWithSorage.doctor.speciality}
+                  {informationWithSorage?.doctor?.speciality || ""}
                 </div>
               </div>
             </div>
@@ -584,10 +586,20 @@ const InputBlock = ({
       </div>
 
       <input
-        type={type || "text"}
+        type={id === "phoneNumber" ? "tel" : type || "text"}
         id={id}
         placeholder={placeholder}
+        inputMode={id === "phoneNumber" ? "numeric" : undefined}
+        pattern={id === "phoneNumber" ? "[0-9]*" : undefined}
+        maxLength={id === "phoneNumber" ? 9 : undefined}
         className={` border-[2px] border-[#E8E8E9] bg-white h-9 rounded-[10px] pl-[15px] text-[15px]/[18px] text-[#5E5E5E] font-inter tracking-[0.675px]`}
+        onInput={
+          id === "phoneNumber"
+            ? (event) => {
+                event.target.value = event.target.value.replace(/\D/g, "").slice(0, 9);
+              }
+            : undefined
+        }
         {...register(id, {
           required: !optional,
           pattern: id === "email" ? emailRegExp : null,

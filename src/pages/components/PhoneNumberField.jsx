@@ -34,7 +34,7 @@ const PhoneNumberField = ({
     COUNTRY_PHONE_OPTIONS[0];
 
   return (
-    <div className={`flex flex-col ${widthClass} mb-[22px] relative ${className}`}>
+    <div className={`flex flex-col ${widthClass} mb-[26px] relative ${className}`}>
       <label
         htmlFor={phoneFieldName}
         className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-[2px]"
@@ -113,7 +113,7 @@ const PhoneNumberField = ({
       <input type="hidden" {...register(countryFieldName)} value={selectedCountryCode} />
 
       {errors?.[phoneFieldName] && (
-        <p className="absolute -bottom-[18px] left-1 text-red-500 text-[12px]/[14px]">
+        <p className="mt-1 text-red-500 text-[12px]/[14px]">
           {errors[phoneFieldName]?.message || "Field is required"}
         </p>
       )}

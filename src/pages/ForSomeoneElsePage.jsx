@@ -376,7 +376,7 @@ const SectionTitle = ({ text }) => (
 );
 
 const Field = ({ label, width, children }) => (
-  <div className={`${width} mb-[22px]`}>
+  <div className={`${width} mb-[26px]`}>
     <div className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-[2px]">
       {label}
     </div>
@@ -396,7 +396,7 @@ const Input = ({ register, id, placeholder, type = "text", disabled = false, err
       {...register(id, rules)}
     />
     {errors?.[id] && (
-      <p className="absolute -bottom-[18px] left-1 text-red-500 text-[12px]/[14px]">
+      <p className="mt-1 text-red-500 text-[12px]/[14px]">
         {errors[id]?.message || "Field is required"}
       </p>
     )}

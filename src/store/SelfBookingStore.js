@@ -43,6 +43,9 @@ const SelfBookingStore = create(
       appointmentTime: {},
       setAppointmentTime: (dataObj) => set({ appointmentTime: dataObj }),
 
+      schedulerHasSelection: false,
+      setSchedulerHasSelection: (value) => set({ schedulerHasSelection: value }),
+
       guardianInfo: {},
       setGuardianInfo: (dataObj) => set({ guardianInfo: dataObj }),
 

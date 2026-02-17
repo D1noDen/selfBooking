@@ -81,6 +81,73 @@ const MainLayout = () => {
       setAppPage(mappedPage);
     }
   }, [pageSize[0]]);
+
+  useEffect(() => {
+    const bookingInfoRaw = sessionStorage.getItem("BookingInformation");
+    let bookingInfo = {};
+    if (bookingInfoRaw) {
+      try {
+        bookingInfo = JSON.parse(bookingInfoRaw);
+      } catch {
+        bookingInfo = {};
+      }
+    }
+    const hasAppointmentType = Boolean(bookingInfo?.apoimentTypeId?.id);
+    const hasSelectedAppointment = Boolean(
+      bookingInfo?.doctor?.eventStartDateTime &&
+        bookingInfo?.doctor?.eventEnd &&
+        bookingInfo?.doctor?.id
+    );
+
+    const firstPages = ["visit type", "visit type mobile"];
+    const pagesRequiringType = [
+      "scheduler",
+      "upcoming schedule",
+      "choose a convenient time",
+      "for who",
+      "for who mobile",
+      "for user",
+      "for someone else",
+      "for guest page",
+      "for patient mobile",
+      "for someone else guardian mobile",
+      "appointment confirmation",
+      "appointment information",
+      "appointment information mobile",
+      "complete",
+      "complete mobile",
+    ];
+    const pagesRequiringSelectedAppointment = [
+      "for who",
+      "for who mobile",
+      "for user",
+      "for someone else",
+      "for guest page",
+      "for patient mobile",
+      "for someone else guardian mobile",
+      "appointment confirmation",
+      "appointment information",
+      "appointment information mobile",
+      "complete",
+      "complete mobile",
+    ];
+
+    if (firstPages.includes(appPage)) return;
+
+    if (pagesRequiringType.includes(appPage) && !hasAppointmentType) {
+      setHeaderPage(0);
+      setAppPage(pageSize[0] < 1024 ? "visit type mobile" : "visit type");
+      return;
+    }
+
+    if (
+      pagesRequiringSelectedAppointment.includes(appPage) &&
+      !hasSelectedAppointment
+    ) {
+      setHeaderPage(0);
+      setAppPage(pageSize[0] < 1024 ? "visit type mobile" : "visit type");
+    }
+  }, [appPage, pageSize, setAppPage, setHeaderPage]);
   
   useEffect(() => {
     if (GetApoimentTypesSelfBookingData) {

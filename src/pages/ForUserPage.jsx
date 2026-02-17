@@ -146,7 +146,7 @@ const ForUserPage = () => {
             maxDate={new Date()}
           />
 
-          <div className="flex flex-col w-[calc(50%-8px)] mb-[22px] relative z-50">
+          <div className="flex flex-col w-[calc(50%-8px)] mb-[26px] relative z-50">
             <div className="text-[15px]/[18px] text-[#333] font-sans font-[500] mb-[4px]">
               Gender *
             </div>
@@ -196,7 +196,7 @@ const ForUserPage = () => {
               value={selectedGender}
             />
             {errors?.gender && (
-              <p className="absolute -bottom-[18px] left-1 text-red-500 text-[12px]/[14px]">
+              <p className="mt-1 text-red-500 text-[12px]/[14px]">
                 {errors.gender.message}
               </p>
             )}
@@ -269,7 +269,7 @@ const ForUserPage = () => {
 
 const InputBlock = ({ label, placeholder, width, id, type, register, errors, rules }) => {
   return (
-    <div className={`inputBlock flex flex-col ${width} mb-[22px] relative`}>
+    <div className={`inputBlock flex flex-col ${width} mb-[26px]`}>
       <label htmlFor={id} className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-[2px]">
         {label}
       </label>
@@ -281,7 +281,7 @@ const InputBlock = ({ label, placeholder, width, id, type, register, errors, rul
         {...register(id, rules)}
       />
       {errors?.[id] && (
-        <p className="absolute top-[47px] bg-white px-3 left-[5px] text-red-500 text-[12px]/[14px]">
+        <p className="mt-1 text-red-500 text-[12px]/[14px]">
           {errors[id]?.message || "Field is required"}
         </p>
       )}

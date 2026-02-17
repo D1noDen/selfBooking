@@ -145,7 +145,7 @@ const DatePickerField = ({
   };
 
   return (
-    <div className={`inputBlock flex flex-col ${width} mb-[22px] relative`}>
+    <div className={`inputBlock flex flex-col ${width} mb-[26px]`}>
       {label && (
         <label
           htmlFor={id}
@@ -364,7 +364,7 @@ const DatePickerField = ({
         )}
       </div>
       {errors?.[id] && (
-        <p className="absolute top-[47px] bg-white px-3 left-[5px] text-red-500 text-[12px]/[14px]">
+        <p className="mt-1 text-red-500 text-[12px]/[14px]">
           {errors[id]?.message || "Field is required"}
         </p>
       )}

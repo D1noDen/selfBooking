@@ -10,6 +10,9 @@ const StepNavigationFooter = () => {
   const forSomeoneElseConsent = SelfBookingStore(
     (state) => state.forSomeoneElseConsent
   );
+  const schedulerHasSelection = SelfBookingStore(
+    (state) => state.schedulerHasSelection
+  );
 
   const pageByHeaderStep = [
     "visit type",
@@ -57,9 +60,18 @@ const StepNavigationFooter = () => {
   const isForUserPage = appPage === "for user";
   const isForWhoPage = appPage === "for who";
   const isForSomeoneElsePage = appPage === "for someone else";
-  const isContinueDisabled = isForSomeoneElsePage && !forSomeoneElseConsent;
+  const isSchedulerPage = appPage === "scheduler";
+  const isContinueDisabled =
+    (isForSomeoneElsePage && !forSomeoneElseConsent) ||
+    (isSchedulerPage && !schedulerHasSelection);
 
   const handleContinue = () => {
+    if (isSchedulerPage) {
+      setHeaderPage(2);
+      setAppPage("for who");
+      return;
+    }
+
     const formId = isForUserPage
       ? "for-user-form"
       : isForWhoPage
@@ -148,7 +160,7 @@ const StepNavigationFooter = () => {
           </button>
         </div> */}
 
-        {(isForUserPage || isForSomeoneElsePage) && (
+        {(isSchedulerPage || isForUserPage || isForSomeoneElsePage) && (
           <button
             type="button"
             className={`h-[44px] px-6 rounded-[8px] text-white text-[14px]/[18px] font-semibold duration-150 ${

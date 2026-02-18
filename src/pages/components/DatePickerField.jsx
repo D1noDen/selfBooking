@@ -65,6 +65,7 @@ const DatePickerField = ({
   const yearListRef = useRef(null);
   const activeMonthButtonRef = useRef(null);
   const activeYearButtonRef = useRef(null);
+  const hasOpenedOnceRef = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [pickerViewDate, setPickerViewDate] = useState(new Date());
   const [typedValue, setTypedValue] = useState("");
@@ -145,19 +146,30 @@ const DatePickerField = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    const scrollActiveIntoList = (listRef, itemRef) => {
+    const shouldScrollToLatestOnFirstOpen =
+      !hasOpenedOnceRef.current &&
+      !selectedDate &&
+      !!effectiveMaxDate &&
+      pickerViewDate.getTime() === effectiveMaxDate.getTime();
+
+    const scrollActiveIntoList = (listRef, itemRef, align = "center") => {
       const listEl = listRef.current;
       const itemEl = itemRef.current;
       if (!listEl || !itemEl) return;
 
-      const targetTop = itemEl.offsetTop - listEl.clientHeight / 2 + itemEl.clientHeight / 2;
+      let targetTop = itemEl.offsetTop - listEl.clientHeight / 2 + itemEl.clientHeight / 2;
+      if (align === "end") {
+        targetTop = itemEl.offsetTop - listEl.clientHeight + itemEl.clientHeight;
+      }
       const maxTop = Math.max(0, listEl.scrollHeight - listEl.clientHeight);
       listEl.scrollTop = Math.min(Math.max(0, targetTop), maxTop);
     };
 
-    scrollActiveIntoList(monthListRef, activeMonthButtonRef);
-    scrollActiveIntoList(yearListRef, activeYearButtonRef);
-  }, [isOpen, pickerViewDate]);
+    const align = shouldScrollToLatestOnFirstOpen ? "end" : "center";
+    scrollActiveIntoList(monthListRef, activeMonthButtonRef, align);
+    scrollActiveIntoList(yearListRef, activeYearButtonRef, align);
+    hasOpenedOnceRef.current = true;
+  }, [effectiveMaxDate, isOpen, pickerViewDate, selectedDate]);
 
   const isOutOfRange = (date) => {
     if (effectiveMinDate && date < effectiveMinDate) return true;

@@ -629,6 +629,15 @@ const SchedulerPage = ({ setSesionStorage }) => {
     }
   }, [calendarRefs, doctorsWithEvents, startDate]);
 
+  useEffect(() => {
+    calendarRefs.forEach((item) => {
+      const calendarApi = item.current?.getApi?.();
+      if (calendarApi && typeof calendarApi.render === "function") {
+        calendarApi.render();
+      }
+    });
+  }, [calendarRefs, selectedSlot?.slotKey]);
+
   const memoizedDoctorsWithEvents = useMemo(() => {
     return doctorsWithEvents?.map((item) => ({
       ...item,

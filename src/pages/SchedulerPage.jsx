@@ -1104,7 +1104,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
       })
     ) : (
       <div className="flex items-center justify-center py-10 text-gray-500">
-        No appointments available
+        No slots available
       </div>
     )}
   </div>

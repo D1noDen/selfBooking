@@ -287,6 +287,16 @@
 
         }
 
+        .fc-daygrid-day-frame {
+            padding-left: 6px;
+            padding-right: 6px;
+        }
+
+        .fc-daygrid-day-events {
+            margin-top: 4px !important;
+            margin-bottom: 4px !important;
+        }
+
         .fc-event:focus {
             box-shadow: none;
         }
@@ -306,7 +316,7 @@
         }
 
         .fc-daygrid-body {
-            padding-top: 15px;
+            padding-top: 22px;
             @media (max-width: 1000px) {
                 z-index: 0;
             }

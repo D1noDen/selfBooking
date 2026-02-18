@@ -721,23 +721,37 @@ const SchedulerPage = ({ setSesionStorage }) => {
     setSchedulerHasSelection(Boolean(selectedSlot?.doctor?.id));
   }, [selectedSlot, setSchedulerHasSelection]);
 
+  const selectedSlotDayIso = useMemo(() => {
+    if (!selectedSlot?.dateStart) return null;
+    const parsedDate = moment(selectedSlot.dateStart, "DD.MM.YYYY HH:mm:ss", true);
+    return parsedDate.isValid() ? parsedDate.format("YYYY-MM-DD") : null;
+  }, [selectedSlot?.dateStart]);
+
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }).map((_, index) => {
       const day = new Date(startDate);
       day.setDate(day.getDate() + index);
       day.setHours(0, 0, 0, 0);
+      const dayIso = moment(day).format("YYYY-MM-DD");
       const isDisabled = day < todayDate || day > maxSelectableDate;
 
       return {
         date: day,
-        iso: moment(day).format("YYYY-MM-DD"),
+        iso: dayIso,
         dayNumber: day.getDate(),
         dayName: moment(day).format("ddd"),
         isToday: day.getTime() === todayDate.getTime(),
         isDisabled,
+        isSelectedColumn: selectedSlotDayIso === dayIso,
       };
     });
-  }, [startDate, todayDate, maxSelectableDate]);
+  }, [maxSelectableDate, selectedSlotDayIso, startDate, todayDate]);
+  const selectedColumnIndex = useMemo(
+    () => weekDays.findIndex((day) => day.iso === selectedSlotDayIso),
+    [selectedSlotDayIso, weekDays]
+  );
+  const calendarGridWidthPercent = 90;
+  const calendarGridOffsetPercent = (100 - calendarGridWidthPercent) / 2;
 
   const weekMs = 7 * 24 * 60 * 60 * 1000;
 
@@ -877,7 +891,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
               </Listbox>
             </div>
           </div>
-          <div className={`lg:w-[76%] xl:w-[70%] px-4 lg:pt-5 lg:pb-4 xl:pt-7 xl:pb-5`}>
+          <div className={`lg:w-[76%] xl:w-[70%] px-4 lg:pt-5 xl:pt-7`}>
             <div className="flex justify-center items-center gap-3 mb-5 text-[#2A2C33]">
               {/* <span className={`w-6 h-6 bg-[url("./assets/images/self-booking/calendarIcon.svg")] bg-center bg-no-repeat`}></span> */}
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -906,13 +920,13 @@ const SchedulerPage = ({ setSesionStorage }) => {
               />
             </div>
             <div
-              className="flex items-start gap-3 relative w-[calc(100%-50px)] mx-auto"
+              className="relative w-full mx-auto"
               onTouchStart={handleDatesTouchStart}
               onTouchEnd={handleDatesTouchEnd}
             >
               <button
                 type="button"
-                className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute left-0 top-1/2 transform -translate-y-1/2 z-10"
+                className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute left-[1%] top-1/2 transform -translate-y-1/2 z-10"
                 onClick={() => changeWeek(-1)}
                 disabled={startDate <= todayDate}
                 style={{
@@ -925,13 +939,15 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 <path d="M11.4999 15L6.8999 10L11.4999 5" stroke="#0A0A0A" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-              <div className="grid grid-cols-7 gap-0 flex-1">
+              <div className="grid grid-cols-7 gap-0 w-[93%] mx-auto">
                 {weekDays.map((day) => {
                   // const isActive = day.iso === activeDay;
                   return (
                     <div
                       key={day.iso}
-                      className={`relative flex flex-col items-center gap-1 ${day.isDisabled ? "opacity-40" : ""}`}
+                      className={`relative flex flex-col items-center gap-0 pt-2 pb-4 transition-colors ${
+                        day.isSelectedColumn ? "bg-[#EFEEFB]" : ""
+                      } ${day.isDisabled ? "opacity-40" : ""}`}
                     >
                       {day.isToday && (
                         <span className="absolute top-[10px] right-0 rounded-[4px] bg-[#8380FF] px-[8px] py-[4px] text-[10px] font-[400] font-sans leading-none text-white">
@@ -939,8 +955,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
                         </span>
                       )}
                       <span
-                        className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-[20px] text-[#101828]
-                        }`}
+                        className={`w-[72px] h-[50px] rounded-full flex items-center justify-center text-[20px] text-[#101828]`}
                         // style={isActive ? {
                           // boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -4px rgba(0, 0, 0, 0.10)"
                         // } : {}}
@@ -956,7 +971,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
               </div>
               <button
                 type="button"
-                className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute top-1/2 transform -translate-y-1/2 z-10 right-0"
+                className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute top-1/2 transform -translate-y-1/2 z-10 right-[1%]"
                 onClick={() => changeWeek(1)}
                 disabled={startDate >= maxSelectableDate}
                 style={{
@@ -1054,7 +1069,16 @@ const SchedulerPage = ({ setSesionStorage }) => {
                           </span>
                         </div>
                       </div>
-                      <div className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%]`}>
+                      <div className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%] relative overflow-hidden`}>
+                        {selectedColumnIndex >= 0 && (
+                          <div
+                            className="pointer-events-none absolute top-0 bottom-0 z-0 bg-[#EFEEFB]"
+                            style={{
+                              left: `calc(${calendarGridOffsetPercent}% + ${(selectedColumnIndex * calendarGridWidthPercent) / 7}%)`,
+                              width: `calc(${calendarGridWidthPercent}% / 7)`,
+                            }}
+                          />
+                        )}
                         <FullCalendar
                           headerToolbar={false}
                           dayHeaders={false}

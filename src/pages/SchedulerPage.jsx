@@ -610,9 +610,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
     [doctorsWithEvents]
   );
 
-  let _height = window.innerHeight;
-  let _width = window.innerWidth;
-
   useEffect(() => {
     if (doctorsWithEvents.length !== 0 && calendarRefs[0]?.current !== null) {
       queueMicrotask(() => {
@@ -826,27 +823,13 @@ const SchedulerPage = ({ setSesionStorage }) => {
   return (
     <>
       <div
-      // h-[calc(100vh-200px)] - можна це вкинути
-        className={`pt-[20px] pb-[20px] bg-white mx-auto rounded-[10px] overflow-hidden`}
+        className={`bg-white mx-auto rounded-[10px] overflow-hidden h-full min-h-0 flex flex-col`}
         style={{
           boxShadow: "0 4px 20px -1px rgba(0, 0, 0, 0.06)",
           width: widthBlock,
-          height:
-            _height >= 1080
-              ? _width > 1280
-                ? 940
-                : 980
-              : _width > 1280
-              ? _height < 1000
-                ? _height - 100
-                : _height - 130
-              : _height < 1000
-              ? _height - 100
-              : _height - 100,
-          minHeight: 688,
         }}
       >
-        <div className={`flex relative bg-white border-b border-[#E5E5EA]`}>
+        <div className={`flex relative bg-white border-b border-[#E5E5EA] flex-shrink-0`}>
           <div className={`lg:w-[260px] xl:w-[30%] flex flex-col items-start gap-4 text-start lg:p-4 xl:px-10`}>
             <div className={`text-[30px] text-[#333] font-semibold font-sans`}>
               Select date and time
@@ -1027,97 +1010,82 @@ const SchedulerPage = ({ setSesionStorage }) => {
             </div>
           </div>
         </div> */}
-        <Scrollbar
-  style={{
-    height:
-      _height >= 1080
-        ? _width > 1280
-          ? 740
-          : 740
-        : _width < 1280
-        ? _height >= 1000
-          ? _height - 340
-          : _height - 340
-        : _height >= 1000
-        ? _height - 330
-        : _height - 300,
-    minHeight: 439,
-  }}
-  trackYProps={{ className: "trackY" }}
-  thumbYProps={{ className: "thumbY" }}
->
-  <div>
-    {shouldShowWeekSpinner ? (
-      <div className="flex items-center justify-center py-20">
-        <Spinner />
-      </div>
-    ) : memoizedDoctorsWithProcessedEvents && memoizedDoctorsWithProcessedEvents.length > 0 ? (
-      memoizedDoctorsWithProcessedEvents.map((item, i) => {
-        return (
-          <div
-            className={`flex border-b border-b-[#E5E5EA] ${
-              i % 2 === 0 ? "bg-white" : "bg-[#F1F2FA]"
-            }`}
-            key={item.id || i} 
+        <div className="flex-1 min-h-0">
+          <Scrollbar
+            style={{ height: "100%", WebkitBorderBottomLeftRadius: 8, WebkitBorderBottomRightRadius: 8 }}
+            trackYProps={{ className: "trackY" }}
+            thumbYProps={{ className: "thumbY" }}
           >
-            <div
-              className={`flex lg:flex-col xl:flex-row lg:justify-center xl:justify-normal lg:items-start xl:items-center lg:py-3 xl:py-10 lg:pl-5 xl:pl-10 lg:w-[260px] xl:w-[30%] border-r border-r-[#E5E5EA] items-center`}
-            >
-              <div
-                className={` bg-transparent  w-[48px] h-[48px] mr-[25px] lg:mb-3 xl:mb-0`}
-              >
-                <img
-                  className={`rounded-[25px]`}
-                  src={item.avatar || WithoutAvatar}
-                  alt="avatar"
-                />
-              </div>
-              <div className={`flex flex-col`}>
-                <span
-                  className={`uppercase text-[16px]/[22px] text-[#D2D2D2] font-nunito font-bold tracking-[0.72px] lg:mb-3 xl:mb-0`}
-                >
-                  {item.speciality}
-                </span>
-                <span
-                  className={`text-[18px]/[25px] text-[#6C6C6C] font-nunito font-semibold tracking-[0.81px]`}
-                >
-                  {item.name}
-                </span>
-              </div>
+            <div>
+              {shouldShowWeekSpinner ? (
+                <div className="flex items-center justify-center py-20">
+                  <Spinner />
+                </div>
+              ) : memoizedDoctorsWithProcessedEvents &&
+                memoizedDoctorsWithProcessedEvents.length > 0 ? (
+                memoizedDoctorsWithProcessedEvents.map((item, i) => {
+                  return (
+                    <div
+                      className={`flex border-b border-b-[#E5E5EA] bg-white`}
+                      key={item.id || i}
+                    >
+                      <div
+                        className={`flex lg:flex-col xl:flex-row lg:justify-center xl:justify-normal lg:items-start xl:items-center lg:py-3 xl:py-10 lg:pl-5 xl:pl-10 lg:w-[260px] xl:w-[30%] border-r border-r-[#E5E5EA] items-center`}
+                      >
+                        <div
+                          className={` bg-transparent  w-[48px] h-[48px] mr-[25px] lg:mb-3 xl:mb-0`}
+                        >
+                          <img
+                            className={`rounded-[25px]`}
+                            src={item.avatar || WithoutAvatar}
+                            alt="avatar"
+                          />
+                        </div>
+                        <div className={`flex flex-col`}>
+                          <span
+                            className={`uppercase text-[16px]/[22px] text-[#D2D2D2] font-nunito font-bold tracking-[0.72px] lg:mb-3 xl:mb-0`}
+                          >
+                            {item.speciality}
+                          </span>
+                          <span
+                            className={`text-[18px]/[25px] text-[#6C6C6C] font-nunito font-semibold tracking-[0.81px]`}
+                          >
+                            {item.name}
+                          </span>
+                        </div>
+                      </div>
+                      <div className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%]`}>
+                        <FullCalendar
+                          headerToolbar={false}
+                          dayHeaders={false}
+                          plugins={[dayGridPlugin]}
+                          initialView="dayGridSeven"
+                          views={{
+                            dayGridSeven: {
+                              type: "dayGrid",
+                              duration: { days: 7 },
+                              dateAlignment: "day",
+                            },
+                          }}
+                          events={item.processedEvents}
+                          eventContent={TimeAppointment}
+                          height={"auto"}
+                          ref={calendarRefs[i]}
+                          initialDate={startDate}
+                          eventClick={createEventClickHandler(item)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex items-center justify-center py-10 text-gray-500">
+                  No slots available
+                </div>
+              )}
             </div>
-            <div
-              className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%]`}
-            >
-              <FullCalendar
-                headerToolbar={false}
-                dayHeaders={false}
-                plugins={[dayGridPlugin]}
-                initialView="dayGridSeven"
-                views={{
-                  dayGridSeven: {
-                    type: "dayGrid",
-                    duration: { days: 7 },
-                    dateAlignment: "day",
-                  },
-                }}
-                events={item.processedEvents}
-                eventContent={TimeAppointment}
-                height={"auto"}
-                ref={calendarRefs[i]}
-                initialDate={startDate}
-                eventClick={createEventClickHandler(item)}
-              />
-            </div>
-          </div>
-        );
-      })
-    ) : (
-      <div className="flex items-center justify-center py-10 text-gray-500">
-        No slots available
-      </div>
-    )}
-  </div>
-</Scrollbar>
+          </Scrollbar>
+        </div>
       </div>
     </>
   );

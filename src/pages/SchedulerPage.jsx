@@ -13,16 +13,13 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import { Scrollbar } from "react-scrollbars-custom";
 import { Listbox, Transition } from "@headlessui/react";
 import SelfBookingStore from "../store/SelfBookingStore";
-import {
-  get_Slot_Apoiment,
-  get_Apoiment_Types_Self_Booking,
-  get_Doctor_By_Type_Id,
-} from "./request/requestSelfBooking";
+import { get_Apoiment_Types_Self_Booking } from "./request/requestSelfBooking";
 import Spinner from "./helpers/Spinner";
 import WithoutAvatar from "../assets/images/svg/NoAvatar.svg";
 import moment from "moment";
 import useAuth from "../store/useAuth";
 import DatePicker from "react-datepicker";
+import { selfBookingBackendHelper } from "./helpers/backendHelpers";
 import "react-datepicker/dist/react-datepicker.css";
 
 const MonthYearPickerButton = forwardRef(({ value, onClick, isOpen }, ref) => (
@@ -56,7 +53,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
   );
   const [events, setEvents] = useState(null);
   const [doctors, setDoctors] = useState(null);
-  const [doctorsWithEvents, setDoctorsWithEvents] = useState([]);
   const todayDate = useMemo(() => {
     const date = new Date();
     date.setHours(0, 0, 0, 0);
@@ -86,28 +82,31 @@ const SchedulerPage = ({ setSesionStorage }) => {
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const {auth} = useAuth();
+  const backendHelper = useMemo(() => selfBookingBackendHelper(), []);
 
   const doctorCacheRef = useRef({});
   const slotCacheRef = useRef({});
-  const pendingDoctorRequestRef = useRef(null);
-  const pendingSlotRequestRef = useRef(null);
+  const doctorInFlightRef = useRef(new Map());
+  const slotInFlightRef = useRef(new Map());
+  const blockingRequestsRef = useRef({});
+  const currentAppointmentTypeIdRef = useRef(null);
+  const currentStartDateRef = useRef(todayDate);
+  const currentWeekKeyRef = useRef("");
   const touchStartXRef = useRef(null);
-
-  const {
-    data: GetSlotApoimentData,
-    setText: GetSlotApoimentInformation,
-  } = get_Slot_Apoiment();
-  
-  const {
-    data: GetDoctorByTypeIdData,
-    setText: GetDoctorByTypeIdInformation,
-  } = get_Doctor_By_Type_Id();
 
   const getWeekDates = useCallback((weekStartDate) => {
     return Array.from({ length: 7 }).map((_, index) =>
       moment(weekStartDate).add(index, "days").format("YYYY-MM-DD")
     );
   }, []);
+
+  const getWeekKey = useCallback(
+    (appointmentTypeId, weekStartDate) => {
+      if (!appointmentTypeId || !weekStartDate) return "";
+      return `${appointmentTypeId}:${getWeekDates(weekStartDate).join("|")}`;
+    },
+    [getWeekDates]
+  );
 
   const getCacheBucket = useCallback((appointmentTypeId) => {
     if (!slotCacheRef.current[appointmentTypeId]) {
@@ -126,7 +125,26 @@ const SchedulerPage = ({ setSesionStorage }) => {
       const weekShifts = weekDates.flatMap(
         (day) => cacheBucket.shiftsByDate[day] || []
       );
-      setEvents(weekShifts);
+      const buildSignature = (shifts) =>
+        (shifts || [])
+          .map((shift) => {
+            const userId = shift?.shift?.userId ?? "";
+            const cabinetId = shift?.shift?.cabinetId ?? "";
+            const slots = (shift?.appointmentSlot || [])
+              .map((slot) => `${slot.startTime}|${slot.endTime}`)
+              .sort()
+              .join(",");
+            return `${userId}|${cabinetId}|${slots}`;
+          })
+          .sort()
+          .join("||");
+
+      setEvents((prevEvents) => {
+        if (buildSignature(prevEvents) === buildSignature(weekShifts)) {
+          return prevEvents;
+        }
+        return weekShifts;
+      });
     },
     [getCacheBucket, getWeekDates]
   );
@@ -187,11 +205,209 @@ const SchedulerPage = ({ setSesionStorage }) => {
     setSelectedSlot(null);
     updateDoctorInStorage(null);
   }, [updateDoctorInStorage]);
+
+  const activeAppointmentTypeId = selectedAppointment?.id || storedAppointmentTypeId;
+  const shouldShowWeekSpinner = isLoadingData;
+
+  useEffect(() => {
+    currentAppointmentTypeIdRef.current = activeAppointmentTypeId;
+  }, [activeAppointmentTypeId]);
+
+  useEffect(() => {
+    currentStartDateRef.current = startDate;
+  }, [startDate]);
+
+  useEffect(() => {
+    currentWeekKeyRef.current = getWeekKey(activeAppointmentTypeId, startDate);
+  }, [activeAppointmentTypeId, getWeekKey, startDate]);
+
+  const syncLoadingState = useCallback(() => {
+    const visibleWeekKey = currentWeekKeyRef.current;
+    const visibleCount = visibleWeekKey
+      ? blockingRequestsRef.current[visibleWeekKey] || 0
+      : 0;
+    setIsLoadingData(visibleCount > 0);
+  }, []);
+
+  const startBlockingForWeek = useCallback(
+    (weekKey) => {
+      if (!weekKey) return;
+      blockingRequestsRef.current[weekKey] =
+        (blockingRequestsRef.current[weekKey] || 0) + 1;
+      syncLoadingState();
+    },
+    [syncLoadingState]
+  );
+
+  const finishBlockingForWeek = useCallback(
+    (weekKey) => {
+      if (!weekKey) return;
+      const currentCount = blockingRequestsRef.current[weekKey] || 0;
+      if (currentCount <= 1) {
+        delete blockingRequestsRef.current[weekKey];
+      } else {
+        blockingRequestsRef.current[weekKey] = currentCount - 1;
+      }
+      syncLoadingState();
+    },
+    [syncLoadingState]
+  );
+
+  const applySlotResponseToCache = useCallback(
+    (appointmentTypeId, requestedDates, fetchedShifts) => {
+      const cacheBucket = getCacheBucket(appointmentTypeId);
+      const nextShiftsByDate = {};
+      let hasAnyChanges = false;
+
+      requestedDates.forEach((day) => {
+        nextShiftsByDate[day] = [];
+      });
+
+      fetchedShifts.forEach((shift) => {
+        const dayKey = getShiftDateKey(shift);
+        if (!dayKey) return;
+        if (!nextShiftsByDate[dayKey]) {
+          nextShiftsByDate[dayKey] = [];
+        }
+        nextShiftsByDate[dayKey].push(shift);
+      });
+
+      requestedDates.forEach((day) => {
+        const prevDayShifts = cacheBucket.shiftsByDate[day] || [];
+        const nextDayShifts = nextShiftsByDate[day] || [];
+        const isSameDay =
+          getDaySignature(prevDayShifts) === getDaySignature(nextDayShifts);
+
+        cacheBucket.loadedDates.add(day);
+        if (!isSameDay) {
+          cacheBucket.shiftsByDate[day] = nextDayShifts;
+          hasAnyChanges = true;
+        }
+      });
+
+      return hasAnyChanges;
+    },
+    [getCacheBucket, getDaySignature, getShiftDateKey]
+  );
+
+  const fetchDoctors = useCallback(
+    ({ appointmentTypeId, weekKey, blocking }) => {
+      const cachedDoctors = doctorCacheRef.current[appointmentTypeId];
+      if (cachedDoctors) {
+        if (currentAppointmentTypeIdRef.current === appointmentTypeId) {
+          setDoctors(cachedDoctors);
+        }
+        return Promise.resolve(cachedDoctors);
+      }
+
+      if (doctorInFlightRef.current.has(appointmentTypeId)) {
+        return doctorInFlightRef.current.get(appointmentTypeId);
+      }
+
+      if (blocking) {
+        startBlockingForWeek(weekKey);
+      }
+
+      const promise = backendHelper
+        .getDoctorByTypeId({
+          bookingToken: auth,
+          appointmentTypeId,
+        })
+        .then((response) => {
+          const nextDoctors = response?.data?.result || [];
+          doctorCacheRef.current[appointmentTypeId] = nextDoctors;
+          if (currentAppointmentTypeIdRef.current === appointmentTypeId) {
+            setDoctors(nextDoctors);
+          }
+          return nextDoctors;
+        })
+        .finally(() => {
+          doctorInFlightRef.current.delete(appointmentTypeId);
+          if (blocking) {
+            finishBlockingForWeek(weekKey);
+          }
+        });
+
+      doctorInFlightRef.current.set(appointmentTypeId, promise);
+      return promise;
+    },
+    [auth, backendHelper, finishBlockingForWeek, startBlockingForWeek]
+  );
+
+  const fetchSlots = useCallback(
+    ({ appointmentTypeId, requestedDates, weekKey, blocking, background }) => {
+      if (!requestedDates || requestedDates.length === 0) {
+        return Promise.resolve();
+      }
+
+      const requestDates = [...requestedDates];
+      const requestKey = `${appointmentTypeId}:${requestDates[0]}:${requestDates[requestDates.length - 1]}`;
+
+      if (slotInFlightRef.current.has(requestKey)) {
+        return slotInFlightRef.current.get(requestKey);
+      }
+
+      if (blocking) {
+        startBlockingForWeek(weekKey);
+      }
+
+      const promise = backendHelper
+        .getSlotApoimet({
+          bookingToken: auth,
+          appointmentTypeId,
+          startDate: requestDates[0],
+          endDate: requestDates[requestDates.length - 1],
+        })
+        .then((response) => {
+          const fetchedShifts = response?.data?.result?.shifts || [];
+          const hasChanges = applySlotResponseToCache(
+            appointmentTypeId,
+            requestDates,
+            fetchedShifts
+          );
+          const isCurrentTypeVisible =
+            currentAppointmentTypeIdRef.current === appointmentTypeId;
+          if (!isCurrentTypeVisible) return;
+
+          const visibleWeekStart = currentStartDateRef.current;
+          const visibleWeekKey = getWeekKey(appointmentTypeId, visibleWeekStart);
+          if (visibleWeekKey !== weekKey) return;
+
+          if (background && hasChanges) {
+            startBlockingForWeek(weekKey);
+            updateVisibleEventsFromCache(appointmentTypeId, visibleWeekStart);
+            requestAnimationFrame(() => {
+              finishBlockingForWeek(weekKey);
+            });
+            return;
+          }
+
+          updateVisibleEventsFromCache(appointmentTypeId, visibleWeekStart);
+        })
+        .finally(() => {
+          slotInFlightRef.current.delete(requestKey);
+          if (blocking) {
+            finishBlockingForWeek(weekKey);
+          }
+        });
+
+      slotInFlightRef.current.set(requestKey, promise);
+      return promise;
+    },
+    [
+      applySlotResponseToCache,
+      auth,
+      backendHelper,
+      finishBlockingForWeek,
+      getWeekKey,
+      startBlockingForWeek,
+      updateVisibleEventsFromCache,
+    ]
+  );
   
   useEffect(() => {
     const appointmentTypeId = selectedAppointment?.id || storedAppointmentTypeId;
     if (!appointmentTypeId || !auth) {
-      setDoctorsWithEvents([]);
       setDoctors(null);
       setEvents(null);
       setIsLoadingData(false);
@@ -211,74 +427,63 @@ const SchedulerPage = ({ setSesionStorage }) => {
     const missingDates = getMissingDatesForWeek(appointmentTypeId, startDate);
     const shouldFetchDoctors = !cachedDoctors;
     const shouldFetchMissingSlots = missingDates.length > 0;
-    const shouldRefreshCachedWeek = missingDates.length === 0;
-    const shouldShowSpinner = shouldFetchDoctors || shouldFetchMissingSlots;
+    const weekKey = getWeekKey(appointmentTypeId, startDate);
 
     if (shouldFetchMissingSlots) {
       clearSelectedSlot();
     }
 
-    if (!shouldFetchDoctors && !shouldFetchMissingSlots && !shouldRefreshCachedWeek) {
-      setIsLoadingData(false);
-      return;
-    }
-
-    setIsLoadingData(shouldShowSpinner);
-
     if (shouldFetchDoctors) {
-      pendingDoctorRequestRef.current = { appointmentTypeId };
-      GetDoctorByTypeIdInformation({
-        bookingToken: auth,
+      fetchDoctors({
         appointmentTypeId,
+        weekKey,
+        blocking: true,
       });
     }
 
     if (shouldFetchMissingSlots) {
-      pendingSlotRequestRef.current = {
-        mode: "missing",
+      fetchSlots({
         appointmentTypeId,
         requestedDates: missingDates,
-        showSpinner: true,
-      };
-      GetSlotApoimentInformation({
-        bookingToken: auth,
-        appointmentTypeId,
-        startDate: missingDates[0],
-        endDate: missingDates[missingDates.length - 1],
+        weekKey,
+        blocking: true,
+        background: false,
       });
       return;
     }
 
-    if (shouldRefreshCachedWeek) {
-      pendingSlotRequestRef.current = {
-        mode: "refresh",
-        appointmentTypeId,
-        requestedDates: weekDates,
-        showSpinner: false,
-      };
-      GetSlotApoimentInformation({
-        bookingToken: auth,
-        appointmentTypeId,
-        startDate: weekDates[0],
-        endDate: weekDates[weekDates.length - 1],
-      });
-    }
+    syncLoadingState();
+    fetchSlots({
+      appointmentTypeId,
+      requestedDates: weekDates,
+      weekKey,
+      blocking: false,
+      background: true,
+    });
   }, [
+    auth,
+    clearSelectedSlot,
+    fetchDoctors,
+    fetchSlots,
+    getMissingDatesForWeek,
+    getWeekDates,
+    getWeekKey,
     selectedAppointment,
     startDate,
-    auth,
     storedAppointmentTypeId,
-    GetDoctorByTypeIdInformation,
-    GetSlotApoimentInformation,
-    clearSelectedSlot,
-    getWeekDates,
-    getMissingDatesForWeek,
+    syncLoadingState,
     updateVisibleEventsFromCache,
   ]);
 
+  useEffect(() => {
+    Object.keys(blockingRequestsRef.current).forEach((weekKey) => {
+      delete blockingRequestsRef.current[weekKey];
+    });
+    syncLoadingState();
+  }, [auth, activeAppointmentTypeId, syncLoadingState]);
+
   const {
     data: GetApoimentTypesSelfBookingData,
-    isLoading: GetApoimentTypesSelfBookingLoading,
     setText: GetApoimentTypesSelfBookingInformation,
   } = get_Apoiment_Types_Self_Booking();
 
@@ -293,7 +498,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
         bookingToken: auth,
       });
     }
-  }, [auth]);
+  }, [auth, GetApoimentTypesSelfBookingInformation]);
 
   useEffect(() => {
     if (!storedAppointmentTypeId || appointmentTypeOptions.length === 0) return;
@@ -336,80 +541,12 @@ const SchedulerPage = ({ setSesionStorage }) => {
     return currentType?.label || "Select visit type";
   }, [appointmentTypeOptions, selectedAppointment, storedAppointmentTypeId]);
 
-  useEffect(() => {
-    const pendingDoctorRequest = pendingDoctorRequestRef.current;
-    if (!pendingDoctorRequest || !GetDoctorByTypeIdData?.data?.result) return;
-
-    doctorCacheRef.current[pendingDoctorRequest.appointmentTypeId] =
-      GetDoctorByTypeIdData.data.result;
-    setDoctors(GetDoctorByTypeIdData.data.result);
-    pendingDoctorRequestRef.current = null;
-    setIsLoadingData(Boolean(pendingSlotRequestRef.current));
-  }, [GetDoctorByTypeIdData]);
-
-  useEffect(() => {
-    const pendingSlotRequest = pendingSlotRequestRef.current;
-    if (!pendingSlotRequest || !GetSlotApoimentData?.data?.result) return;
-
-    const cacheBucket = getCacheBucket(pendingSlotRequest.appointmentTypeId);
-    const fetchedShifts = GetSlotApoimentData.data.result.shifts || [];
-    const nextShiftsByDate = {};
-
-    pendingSlotRequest.requestedDates.forEach((day) => {
-      nextShiftsByDate[day] = [];
-    });
-
-    fetchedShifts.forEach((shift) => {
-      const dayKey = getShiftDateKey(shift);
-      if (!dayKey) return;
-      if (!nextShiftsByDate[dayKey]) {
-        nextShiftsByDate[dayKey] = [];
-      }
-      nextShiftsByDate[dayKey].push(shift);
-    });
-
-    let hasChanges = false;
-    pendingSlotRequest.requestedDates.forEach((day) => {
-      const prevDayShifts = cacheBucket.shiftsByDate[day] || [];
-      const nextDayShifts = nextShiftsByDate[day] || [];
-      const isSameDay =
-        getDaySignature(prevDayShifts) === getDaySignature(nextDayShifts);
-
-      cacheBucket.loadedDates.add(day);
-      if (!isSameDay) {
-        cacheBucket.shiftsByDate[day] = nextDayShifts;
-        hasChanges = true;
-      }
-    });
-
-    const activeAppointmentTypeId = selectedAppointment?.id || storedAppointmentTypeId;
-    if (hasChanges && activeAppointmentTypeId === pendingSlotRequest.appointmentTypeId) {
-      updateVisibleEventsFromCache(activeAppointmentTypeId, startDate);
-    }
-
-    pendingSlotRequestRef.current = null;
-    setIsLoadingData(Boolean(pendingDoctorRequestRef.current));
-  }, [
-    GetSlotApoimentData,
-    getCacheBucket,
-    getDaySignature,
-    getShiftDateKey,
-    selectedAppointment,
-    startDate,
-    storedAppointmentTypeId,
-    updateVisibleEventsFromCache,
-  ]);
-
-  // Виправлений useEffect для обробки doctors і events
-  useEffect(() => {
+  const doctorsWithEvents = useMemo(() => {
     if (!doctors || !events || doctors.length === 0 || events.length === 0) {
-      setDoctorsWithEvents([]);
-      return;
+      return [];
     }
 
-    console.log(events, 'doctors , events');
-     
-    const newArrayDoctors = doctors.map((item) => ({
+    return doctors.map((item) => ({
       id: item.userId,
       avatar: item.profilePicture,
       name: `${item.firstName + " " + item.lastName}`,
@@ -437,8 +574,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
           })
         ),
     }));
-    
-    setDoctorsWithEvents(newArrayDoctors);
   }, [doctors, events]);
 
   const TimeAppointment = (eventInfo) => {
@@ -470,7 +605,10 @@ const SchedulerPage = ({ setSesionStorage }) => {
     );
   };
 
-  let calendarRefs = doctorsWithEvents.map((item) => createRef(item.id));
+  const calendarRefs = useMemo(
+    () => doctorsWithEvents.map(() => createRef()),
+    [doctorsWithEvents]
+  );
 
   let _height = window.innerHeight;
   let _width = window.innerWidth;
@@ -489,7 +627,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
         });
       });
     }
-  }, [doctorsWithEvents, calendarRefs]);
+  }, [calendarRefs, doctorsWithEvents, startDate]);
 
   const memoizedDoctorsWithEvents = useMemo(() => {
     return doctorsWithEvents?.map((item) => ({
@@ -900,7 +1038,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
   thumbYProps={{ className: "thumbY" }}
 >
   <div>
-    {isLoadingData ? (
+    {shouldShowWeekSpinner ? (
       <div className="flex items-center justify-center py-20">
         <Spinner />
       </div>

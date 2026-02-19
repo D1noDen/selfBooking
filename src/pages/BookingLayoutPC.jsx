@@ -8,7 +8,6 @@ import SchedulerPage from "./SchedulerPage";
 import ForWhoPage from "./ForWhoPage";
 import ForSomeoneElsePage from "./ForSomeoneElsePage";
 import ForUserPage from "./ForUserPage";
-import ForGuestPage from "./ForGuestPage";
 import FinalPage from "./FinalPage";
 import AppointmentConfirmationPage from "./AppointmentConfirmationPage";
 import SelfBookingStore from "../store/SelfBookingStore";
@@ -74,7 +73,7 @@ const BookingLayoutPC = ({
           ) : appPage === "for who" ? (
             <ForWhoPage />
           ) : appPage === "for guest page" ? (
-            <ForGuestPage mainBlock={mainBlock} />
+            <ForUserPage />
           ) : appPage === "for someone else" ? (
             <ForSomeoneElsePage />
           ) : appPage === "for user" ? (

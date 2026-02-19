@@ -13,6 +13,14 @@ import DatePickerField from "./components/DatePickerField";
 const genderOptions = ["Male", "Female", "Other"];
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+const allowedNameCharsRegExp = /[^\p{L}\p{M}\s'-]/gu;
+
+const sanitizeNameInput = (value = "") => value.replace(allowedNameCharsRegExp, "");
+const nameRules = {
+  required: "Field is required",
+  validate: (value) =>
+    value?.trim().length > 0 ? true : "Field is required",
+};
 
 const ForUserPage = () => {
   const { register, control, handleSubmit, setValue, trigger, watch, formState: { errors } } = useForm({
@@ -150,7 +158,8 @@ const ForUserPage = () => {
             id="firstName"
             register={register}
             errors={errors}
-            rules={{ required: "Field is required" }}
+            rules={nameRules}
+            sanitizeInput={sanitizeNameInput}
           />
           <InputBlock
             label="Last Name *"
@@ -159,7 +168,8 @@ const ForUserPage = () => {
             id="lastName"
             register={register}
             errors={errors}
-            rules={{ required: "Field is required" }}
+            rules={nameRules}
+            sanitizeInput={sanitizeNameInput}
           />
           <DatePickerField
             label="Date of Birth *"
@@ -169,7 +179,6 @@ const ForUserPage = () => {
             control={control}
             errors={errors}
             rules={{ required: "Select date" }}
-            maxYearsFromToday={10}
             maxDate={new Date()}
           />
 
@@ -296,7 +305,16 @@ const ForUserPage = () => {
   );
 };
 
-const InputBlock = ({ label, placeholder, width, id, type, register, errors, rules }) => {
+const InputBlock = ({ label, placeholder, width, id, type, register, errors, rules, sanitizeInput }) => {
+  const registerOptions = sanitizeInput
+    ? {
+        ...rules,
+        onChange: (event) => {
+          event.target.value = sanitizeInput(event.target.value);
+        },
+      }
+    : rules;
+
   return (
     <div className={`inputBlock flex flex-col ${width} mb-[26px]`}>
       <label htmlFor={id} className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-[2px]">
@@ -307,7 +325,7 @@ const InputBlock = ({ label, placeholder, width, id, type, register, errors, rul
         id={id}
         placeholder={placeholder}
         className="px-[12px] py-[10px] border-[2px] border-[#E8E8E9] bg-white rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px]"
-        {...register(id, rules)}
+        {...register(id, registerOptions)}
       />
       {errors?.[id] && (
         <p className="mt-1 text-red-500 text-[12px]/[14px]">

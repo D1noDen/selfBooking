@@ -31,7 +31,7 @@ const PhoneNumberField = ({
 
   const currentCountry =
     COUNTRY_PHONE_OPTIONS.find((item) => item.code === selectedCountryCode) ||
-    COUNTRY_PHONE_OPTIONS[0];
+    COUNTRY_PHONE_OPTIONS[1];
 
   return (
     <div className={`flex flex-col ${widthClass} mb-[26px] relative ${className}`}>

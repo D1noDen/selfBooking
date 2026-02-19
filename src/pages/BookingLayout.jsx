@@ -64,7 +64,7 @@ const MainLayout = () => {
     "choose a convenient time": "scheduler",
     "continue as mobile": "continue as",
     "for who mobile": "for who",
-    "for patient mobile": "for guest page",
+    "for patient mobile": "for user",
     "for someone else guardian mobile": "for someone else",
     "appointment information mobile": "appointment confirmation",
     "complete mobile": "complete",
@@ -92,6 +92,12 @@ const MainLayout = () => {
       setAppPage(mappedPage);
     }
   }, [pageSize[0]]);
+
+  useEffect(() => {
+    if (appPage !== "for guest page") return;
+    setHeaderPage(2);
+    setAppPage(pageSize[0] < 1024 ? "for patient mobile" : "for user");
+  }, [appPage, pageSize, setAppPage, setHeaderPage]);
 
   useEffect(() => {
     const bookingInfo = getBookingInformation();

@@ -16,15 +16,14 @@ import SelfBookingStore from "../store/SelfBookingStore";
 const BookingLayoutPC = ({
   types,
   setSesionStorage,
-  paddingB,
   appPage,
   headerPage,
 }) => {
   const mainBlock = useRef(0);
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
-  let _width = window.innerWidth;
-  let _height = window.innerHeight;
+  const widthBlock = SelfBookingStore((state) => state.widthBlock);
+  const isDesktopNarrow = window.innerWidth < 1024;
 
   useEffect(() => {
     if (appPage === "continue as") {
@@ -35,46 +34,52 @@ const BookingLayoutPC = ({
 
   return (
     <div
-      className={`bookingAppointmentPage  pt-[33px] pb-[35px] h-full w-screen ${
-        _width < 1024 ? "bg-[#FFF]" : "bg-[#F4F7FF]"
-      } ${paddingB ? "pb-[260px]" : ""}`}
-      style={{
-        // height: _height < mainBlock.current.scrollHeight ? `100%` : `100vh`,
-        minHeight: 768,
-      }}
+      className={`bookingAppointmentPage h-[100dvh] overflow-hidden w-full ${
+        isDesktopNarrow ? "bg-[#FFF]" : "bg-[#F4F7FF]"
+      }`}
       ref={mainBlock}
       onClick={() => {}}
     >
-     
-      <div className="bookingAppointmentWrapper max-w-[1420px] mx-auto  h-full">
-        {appPage !== "complete" && <Header />}
-        {appPage === "visit type" ? (
-          <VisiteTypePage
-            visitTypeArr={types}
-            setSesionStorage={setSesionStorage}
-          />
-        ) : appPage === "scheduler" ? (
-          <SchedulerPage
-            setSesionStorage={setSesionStorage}
-            visitTypeArr={types}
-          />
-        ) : appPage === "for who" ? (
-          <ForWhoPage />
-        ) : appPage === "for guest page" ? (
-          <ForGuestPage mainBlock={mainBlock} />
-        ) : appPage === "for someone else" ? (
-          <ForSomeoneElsePage />
-        ) : appPage === "for user" ? (
-          <ForUserPage />
-        ) : appPage === "appointment confirmation" ? (
-          <AppointmentConfirmationPage />
-        ) : appPage === "complete" ? (
-          <FinalPage />
-        ) : (
-          ""
+      <div
+        className="bookingAppointmentWrapper mx-auto h-full flex flex-col min-h-0 pt-[33px] pb-[35px]"
+        style={{ width: window.innerWidth < 600 ? "auto" : widthBlock }}
+      >
+        {appPage !== "complete" && (
+          <div className="flex-shrink-0">
+            <Header />
+          </div>
         )}
-        {headerPage === 0 && <Footer />}
-        {appPage !== "complete" && <StepNavigationFooter />}
+        <main className="scrollmainContent flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          {appPage === "visit type" ? (
+            <VisiteTypePage
+              visitTypeArr={types}
+              setSesionStorage={setSesionStorage}
+            />
+          ) : appPage === "scheduler" ? (
+            <SchedulerPage
+              setSesionStorage={setSesionStorage}
+              visitTypeArr={types}
+            />
+          ) : appPage === "for who" ? (
+            <ForWhoPage />
+          ) : appPage === "for guest page" ? (
+            <ForGuestPage mainBlock={mainBlock} />
+          ) : appPage === "for someone else" ? (
+            <ForSomeoneElsePage />
+          ) : appPage === "for user" ? (
+            <ForUserPage />
+          ) : appPage === "appointment confirmation" ? (
+            <AppointmentConfirmationPage />
+          ) : appPage === "complete" ? (
+            <FinalPage />
+          ) : (
+            ""
+          )}
+        </main>
+        <div className="flex-shrink-0">
+          {headerPage === 0 && <Footer />}
+          {appPage !== "complete" && <StepNavigationFooter />}
+        </div>
       </div>
     </div>
   );

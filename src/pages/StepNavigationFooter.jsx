@@ -104,10 +104,10 @@ const StepNavigationFooter = () => {
       <div className="w-[95%] mx-auto flex items-center justify-between">
         <button
           type="button"
-          className={`h-[44px] px-5 rounded-[8px] text-[15px] font-sans font-[500] flex items-center gap-[10px] duration-300 ${
+          className={`h-[44px] px-5 rounded-[8px] text-[15px] font-sans font-[500] flex items-center gap-[10px] duration-300 transition-all ${
             isBackDisabled
               ? "cursor-not-allowed text-gray-400 bg-[#F6F7FB]"
-              : "text-[#0A0A0A] bg-[#FFFFFF] shadow-[0_1px_2px_0_rgba(0,0,0,0.08)]"
+              : "text-[#0A0A0A] bg-[#FFFFFF] shadow-[0_1px_2px_0_rgba(0,0,0,0.08)] hover:bg-[#8380ff] hover:text-white group"
           }`}
           style={{boxShadow: "0px 2px 12px 0px #0000000F"}}
           onClick={handleBack}
@@ -123,7 +123,7 @@ const StepNavigationFooter = () => {
           >
             <path
               d="M4.6665 8.66699L0.666504 4.66699L4.6665 0.666992"
-              stroke={isBackDisabled ? "#9AA1C2" : "#0A0A0A"}
+              className={`${isBackDisabled ? "stroke-[#9AA1C2]" : "group-hover:stroke-white stroke-[#0A0A0A]"}`}
               strokeWidth="1.33333"
               strokeLinecap="round"
               strokeLinejoin="round"

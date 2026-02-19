@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { patchBookingInformation } from "../helpers/bookingStorage";
 
 const SelfBookingStore = create(
   persist(
@@ -8,7 +9,10 @@ const SelfBookingStore = create(
       setHeaderPage: (page) => set({ headerPage: page }),
 
     appointmentData : null ,
-    setAppointmentData : (data) => set ( { appointmentData : data } ) ,
+    setAppointmentData : (data) => {
+      set({ appointmentData: data });
+      patchBookingInformation({ appointmentData: data });
+    },
     
       appPage: "visite type",
       setAppPage: (namePage) => set({ appPage: namePage }),
@@ -32,34 +36,49 @@ const SelfBookingStore = create(
       setPaddingB: (bool) => set({ paddingB: bool }),
 
       patientInfo: {},
-      setPatientInfo: (dataObj) => set({ patientInfo: dataObj }),
+      setPatientInfo: (dataObj) => {
+        set({ patientInfo: dataObj });
+        patchBookingInformation({ patientInfo: dataObj });
+      },
 
       chosenDoctor: {},
-      setChosenDoctor: (dataObj) => set({ chosenDoctor: dataObj }),
+      setChosenDoctor: (dataObj) => {
+        set({ chosenDoctor: dataObj });
+        patchBookingInformation({ chosenDoctor: dataObj });
+      },
 
       calendarApi: {},
       setCalendarApi: (dataObj) => set({ calendarApi: dataObj }),
 
       appointmentTime: {},
-      setAppointmentTime: (dataObj) => set({ appointmentTime: dataObj }),
+      setAppointmentTime: (dataObj) => {
+        set({ appointmentTime: dataObj });
+        patchBookingInformation({ appointmentTime: dataObj });
+      },
 
       schedulerHasSelection: false,
       setSchedulerHasSelection: (value) => set({ schedulerHasSelection: value }),
 
       guardianInfo: {},
-      setGuardianInfo: (dataObj) => set({ guardianInfo: dataObj }),
+      setGuardianInfo: (dataObj) => {
+        set({ guardianInfo: dataObj });
+        patchBookingInformation({ guardianInfo: dataObj });
+      },
 
       forSomeoneElseConsent: false,
       setForSomeoneElseConsent: (bool) => set({ forSomeoneElseConsent: bool }),
 
       confirmationData: null,
-      setConfirmationData: (data) => set({ confirmationData: data }),
+      setConfirmationData: (data) => {
+        set({ confirmationData: data });
+        patchBookingInformation({ confirmationData: data });
+      },
       
     }),
   
     {
       name: "selfBooking-storage",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

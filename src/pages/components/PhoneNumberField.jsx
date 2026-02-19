@@ -11,7 +11,7 @@ const PhoneNumberField = ({
   widthClass = "w-[calc(50%-8px)]",
   phoneFieldName,
   countryFieldName,
-  placeholder = "608484004",
+  placeholder = "000000000",
   register,
   setValue,
   trigger,
@@ -42,11 +42,11 @@ const PhoneNumberField = ({
         {label}
       </label>
 
-      <div className="border-[2px] border-[#E8E8E9] bg-white rounded-[10px] h-[46px] px-[8px] flex items-center gap-[10px]">
+      <div className="border-[2px] border-[#E8E8E9] bg-white rounded-[10px] h-auto py-[7px] px-[8px] flex items-center gap-[10px]">
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
-            className="h-[34px] min-w-[92px] px-[10px] bg-[#F2F3FA] rounded-[8px] flex items-center justify-between gap-[10px] text-[15px]/[20px] font-semibold text-[#333]"
+            className="h-[24px] min-w-[92px] px-[10px] bg-[#F2F3FA] rounded-[8px] flex items-center justify-between gap-[10px] text-[15px]/[20px] font-semibold text-[#333]"
             onClick={() => setIsOpen((prev) => !prev)}
             aria-label={`Select country code, current ${currentCountry.label}`}
           >

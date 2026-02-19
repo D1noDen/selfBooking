@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import SelfBookingStore from "../store/SelfBookingStore";
+import { clearBookingInformation } from "../helpers/bookingStorage";
 
 import FinalPageImage from "../assets/images/self-booking/finalPageImage.gif";
 
@@ -82,7 +83,8 @@ const FinalPage = () => {
             }
             setHeaderPage(0);
             setUser(false);
-            sessionStorage.removeItem("selfBooking-storage");
+            localStorage.removeItem("selfBooking-storage");
+            clearBookingInformation();
           }}
         >
           Book another appointment

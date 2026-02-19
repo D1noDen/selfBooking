@@ -18,10 +18,12 @@
 body {
   font-family: 'Open Sans', sans-serif;
   background-color: #F4F7FF;
+  overflow-x: hidden;
 }
 
 html {
   font-family: 'Open Sans', sans-serif;
+  overflow-x: hidden;
 }
 
 

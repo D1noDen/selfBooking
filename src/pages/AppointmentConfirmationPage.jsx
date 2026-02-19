@@ -10,6 +10,7 @@ import {
 } from "./request/requestSelfBooking";
 import { dateHelper } from "./helpers/dateHelper";
 import Spinner from "./helpers/Spinner";
+import { getBookingInformation } from "../helpers/bookingStorage";
 
 const AppointmentConfirmationPage = () => {
   const { auth } = useAuth();
@@ -24,7 +25,7 @@ const AppointmentConfirmationPage = () => {
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
 
   const bookingInfo = useMemo(
-    () => JSON.parse(sessionStorage.getItem("BookingInformation")) || {},
+    () => getBookingInformation(),
     []
   );
   const data = confirmationData?.formData || {};
@@ -256,7 +257,15 @@ const AppointmentConfirmationPage = () => {
               <div className="ml-4">
                 <div className="text-[#2F3441] font-semibold">{clinicInfo?.clinicName || '-'}</div>
                 <div className="text-[#6B7283]">{clinicInfo?.clinicAddress || "-"}</div>
-                <div className="mt-3 flex items-center text-[#8380FF] text-[14px] font-sans font-medium gap-2 cursor-pointer">
+                <div
+                  className="mt-3 flex items-center text-[#8380FF] text-[14px] font-sans font-medium gap-2 cursor-pointer"
+                  onClick={() => {
+                    const destination = encodeURIComponent(`${clinicInfo?.clinicName || ""} ${clinicInfo?.clinicAddress || ""}`.trim());
+                    if (destination) {
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, "_blank");
+                    }
+                  }}
+                >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2 7.33301L14.6667 1.33301L8.66667 13.9997L7.33333 8.66634L2 7.33301Z" stroke="#8380FF" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>

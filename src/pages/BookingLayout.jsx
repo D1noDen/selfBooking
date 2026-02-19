@@ -8,6 +8,10 @@ import { GlobalHookWindowHeight } from "../helpers/GlobalHookWindowSummary";
 import { get_Apoiment_Types_Self_Booking , get_Clinic_Info} from "./request/requestSelfBooking";
 import useAuth from "../store/useAuth";
 import BookingLayoutMobile from "./BookingLayoutMobile";
+import {
+  getBookingInformation,
+  setBookingInformation,
+} from "../helpers/bookingStorage";
 const MainLayout = () => {
   const pageSize = useResize();
  
@@ -20,10 +24,15 @@ const MainLayout = () => {
   const setWidthBlock = SelfBookingStore((state) => state.setWidthBlock);
   const setPaddingB = SelfBookingStore((state) => state.setPaddingB);
   const paddingB = SelfBookingStore((state) => state.paddingB);
+  const appointmentData = SelfBookingStore((state) => state.appointmentData);
+  const patientInfo = SelfBookingStore((state) => state.patientInfo);
+  const guardianInfo = SelfBookingStore((state) => state.guardianInfo);
+  const appointmentTime = SelfBookingStore((state) => state.appointmentTime);
+  const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
+  const confirmationData = SelfBookingStore((state) => state.confirmationData);
   const [types, setTypes] = useState(null);
   const width = GlobalHookWindowSummary();
   const height = GlobalHookWindowHeight();
-  const mainBlock = useRef(0);
   const {
     data: GetApoimentTypesSelfBookingData,
     isLoading: GetApoimentTypesSelfBookingLoading,
@@ -59,6 +68,10 @@ const MainLayout = () => {
     "guardian exact information": "for someone else",
     "appointment information": "appointment confirmation",
   };
+  const historySyncRef = useRef({
+    initialized: false,
+    skipNextPush: false,
+  });
 
   useEffect(() => {
    
@@ -83,15 +96,7 @@ const MainLayout = () => {
   }, [pageSize[0]]);
 
   useEffect(() => {
-    const bookingInfoRaw = sessionStorage.getItem("BookingInformation");
-    let bookingInfo = {};
-    if (bookingInfoRaw) {
-      try {
-        bookingInfo = JSON.parse(bookingInfoRaw);
-      } catch {
-        bookingInfo = {};
-      }
-    }
+    const bookingInfo = getBookingInformation();
     const hasAppointmentType = Boolean(bookingInfo?.apoimentTypeId?.id);
     const hasSelectedAppointment = Boolean(
       bookingInfo?.doctor?.eventStartDateTime &&
@@ -178,10 +183,77 @@ const MainLayout = () => {
     }
   }, [appPage, _width, _height]);
 
-  const mainLayout = useRef(null);
   const setSesionStorage = (object) => {
-    sessionStorage.setItem("BookingInformation", JSON.stringify(object));
+    setBookingInformation(object);
   };
+
+  useEffect(() => {
+    const bookingInfo = getBookingInformation();
+    setBookingInformation({
+      ...bookingInfo,
+      appointmentData,
+      patientInfo,
+      guardianInfo,
+      appointmentTime,
+      chosenDoctor,
+      confirmationData,
+    });
+  }, [
+    appointmentData,
+    patientInfo,
+    guardianInfo,
+    appointmentTime,
+    chosenDoctor,
+    confirmationData,
+  ]);
+
+  useEffect(() => {
+    const currentState = { appPage, headerPage };
+    const historyState = window.history.state || {};
+    if (!historySyncRef.current.initialized) {
+      historySyncRef.current.initialized = true;
+      if (
+        historyState?.bookingFlow?.appPage !== appPage ||
+        historyState?.bookingFlow?.headerPage !== headerPage
+      ) {
+        window.history.replaceState(
+          { ...historyState, bookingFlow: currentState },
+          ""
+        );
+      }
+      return;
+    }
+
+    if (historySyncRef.current.skipNextPush) {
+      historySyncRef.current.skipNextPush = false;
+      return;
+    }
+
+    window.history.pushState(
+      {
+        ...(window.history.state || {}),
+        bookingFlow: currentState,
+      },
+      ""
+    );
+  }, [appPage, headerPage]);
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      const nextPage = event.state?.bookingFlow?.appPage;
+      const nextHeader = event.state?.bookingFlow?.headerPage;
+      if (typeof nextPage !== "string" || typeof nextHeader !== "number") {
+        return;
+      }
+
+      historySyncRef.current.skipNextPush = true;
+      setHeaderPage(nextHeader);
+      setAppPage(nextPage);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [setAppPage, setHeaderPage]);
 
   // useEffect(() => {
   //   setAppPage("continue as");

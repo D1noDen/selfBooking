@@ -1,5 +1,5 @@
 import SelfBookingStore from "../store/SelfBookingStore";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import moment from "moment";
 import avatar67 from "../assets/images/self-booking/avatar67.png";
@@ -18,6 +18,7 @@ import {
   joinPhoneByCountryCode,
   splitPhoneByCountryCode,
 } from "./helpers/phoneCountry";
+import { getBookingInformation } from "../helpers/bookingStorage";
 
 const ForGuestPage = () => {
   const {
@@ -26,10 +27,9 @@ const ForGuestPage = () => {
     handleSubmit,
     trigger,
     setValue,
+    watch,
   } = useForm({ mode: "all" });
-  const informationWithSorage = JSON.parse(
-    sessionStorage.getItem("BookingInformation")
-  );
+  const informationWithSorage = getBookingInformation();
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const appointmentData = SelfBookingStore((state) => state.appointmentData);
   const setAppointmentData = SelfBookingStore(
@@ -49,6 +49,9 @@ console.log("chosenDoctor:", chosenDoctor);
   const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(
     DEFAULT_COUNTRY_CODE
   );
+  const watchedValues = watch();
+  const hasHydratedRef = useRef(false);
+  const lastDraftRef = useRef("");
   // const auth = {
   //   clinicId: 1,
   //   companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
@@ -226,7 +229,25 @@ console.log("chosenDoctor:", chosenDoctor);
     setSelectedPhoneCountryCode(parsedPhone.countryCode);
     setValue("phoneNumber", parsedPhone.localNumber || "");
     setValue("phoneNumberCountryCode", parsedPhone.countryCode);
+    hasHydratedRef.current = true;
   }, [appointmentData, setValue]);
+
+  useEffect(() => {
+    if (!hasHydratedRef.current) return;
+
+    const payload = {
+      ...watchedValues,
+      phoneNumber: joinPhoneByCountryCode(
+        watchedValues?.phoneNumberCountryCode || selectedPhoneCountryCode,
+        watchedValues?.phoneNumber || ""
+      ),
+    };
+
+    const nextDraft = JSON.stringify(payload);
+    if (lastDraftRef.current === nextDraft) return;
+    lastDraftRef.current = nextDraft;
+    setAppointmentData(payload);
+  }, [watchedValues, selectedPhoneCountryCode, setAppointmentData]);
 
   let _width = window.innerWidth;
   let _height = window.innerHeight;

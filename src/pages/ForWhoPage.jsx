@@ -77,7 +77,7 @@ const BackButton = ({ prevStep, setHeaderPage, humanStatus }) => {
 
     return (
         <div
-            className={`w-[380px] h-[45px] rounded-[10px] bg-white text-[16px]/[22px] text-[#7C67FF] font-nunito font-semibold tracking-[0.72px] mx-auto flex justify-center items-center cursor-pointer hover:shadow-[0px_4px_20px_0px_rgba(0,0,0,0.11)]`}
+            className={`w-[380px] h-[45px] rounded-[10px] bg-white text-[16px]/[22px] text-[#7C67FF] font-sans font-semibold tracking-[0.72px] mx-auto flex justify-center items-center cursor-pointer hover:shadow-[0px_4px_20px_0px_rgba(0,0,0,0.11)]`}
             onClick={() => { prevStep(humanStatus); setHeaderPage(1) }}
         >
             Back

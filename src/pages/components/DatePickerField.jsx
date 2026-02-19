@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useController } from "react-hook-form";
 import { useOnClickOutside } from "../helpers/helpers";
 
@@ -61,6 +61,11 @@ const DatePickerField = ({
   maxYearsFromToday,
 }) => {
   const pickerRef = useRef(null);
+  const monthListRef = useRef(null);
+  const yearListRef = useRef(null);
+  const activeMonthButtonRef = useRef(null);
+  const activeYearButtonRef = useRef(null);
+  const hasOpenedOnceRef = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [pickerViewDate, setPickerViewDate] = useState(new Date());
   const [typedValue, setTypedValue] = useState("");
@@ -137,6 +142,34 @@ const DatePickerField = ({
   const selectedDate = fromIsoDate(field.value);
   const displayValue = selectedDate ? toDisplayDate(selectedDate) : "";
   const inputValue = typedValue || displayValue;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const shouldScrollToLatestOnFirstOpen =
+      !hasOpenedOnceRef.current &&
+      !selectedDate &&
+      !!effectiveMaxDate &&
+      pickerViewDate.getTime() === effectiveMaxDate.getTime();
+
+    const scrollActiveIntoList = (listRef, itemRef, align = "center") => {
+      const listEl = listRef.current;
+      const itemEl = itemRef.current;
+      if (!listEl || !itemEl) return;
+
+      let targetTop = itemEl.offsetTop - listEl.clientHeight / 2 + itemEl.clientHeight / 2;
+      if (align === "end") {
+        targetTop = itemEl.offsetTop - listEl.clientHeight + itemEl.clientHeight;
+      }
+      const maxTop = Math.max(0, listEl.scrollHeight - listEl.clientHeight);
+      listEl.scrollTop = Math.min(Math.max(0, targetTop), maxTop);
+    };
+
+    const align = shouldScrollToLatestOnFirstOpen ? "end" : "center";
+    scrollActiveIntoList(monthListRef, activeMonthButtonRef, align);
+    scrollActiveIntoList(yearListRef, activeYearButtonRef, align);
+    hasOpenedOnceRef.current = true;
+  }, [effectiveMaxDate, isOpen, pickerViewDate, selectedDate]);
 
   const isOutOfRange = (date) => {
     if (effectiveMinDate && date < effectiveMinDate) return true;
@@ -262,11 +295,15 @@ const DatePickerField = ({
 
                 return (
                   <>
-                    <div className="w-[190px] max-h-[360px] scrollmainContent overflow-y-auto pr-2 border-r border-[#E3E4EA]">
+                    <div
+                      ref={monthListRef}
+                      className="w-[190px] max-h-[360px] scrollmainContent overflow-y-auto pr-2 border-r border-[#E3E4EA]"
+                    >
                       {monthNames.map((month, index) => (
                         <button
                           type="button"
                           key={month}
+                          ref={index === pickerMonth ? activeMonthButtonRef : null}
                           className={`w-full px-3 flex justify-center items-center text-center py-2 rounded-[8px] text-[15px] font-sans ${
                             index === pickerMonth
                               ? "bg-[#F5F3FF] text-[#2B2B2F]"
@@ -278,11 +315,15 @@ const DatePickerField = ({
                         </button>
                       ))}
                     </div>
-                    <div className="w-[120px] max-h-[360px] scrollmainContent overflow-y-auto pr-2">
+                    <div
+                      ref={yearListRef}
+                      className="w-[120px] max-h-[360px] scrollmainContent overflow-y-auto pr-2"
+                    >
                       {yearOptions.map((year) => (
                         <button
                           type="button"
                           key={year}
+                          ref={year === pickerYear ? activeYearButtonRef : null}
                           className={`w-full px-3 flex justify-center items-center text-center py-2 rounded-[8px] text-[15px] font-sans ${
                             year === pickerYear
                               ? "bg-[#F5F3FF] text-[#2B2B2F]"

@@ -75,7 +75,7 @@ const MainLayout = () => {
 
   useEffect(() => {
    
-    const isMobile = false; // desktop
+    const isMobile = pageSize[0] < 1024;
     const currentPageIsMobile = appPage.includes("mobile") || 
                                 appPage === "upcoming schedule" || 
                                 appPage === "choose a convenient time" ||
@@ -141,7 +141,7 @@ const MainLayout = () => {
 
     if (pagesRequiringType.includes(appPage) && !hasAppointmentType) {
       setHeaderPage(0);
-      setAppPage("visit type");
+      setAppPage(pageSize[0] < 1024 ? "visit type mobile" : "visit type");
       return;
     }
 
@@ -150,7 +150,7 @@ const MainLayout = () => {
       !hasSelectedAppointment
     ) {
       setHeaderPage(0);
-      setAppPage("visit type");
+      setAppPage(pageSize[0] < 1024 ? "visit type mobile" : "visit type");
     }
   }, [appPage, pageSize, setAppPage, setHeaderPage]);
   
@@ -266,15 +266,15 @@ useEffect(() => {
   }
 }, [token]);
   const content =
-    // pageSize[0] < 1024 ? (
-    //   <BookingLayoutMobile
-    //     types={types}
-    //     setSesionStorage={setSesionStorage}
-    //     paddingB={paddingB}
-    //     appPage={appPage}
-    //     headerPage={headerPage}
-    //   />
-    // ) : (
+    pageSize[0] < 1024 ? (
+      <BookingLayoutMobile
+        types={types}
+        setSesionStorage={setSesionStorage}
+        paddingB={paddingB}
+        appPage={appPage}
+        headerPage={headerPage}
+      />
+    ) : (
       <BookingLayoutPC
         types={types}
         setSesionStorage={setSesionStorage}
@@ -282,7 +282,7 @@ useEffect(() => {
         appPage={appPage}
         headerPage={headerPage}
       />
-    // );
+    );
   return <>{content}</>;
 };
 

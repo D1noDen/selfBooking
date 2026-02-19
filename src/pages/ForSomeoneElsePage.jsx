@@ -21,6 +21,7 @@ const ForSomeoneElsePage = () => {
     handleSubmit,
     setValue,
     trigger,
+    watch,
     formState: { errors },
   } = useForm({ mode: "all" });
 
@@ -41,6 +42,9 @@ const ForSomeoneElsePage = () => {
   const setConfirmationData = SelfBookingStore((state) => state.setConfirmationData);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const setForSomeoneElseConsent = SelfBookingStore((state) => state.setForSomeoneElseConsent);
+  const watchedValues = watch();
+  const hasHydratedRef = useRef(false);
+  const lastDraftRef = useRef("");
 
   const patientGenderRef = useRef(null);
   const guardianGenderRef = useRef(null);
@@ -50,13 +54,17 @@ const ForSomeoneElsePage = () => {
   useOnClickOutside(guardianGenderRef, () => setShowGuardianGender(false));
 
   useEffect(() => {
-    if (!appointmentData) return;
+    if (!appointmentData) {
+      hasHydratedRef.current = true;
+      return;
+    }
 
     if (Object.keys(appointmentData).length === 0) {
       setValue("gender", patientGender);
       setValue("guardianGender", guardianGender);
       setActivePatientGuardian("Yes");
       setForSomeoneElseConsent(false);
+      hasHydratedRef.current = true;
       return;
     }
 
@@ -84,7 +92,37 @@ const ForSomeoneElsePage = () => {
     setActivePatientGuardian(appointmentData.activePatientGuardian || "Yes");
     setConsentChecked(!!appointmentData.consent);
     setForSomeoneElseConsent(!!appointmentData.consent);
+    hasHydratedRef.current = true;
   }, []);
+
+  useEffect(() => {
+    if (!hasHydratedRef.current) return;
+
+    const payload = {
+      ...watchedValues,
+      gender: patientGender,
+      guardianGender,
+      activePatientGuardian,
+      consent: consentChecked,
+      phoneNumber: joinPhoneByCountryCode(
+        watchedValues?.phoneNumberCountryCode || selectedPhoneCountryCode,
+        watchedValues?.phoneNumber || ""
+      ),
+    };
+
+    const nextDraft = JSON.stringify(payload);
+    if (lastDraftRef.current === nextDraft) return;
+    lastDraftRef.current = nextDraft;
+    setAppointmentData(payload);
+  }, [
+    watchedValues,
+    patientGender,
+    guardianGender,
+    activePatientGuardian,
+    consentChecked,
+    selectedPhoneCountryCode,
+    setAppointmentData,
+  ]);
 
   const onSubmit = (data) => {
     const { phoneNumberCountryCode, ...rest } = data;
@@ -128,7 +166,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="pesel"
-              placeholder="00000000"
+              placeholder="Enter pesel/passport"
               errors={errors}
               rules={{ required: "Field is required" }}
             />
@@ -137,7 +175,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="firstName"
-              placeholder="Abhijit"
+              placeholder="Enter first name"
               errors={errors}
               rules={{ required: "Field is required" }}
             />
@@ -146,7 +184,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="lastName"
-              placeholder="Chatterjee"
+              placeholder="Enter last name"
               errors={errors}
               rules={{ required: "Field is required" }}
             />
@@ -155,7 +193,7 @@ const ForSomeoneElsePage = () => {
             label="Date of Birth *"
             width="w-[calc(50%-8px)]"
             id="dateOfBirth"
-            placeholder="dd.mm.yyyy"
+            placeholder="Enter date of birth"
             control={control}
             errors={errors}
             rules={{ required: "Select date" }}
@@ -186,7 +224,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="guardianFirstName"
-              placeholder="Abhijit"
+              placeholder="Enter first name"
               disabled={isGuardianDisabled}
               errors={errors}
               rules={{
@@ -201,7 +239,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="guardianLastName"
-              placeholder="Chatterjee"
+              placeholder="Enter last name"
               disabled={isGuardianDisabled}
               errors={errors}
               rules={{
@@ -258,7 +296,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="guardianPesel"
-              placeholder="00000000"
+              placeholder="Enter passport/pesel"
               disabled={isGuardianDisabled}
               errors={errors}
               rules={{
@@ -273,7 +311,7 @@ const ForSomeoneElsePage = () => {
             label="Date of Birth *"
             width="w-[calc(50%-8px)]"
             id="guardianDateOfBirth"
-            placeholder="dd.mm.yyyy"
+            placeholder="Enter date of birth"
             control={control}
             disabled={isGuardianDisabled}
             errors={errors}
@@ -291,7 +329,7 @@ const ForSomeoneElsePage = () => {
             widthClass="w-[calc(50%-8px)]"
             phoneFieldName="phoneNumber"
             countryFieldName="phoneNumberCountryCode"
-            placeholder="608484004"
+            placeholder="000000000"
             register={register}
             setValue={setValue}
             trigger={trigger}
@@ -303,7 +341,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="email"
-              placeholder="svitlanatyshchenko95@gmail.com"
+              placeholder="Enter email"
               errors={errors}
               rules={{
                 required: "Field is required",
@@ -315,7 +353,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="city"
-              placeholder="tyu7fg"
+              placeholder="Enter city"
               errors={errors}
               rules={{ required: "Field is required" }}
             />
@@ -324,7 +362,7 @@ const ForSomeoneElsePage = () => {
             <Input
               register={register}
               id="address"
-              placeholder="hbhj 65"
+              placeholder="Enter address"
               errors={errors}
               rules={{ required: "Field is required" }}
             />

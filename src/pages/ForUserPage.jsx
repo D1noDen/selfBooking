@@ -15,7 +15,7 @@ const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
 
 const ForUserPage = () => {
-  const { register, control, handleSubmit, setValue, trigger, formState: { errors } } = useForm({
+  const { register, control, handleSubmit, setValue, trigger, watch, formState: { errors } } = useForm({
     mode: "all",
   });
 
@@ -33,16 +33,24 @@ const ForUserPage = () => {
   const setConfirmationData = SelfBookingStore((state) => state.setConfirmationData);
   const confirmationData = SelfBookingStore((state) => state.confirmationData);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
+  const watchedValues = watch();
+  const hasHydratedRef = useRef(false);
+  const lastDraftRef = useRef("");
 
   const genderSelect = useRef(null);
   useOnClickOutside(genderSelect, () => setShowList(false));
 
   useEffect(() => {
+    if (hasHydratedRef.current) return;
+
     const savedData =
       confirmationData?.source === "for user"
         ? confirmationData?.formData
         : appointmentData;
-    if (!savedData) return;
+    if (!savedData) {
+      hasHydratedRef.current = true;
+      return;
+    }
 
     setValue("pesel", savedData.pesel || "");
     setValue("firstName", savedData.firstName || "");
@@ -58,7 +66,26 @@ const ForUserPage = () => {
     setValue("comment", savedData.comment || "");
     setSelectedGender(savedData.gender || genderOptions[0]);
     setValue("gender", savedData.gender || genderOptions[0]);
+    hasHydratedRef.current = true;
   }, [appointmentData, confirmationData, setValue]);
+
+  useEffect(() => {
+    if (!hasHydratedRef.current) return;
+
+    const payload = {
+      ...watchedValues,
+      gender: selectedGender,
+      cellPhone: joinPhoneByCountryCode(
+        watchedValues?.cellPhoneCountryCode || selectedPhoneCountryCode,
+        watchedValues?.cellPhone || ""
+      ),
+    };
+
+    const nextDraft = JSON.stringify(payload);
+    if (lastDraftRef.current === nextDraft) return;
+    lastDraftRef.current = nextDraft;
+    setAppointmentData(payload);
+  }, [watchedValues, selectedGender, selectedPhoneCountryCode, setAppointmentData]);
 
   const onSubmit = (data) => {
     const { cellPhoneCountryCode, ...rest } = data;
@@ -107,7 +134,7 @@ const ForUserPage = () => {
           </div>
           <InputBlock
             label="PESEL/PASSPORT *"
-            placeholder="00000000"
+            placeholder="Enter PESEL/PASSPORT"
             width="w-full"
             id="pesel"
             register={register}
@@ -118,7 +145,7 @@ const ForUserPage = () => {
           />
           <InputBlock
             label="First Name *"
-            placeholder="Abhijit"
+            placeholder="Enter first name"
             width="w-[calc(50%-8px)]"
             id="firstName"
             register={register}
@@ -127,7 +154,7 @@ const ForUserPage = () => {
           />
           <InputBlock
             label="Last Name *"
-            placeholder="Chatterjee"
+            placeholder="Enter last name"
             width="w-[calc(50%-8px)]"
             id="lastName"
             register={register}
@@ -136,7 +163,7 @@ const ForUserPage = () => {
           />
           <DatePickerField
             label="Date of Birth *"
-            placeholder="dd.mm.yyyy"
+            placeholder="Enter date of birth"
             width="w-[calc(50%-8px)]"
             id="dateOfBirth"
             control={control}
@@ -151,7 +178,7 @@ const ForUserPage = () => {
               Gender *
             </div>
             <div
-              className="border-[2px] border-[#E8E8E9] relative cursor-pointer flex items-center rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] px-[12px] py-[8px]"
+              className="border-[2px] border-[#E8E8E9] relative cursor-pointer flex items-center rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] px-[12px] -mt-1 py-[9px]"
               onClick={() => {
                 setShowList(!showList);
                 setValue("gender", selectedGender, { shouldValidate: true });
@@ -203,6 +230,7 @@ const ForUserPage = () => {
           </div>
           <InputBlock
             label="City *"
+            placeholder="Enter city"
             width="w-[calc(50%-8px)]"
             id="city"
             register={register}
@@ -211,6 +239,7 @@ const ForUserPage = () => {
           />
           <InputBlock
             label="Address *"
+            placeholder="Enter address"
             width="w-[calc(50%-8px)]"
             id="address"
             register={register}
@@ -226,7 +255,7 @@ const ForUserPage = () => {
             widthClass="w-[calc(50%-8px)]"
             phoneFieldName="cellPhone"
             countryFieldName="cellPhoneCountryCode"
-            placeholder="608484004"
+            placeholder="000000000"
             register={register}
             setValue={setValue}
             trigger={trigger}
@@ -236,7 +265,7 @@ const ForUserPage = () => {
           />
           <InputBlock
             label="Email *"
-            placeholder="svitlanatyshchenko95@gmail.com"
+            placeholder="Enter email"
             width="w-[calc(50%-8px)]"
             id="email"
             register={register}
@@ -277,7 +306,7 @@ const InputBlock = ({ label, placeholder, width, id, type, register, errors, rul
         type={type || "text"}
         id={id}
         placeholder={placeholder}
-        className="px-[12px] py-[8px] border-[2px] border-[#E8E8E9] bg-white rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px]"
+        className="px-[12px] py-[10px] border-[2px] border-[#E8E8E9] bg-white rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px]"
         {...register(id, rules)}
       />
       {errors?.[id] && (

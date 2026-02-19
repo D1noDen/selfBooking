@@ -21,6 +21,10 @@ import useAuth from "../store/useAuth";
 import DatePicker from "react-datepicker";
 import { selfBookingBackendHelper } from "./helpers/backendHelpers";
 import "react-datepicker/dist/react-datepicker.css";
+import {
+  getBookingInformation,
+  patchBookingInformation,
+} from "../helpers/bookingStorage";
 
 const MonthYearPickerButton = forwardRef(({ value, onClick, isOpen }, ref) => (
   <button
@@ -41,10 +45,21 @@ const MonthYearPickerButton = forwardRef(({ value, onClick, isOpen }, ref) => (
 MonthYearPickerButton.displayName = "MonthYearPickerButton";
 
 const SchedulerPage = ({ setSesionStorage }) => {
-  const informationWithSorage = JSON.parse(
-    sessionStorage.getItem("BookingInformation")
-  ) || {};
+  const informationWithSorage = getBookingInformation();
   const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
+  const storedDoctorDate = informationWithSorage?.doctor?.eventStartDateTime;
+  const parsedStoredDoctorDate = storedDoctorDate
+    ? moment(storedDoctorDate, "DD.MM.YYYY HH:mm:ss", true)
+    : null;
+  const storedViewDateRaw = informationWithSorage?.schedulerViewDate;
+  const parsedStoredViewDate = storedViewDateRaw
+    ? moment(storedViewDateRaw, "YYYY-MM-DD", true)
+    : null;
+  const initialCalendarDate = parsedStoredViewDate?.isValid()
+    ? parsedStoredViewDate.toDate()
+    : parsedStoredDoctorDate?.isValid()
+    ? parsedStoredDoctorDate.toDate()
+    : null;
   const [selectedAppointment, setSelectedAppointment] = useState(
     storedAppointmentTypeId
   );
@@ -63,8 +78,18 @@ const SchedulerPage = ({ setSesionStorage }) => {
     date.setFullYear(date.getFullYear() + 1);
     return date;
   }, [todayDate]);
-  const [startDate, setStartDay] = useState(todayDate);
-  const [selectedDate, setSelectedDate] = useState(todayDate);
+  const [startDate, setStartDay] = useState(() => {
+    const nextDate = initialCalendarDate ? new Date(initialCalendarDate) : new Date(todayDate);
+    nextDate.setHours(0, 0, 0, 0);
+    if (nextDate < todayDate) return new Date(todayDate);
+    return nextDate;
+  });
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const nextDate = initialCalendarDate ? new Date(initialCalendarDate) : new Date(todayDate);
+    nextDate.setHours(0, 0, 0, 0);
+    if (nextDate < todayDate) return new Date(todayDate);
+    return nextDate;
+  });
   const [selectedSlot, setSelectedSlot] = useState(() => {
     const storedDoctor = informationWithSorage?.doctor;
     if (!storedDoctor?.id || !storedDoctor?.eventStartDateTime) {
@@ -72,7 +97,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
     }
 
     return {
-      slotKey: null,
+      slotKey: `${storedDoctor.id}-${storedDoctor.eventStartDateTime}-${storedDoctor.eventEnd}`,
       doctor: storedDoctor,
       dateStart: storedDoctor.eventStartDateTime,
       time: moment(storedDoctor.eventStartDateTime, "DD.MM.YYYY HH:mm:ss").format("HH:mm"),
@@ -187,7 +212,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
 
   const updateDoctorInStorage = useCallback(
     (doctorData) => {
-      const currentInfo = JSON.parse(sessionStorage.getItem("BookingInformation")) || {};
+      const currentInfo = getBookingInformation();
       const nextInfo = { ...currentInfo };
 
       if (doctorData) {
@@ -429,10 +454,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
     const shouldFetchMissingSlots = missingDates.length > 0;
     const weekKey = getWeekKey(appointmentTypeId, startDate);
 
-    if (shouldFetchMissingSlots) {
-      clearSelectedSlot();
-    }
-
     if (shouldFetchDoctors) {
       fetchDoctors({
         appointmentTypeId,
@@ -462,7 +483,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
     });
   }, [
     auth,
-    clearSelectedSlot,
     fetchDoctors,
     fetchSlots,
     getMissingDatesForWeek,
@@ -523,7 +543,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
       clearSelectedSlot();
       setSelectedAppointment({ id: nextType.id, label: nextType.label });
 
-      const currentInfo = JSON.parse(sessionStorage.getItem("BookingInformation")) || {};
+      const currentInfo = getBookingInformation();
       setSesionStorage({
         ...currentInfo,
         apoimentTypeId: {
@@ -534,6 +554,12 @@ const SchedulerPage = ({ setSesionStorage }) => {
     },
     [appointmentTypeOptions, clearSelectedSlot, setSesionStorage]
   );
+
+  useEffect(() => {
+    patchBookingInformation({
+      schedulerViewDate: moment(startDate).format("YYYY-MM-DD"),
+    });
+  }, [startDate]);
 
   const selectedAppointmentLabel = useMemo(() => {
     const currentId = selectedAppointment?.id || storedAppointmentTypeId;
@@ -680,17 +706,6 @@ const SchedulerPage = ({ setSesionStorage }) => {
     });
   }, [memoizedDoctorsWithEvents, startDate]);
 
-  useEffect(() => {
-    if (!isLoadingData && memoizedDoctorsWithProcessedEvents.length === 0 && selectedSlot) {
-      clearSelectedSlot();
-    }
-  }, [
-    clearSelectedSlot,
-    isLoadingData,
-    memoizedDoctorsWithProcessedEvents,
-    selectedSlot,
-  ]);
-
   const createEventClickHandler = useCallback((item) => {
     return (e) => {
       if (e.event.extendedProps.isEmpty) {
@@ -714,8 +729,11 @@ const SchedulerPage = ({ setSesionStorage }) => {
 
       setSelectedSlot(nextSelectedSlot);
       updateDoctorInStorage(nextSelectedSlot.doctor);
+      patchBookingInformation({
+        schedulerViewDate: moment(startDate).format("YYYY-MM-DD"),
+      });
     };
-  }, [updateDoctorInStorage]);
+  }, [startDate, updateDoctorInStorage]);
 
   useEffect(() => {
     setSchedulerHasSelection(Boolean(selectedSlot?.doctor?.id));

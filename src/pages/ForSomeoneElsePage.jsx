@@ -13,6 +13,9 @@ import DatePickerField from "./components/DatePickerField";
 const genderOptions = ["Male", "Female", "Other"];
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+const allowedNameCharsRegExp = /[^\p{L}\p{M}\s'-]/gu;
+
+const sanitizeNameInput = (value = "") => value.replace(allowedNameCharsRegExp, "");
 
 const ForSomeoneElsePage = () => {
   const {
@@ -178,6 +181,7 @@ const ForSomeoneElsePage = () => {
               placeholder="Enter first name"
               errors={errors}
               rules={{ required: "Field is required" }}
+              sanitizeInput={sanitizeNameInput}
             />
           </Field>
           <Field label="Last Name *" width="w-[calc(50%-8px)]">
@@ -187,6 +191,7 @@ const ForSomeoneElsePage = () => {
               placeholder="Enter last name"
               errors={errors}
               rules={{ required: "Field is required" }}
+              sanitizeInput={sanitizeNameInput}
             />
           </Field>
           <DatePickerField
@@ -197,7 +202,6 @@ const ForSomeoneElsePage = () => {
             control={control}
             errors={errors}
             rules={{ required: "Select date" }}
-            maxYearsFromToday={10}
             maxDate={new Date()}
           />
           <Field label="Gender *" width="w-[calc(50%-8px)]">
@@ -233,6 +237,7 @@ const ForSomeoneElsePage = () => {
                     ? true
                     : "Field is required",
               }}
+              sanitizeInput={sanitizeNameInput}
             />
           </Field>
           <Field label="Last Name *" width="w-[calc(50%-8px)]">
@@ -248,6 +253,7 @@ const ForSomeoneElsePage = () => {
                     ? true
                     : "Field is required",
               }}
+              sanitizeInput={sanitizeNameInput}
             />
           </Field>
           <Field label="Gender *" width="w-[calc(50%-8px)]">
@@ -319,7 +325,6 @@ const ForSomeoneElsePage = () => {
               validate: (value) =>
                 isGuardianDisabled || value ? true : "Select date",
             }}
-            maxYearsFromToday={10}
             maxDate={new Date()}
           />
 
@@ -422,24 +427,44 @@ const Field = ({ label, width, children }) => (
   </div>
 );
 
-const Input = ({ register, id, placeholder, type = "text", disabled = false, errors, rules = {} }) => (
-  <div className="relative">
-    <input
-      type={type}
-      placeholder={placeholder}
-      disabled={disabled}
-      className={`w-full px-[12px] py-[8px] border-[2px] border-[#E8E8E9] rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] ${
-        disabled ? "bg-[#F0F2F6] text-[#A4ABBC] cursor-not-allowed" : "bg-white"
-      }`}
-      {...register(id, rules)}
-    />
-    {errors?.[id] && (
-      <p className="mt-1 text-red-500 text-[12px]/[14px]">
-        {errors[id]?.message || "Field is required"}
-      </p>
-    )}
-  </div>
-);
+const Input = ({
+  register,
+  id,
+  placeholder,
+  type = "text",
+  disabled = false,
+  errors,
+  rules = {},
+  sanitizeInput,
+}) => {
+  const registerOptions = sanitizeInput
+    ? {
+        ...rules,
+        onChange: (event) => {
+          event.target.value = sanitizeInput(event.target.value);
+        },
+      }
+    : rules;
+
+  return (
+    <div className="relative">
+      <input
+        type={type}
+        placeholder={placeholder}
+        disabled={disabled}
+        className={`w-full px-[12px] py-[8px] border-[2px] border-[#E8E8E9] rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] ${
+          disabled ? "bg-[#F0F2F6] text-[#A4ABBC] cursor-not-allowed" : "bg-white"
+        }`}
+        {...register(id, registerOptions)}
+      />
+      {errors?.[id] && (
+        <p className="mt-1 text-red-500 text-[12px]/[14px]">
+          {errors[id]?.message || "Field is required"}
+        </p>
+      )}
+    </div>
+  );
+};
 
 const GenderDropdown = ({ value, open, setOpen, onSelect, dropdownRef, disabled = false }) => (
   <div

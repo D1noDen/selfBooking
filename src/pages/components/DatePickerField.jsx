@@ -177,6 +177,26 @@ const DatePickerField = ({
     return false;
   };
 
+  const commitTypedDate = () => {
+    const candidate = typedValue || displayValue;
+    const parsedDate = parseDisplayDate(candidate);
+
+    if (typedValue === "") {
+      field.onBlur();
+      return;
+    }
+
+    if (parsedDate && !isOutOfRange(parsedDate)) {
+      field.onChange(toIsoDate(parsedDate));
+      setPickerViewDate(parsedDate);
+      setTypedValue("");
+    } else {
+      setTypedValue(displayValue);
+    }
+
+    field.onBlur();
+  };
+
   return (
     <div className={`inputBlock flex flex-col ${width} mb-[26px]`}>
       {label && (
@@ -215,20 +235,18 @@ const DatePickerField = ({
               }
             }}
             onBlur={() => {
-              const parsedDate = parseDisplayDate(typedValue);
               if (typedValue === "") {
-                field.onChange("");
-                setTypedValue("");
                 field.onBlur();
                 return;
               }
-              if (parsedDate && !isOutOfRange(parsedDate)) {
-                field.onChange(toIsoDate(parsedDate));
-                setTypedValue("");
-              } else {
-                setTypedValue(displayValue);
-              }
-              field.onBlur();
+              commitTypedDate();
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              event.preventDefault();
+              if (disabled) return;
+              commitTypedDate();
+              setIsOpen(false);
             }}
             disabled={disabled}
             placeholder={placeholder}

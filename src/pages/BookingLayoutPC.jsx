@@ -8,7 +8,6 @@ import SchedulerPage from "./SchedulerPage";
 import ForWhoPage from "./ForWhoPage";
 import ForSomeoneElsePage from "./ForSomeoneElsePage";
 import ForUserPage from "./ForUserPage";
-import ForGuestPage from "./ForGuestPage";
 import FinalPage from "./FinalPage";
 import AppointmentConfirmationPage from "./AppointmentConfirmationPage";
 import SelfBookingStore from "../store/SelfBookingStore";
@@ -24,6 +23,7 @@ const BookingLayoutPC = ({
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const isDesktopNarrow = window.innerWidth < 1024;
+  const isVisitTypePage = appPage === "visit type";
 
   useEffect(() => {
     if (appPage === "continue as") {
@@ -34,14 +34,18 @@ const BookingLayoutPC = ({
 
   return (
     <div
-      className={`bookingAppointmentPage h-[100dvh] overflow-hidden w-full ${
+      className={`bookingAppointmentPage w-full ${
         isDesktopNarrow ? "bg-[#FFF]" : "bg-[#F4F7FF]"
+      } ${
+        isVisitTypePage ? "min-h-[100dvh] overflow-visible" : "h-[100dvh] overflow-hidden"
       }`}
       ref={mainBlock}
       onClick={() => {}}
     >
       <div
-        className="bookingAppointmentWrapper mx-auto h-full flex flex-col min-h-0 pt-[33px] pb-[35px]"
+        className={`bookingAppointmentWrapper mx-auto flex flex-col pt-[33px] pb-[35px] ${
+          isVisitTypePage ? "h-auto" : "h-full min-h-0"
+        }`}
         style={{ width: window.innerWidth < 600 ? "auto" : widthBlock }}
       >
         {appPage !== "complete" && (
@@ -49,7 +53,13 @@ const BookingLayoutPC = ({
             <Header />
           </div>
         )}
-        <main className="scrollmainContent flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <main
+          className={`scrollmainContent ${
+            isVisitTypePage
+              ? "overflow-visible"
+              : "flex-1 min-h-0 overflow-y-auto overflow-x-hidden"
+          }`}
+        >
           {appPage === "visit type" ? (
             <VisiteTypePage
               visitTypeArr={types}
@@ -63,7 +73,7 @@ const BookingLayoutPC = ({
           ) : appPage === "for who" ? (
             <ForWhoPage />
           ) : appPage === "for guest page" ? (
-            <ForGuestPage mainBlock={mainBlock} />
+            <ForUserPage />
           ) : appPage === "for someone else" ? (
             <ForSomeoneElsePage />
           ) : appPage === "for user" ? (

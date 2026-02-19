@@ -587,6 +587,7 @@ const InputBlock = ({
 }) => {
   const emailRegExp =
     /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+  const allowedNameCharsRegExp = /[^\p{L}\p{M}\s'-]/gu;
 
   let idd = id !== "email" && id !== "phoneNumber" ? id : "";
 
@@ -618,6 +619,10 @@ const InputBlock = ({
           id === "phoneNumber"
             ? (event) => {
                 event.target.value = event.target.value.replace(/\D/g, "").slice(0, 9);
+              }
+            : id === "firstName" || id === "lastName"
+            ? (event) => {
+                event.target.value = event.target.value.replace(allowedNameCharsRegExp, "");
               }
             : undefined
         }

@@ -209,6 +209,25 @@ const SchedulerPage = ({ setSesionStorage }) => {
         .join("||"),
     [getShiftSignature]
   );
+  const getDoctorSignature = useCallback(
+    (doctor) => {
+      const userId = doctor?.userId ?? "";
+      const firstName = doctor?.firstName ?? "";
+      const lastName = doctor?.lastName ?? "";
+      const profilePicture = doctor?.profilePicture ?? "";
+      const specializationLabel = doctor?.specializationLabel ?? "";
+      return `${userId}|${firstName}|${lastName}|${profilePicture}|${specializationLabel}`;
+    },
+    []
+  );
+  const buildDoctorsSignature = useCallback(
+    (doctorList) =>
+      (doctorList || [])
+        .map((doctor) => getDoctorSignature(doctor))
+        .sort()
+        .join("||"),
+    [getDoctorSignature]
+  );
 
   const updateDoctorInStorage = useCallback(
     (doctorData) => {
@@ -247,12 +266,23 @@ const SchedulerPage = ({ setSesionStorage }) => {
   }, [activeAppointmentTypeId, getWeekKey, startDate]);
 
   const syncLoadingState = useCallback(() => {
+    const appointmentTypeId = currentAppointmentTypeIdRef.current;
+    const visibleWeekStart = currentStartDateRef.current;
+    if (!auth || !appointmentTypeId || !visibleWeekStart) {
+      setIsLoadingData(false);
+      return;
+    }
+
     const visibleWeekKey = currentWeekKeyRef.current;
     const visibleCount = visibleWeekKey
       ? blockingRequestsRef.current[visibleWeekKey] || 0
       : 0;
-    setIsLoadingData(visibleCount > 0);
-  }, []);
+    const hasDoctorsInCache = Boolean(doctorCacheRef.current[appointmentTypeId]);
+    const missingDates = getMissingDatesForWeek(appointmentTypeId, visibleWeekStart);
+    const hasMissingVisibleData = !hasDoctorsInCache || missingDates.length > 0;
+
+    setIsLoadingData(visibleCount > 0 || hasMissingVisibleData);
+  }, [auth, getMissingDatesForWeek]);
 
   const startBlockingForWeek = useCallback(
     (weekKey) => {
@@ -316,9 +346,9 @@ const SchedulerPage = ({ setSesionStorage }) => {
   );
 
   const fetchDoctors = useCallback(
-    ({ appointmentTypeId, weekKey, blocking }) => {
+    ({ appointmentTypeId, weekKey, blocking, background }) => {
       const cachedDoctors = doctorCacheRef.current[appointmentTypeId];
-      if (cachedDoctors) {
+      if (cachedDoctors && !background) {
         if (currentAppointmentTypeIdRef.current === appointmentTypeId) {
           setDoctors(cachedDoctors);
         }
@@ -340,9 +370,24 @@ const SchedulerPage = ({ setSesionStorage }) => {
         })
         .then((response) => {
           const nextDoctors = response?.data?.result || [];
+          const prevDoctors = doctorCacheRef.current[appointmentTypeId] || [];
+          const hasChanges =
+            buildDoctorsSignature(prevDoctors) !==
+            buildDoctorsSignature(nextDoctors);
           doctorCacheRef.current[appointmentTypeId] = nextDoctors;
+
           if (currentAppointmentTypeIdRef.current === appointmentTypeId) {
-            setDoctors(nextDoctors);
+            if (background && hasChanges) {
+              startBlockingForWeek(weekKey);
+              setDoctors(nextDoctors);
+              requestAnimationFrame(() => {
+                finishBlockingForWeek(weekKey);
+              });
+              return nextDoctors;
+            }
+            if (!background || hasChanges) {
+              setDoctors(nextDoctors);
+            }
           }
           return nextDoctors;
         })
@@ -356,7 +401,13 @@ const SchedulerPage = ({ setSesionStorage }) => {
       doctorInFlightRef.current.set(appointmentTypeId, promise);
       return promise;
     },
-    [auth, backendHelper, finishBlockingForWeek, startBlockingForWeek]
+    [
+      auth,
+      backendHelper,
+      buildDoctorsSignature,
+      finishBlockingForWeek,
+      startBlockingForWeek,
+    ]
   );
 
   const fetchSlots = useCallback(
@@ -453,12 +504,16 @@ const SchedulerPage = ({ setSesionStorage }) => {
     const shouldFetchDoctors = !cachedDoctors;
     const shouldFetchMissingSlots = missingDates.length > 0;
     const weekKey = getWeekKey(appointmentTypeId, startDate);
+    const shouldRunBlockingFetch = shouldFetchDoctors || shouldFetchMissingSlots;
+
+    setIsLoadingData(shouldRunBlockingFetch);
 
     if (shouldFetchDoctors) {
       fetchDoctors({
         appointmentTypeId,
         weekKey,
         blocking: true,
+        background: false,
       });
     }
 
@@ -474,6 +529,12 @@ const SchedulerPage = ({ setSesionStorage }) => {
     }
 
     syncLoadingState();
+    fetchDoctors({
+      appointmentTypeId,
+      weekKey,
+      blocking: false,
+      background: true,
+    });
     fetchSlots({
       appointmentTypeId,
       requestedDates: weekDates,
@@ -500,7 +561,11 @@ const SchedulerPage = ({ setSesionStorage }) => {
       delete blockingRequestsRef.current[weekKey];
     });
     syncLoadingState();
-  }, [auth, activeAppointmentTypeId, syncLoadingState]);
+  }, [
+    auth,
+    activeAppointmentTypeId,
+    syncLoadingState,
+  ]);
 
   const {
     data: GetApoimentTypesSelfBookingData,
@@ -535,11 +600,13 @@ const SchedulerPage = ({ setSesionStorage }) => {
   const handleVisitTypeChange = useCallback(
     (nextId) => {
       const parsedNextId = Number(nextId);
+      if (parsedNextId === activeAppointmentTypeId) return;
       const nextType = appointmentTypeOptions.find(
         (item) => item.id === parsedNextId
       );
       if (!nextType) return;
 
+      setIsLoadingData(true);
       clearSelectedSlot();
       setSelectedAppointment({ id: nextType.id, label: nextType.label });
 
@@ -552,7 +619,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
         },
       });
     },
-    [appointmentTypeOptions, clearSelectedSlot, setSesionStorage]
+    [activeAppointmentTypeId, appointmentTypeOptions, clearSelectedSlot, setSesionStorage]
   );
 
   useEffect(() => {
@@ -778,17 +845,23 @@ const SchedulerPage = ({ setSesionStorage }) => {
     nextDate.setHours(0, 0, 0, 0);
 
     if (direction < 0 && nextDate < todayDate) {
+      if (startDate.getTime() === todayDate.getTime()) return;
+      setIsLoadingData(true);
       setStartDay(todayDate);
       setSelectedDate(todayDate);
       return;
     }
 
     if (direction > 0 && nextDate > maxSelectableDate) {
+      if (startDate.getTime() === maxSelectableDate.getTime()) return;
+      setIsLoadingData(true);
       setStartDay(maxSelectableDate);
       setSelectedDate(maxSelectableDate);
       return;
     }
 
+    if (startDate.getTime() === nextDate.getTime()) return;
+    setIsLoadingData(true);
     setStartDay(nextDate);
     setSelectedDate(nextDate);
   };
@@ -798,6 +871,8 @@ const SchedulerPage = ({ setSesionStorage }) => {
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
     if (normalizedDate < todayDate || normalizedDate > maxSelectableDate) return;
+    if (normalizedDate.getTime() === startDate.getTime()) return;
+    setIsLoadingData(true);
     setSelectedDate(normalizedDate);
     setStartDay(normalizedDate);
   };

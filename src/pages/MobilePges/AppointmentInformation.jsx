@@ -14,12 +14,12 @@ import {
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import Spinner from "../helpers/Spinner";
+import { getBookingInformation } from "../../helpers/bookingStorage";
 
 const AppointmentInformation = () => {
   const {auth} = useAuth();
-  const informationWithSorage = JSON.parse(
-    sessionStorage.getItem("BookingInformation")
-  );
+  const informationWithSorage = getBookingInformation() || {};
+  const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
   const {
     data: GetDoctorByTypeIdData,
     isLoading: GetDoctorByTypeIdLoading,
@@ -41,7 +41,7 @@ console.log("informationWithSorage", informationWithSorage);
   let start = moment(
     dateHelper(informationWithSorage.doctor?.eventStartDateTime)
   );
-  let end = moment(dateHelper(informationWithSorage?.doctor.eventEnd));
+  let end = moment(dateHelper(informationWithSorage?.doctor?.eventEnd));
   const duration = end.diff(start, "minutes");
   const formattedStartDate = start.format("HH:mm");
   const formattedEndDate = end.format("HH:mm");
@@ -49,7 +49,7 @@ console.log("informationWithSorage", informationWithSorage);
   const newStartDate = dateHelper(
     informationWithSorage.doctor?.eventStartDateTime
   );
-  const newEndDate = dateHelper(informationWithSorage?.doctor.eventEnd);
+  const newEndDate = dateHelper(informationWithSorage?.doctor?.eventEnd);
 
   const calcAge = (birthdate) => {
     let birthdateObj = new Date(birthdate);
@@ -67,13 +67,17 @@ console.log("informationWithSorage", informationWithSorage);
   };
 
   useEffect(() => {
+    if (!storedAppointmentTypeId) {
+      setAppPage("visit type mobile");
+      return;
+    }
     if (informationWithSorage) {
       GetDoctorByTypeIdInformation({
           bookingToken:auth,
-        appointmentTypeId: informationWithSorage.apoimentTypeId.id,
+        appointmentTypeId: storedAppointmentTypeId,
       });
     }
-  }, []);
+  }, [auth, storedAppointmentTypeId, setAppPage]);
 
   useEffect(() => {
     if (GetDoctorByTypeIdData) {
@@ -217,14 +221,14 @@ console.log("patientInfo", patientInfo);
   const CreateBooking = async () => {
     CreateBookingMutate({
      data:{
-       eventStartDateTime: newStartDate,
+      eventStartDateTime: newStartDate,
       eventEndDateTime: newEndDate,
       appointmentDescription: CreatePatientData.data.comments,
-      appointmentTypeId: informationWithSorage?.apoimentTypeId.id,
-      userId: informationWithSorage?.doctor.id,
+      appointmentTypeId: informationWithSorage?.apoimentTypeId?.id,
+      userId: informationWithSorage?.doctor?.id,
       patientId: CreatePatientData.data.patientId,
       patientContactPersonId: CreatePatientData.data.patientContactPersonId,
-      cabinetId: informationWithSorage?.doctor.cabinetId,
+      cabinetId: informationWithSorage?.doctor?.cabinetId,
      },
       token:auth,
     });

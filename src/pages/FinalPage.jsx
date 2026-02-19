@@ -62,7 +62,7 @@ const FinalPage = () => {
         >
           Your appointment has been successfully booked. A confirmation email has been sent to your inbox.
         </div>
-        <div style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.06)"}} className='p-[25px] w-full max-w-[600px] mx-auto rounded-[10px] bg-white mb-[25px] mt-[30px] flex flex-col justify-start items-start'>
+        {/* <div style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.06)"}} className='p-[25px] w-full max-w-[600px] mx-auto rounded-[10px] bg-white mb-[25px] mt-[30px] flex flex-col justify-start items-start'>
           <p className="text-[#101828] font-sans text-[18px]">What's Next?</p>
           <div className="flex flex-col text-[#4A5565] text-[13px] mt-[14px] font-sans">
             {whatsNewList?.map((content, index) => (
@@ -72,7 +72,7 @@ const FinalPage = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
         <div
           className={`w-full max-w-[600px] p-[16px] rounded-[8px] bg-[#8380FF] hover:bg-[#7059F6] duration-300 mx-auto flex justify-center items-center text-[14px] text-white font-sans font-medium tracking-[0.72px] cursor-pointer`}
           onClick={() => {

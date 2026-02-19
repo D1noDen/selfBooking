@@ -51,11 +51,14 @@ const BookingLayoutMobile = ({
           <ContinueAsPageM />
         ) : appPage === "for who mobile" ? (
           <ForWhoM setSesionStorage={setSesionStorage} />
-        ) : appPage === "for patient mobile" ? (
+        ) : appPage === "for patient mobile" ||
+          appPage === "patient exact information" ? (
           <PatientExactInformation mainBlock={mainBlock} />
-        ) : appPage === "for someone else guardian mobile" ? (
+        ) : appPage === "for someone else guardian mobile" ||
+          appPage === "guardian exact information" ? (
           <GuardianExactInformation />
-        ) : appPage === "appointment information mobile" ? (
+        ) : appPage === "appointment information mobile" ||
+          appPage === "appointment information" ? (
           <AppointmentInformation />
         ) : appPage === "complete mobile" ? (
           <FinalPage />

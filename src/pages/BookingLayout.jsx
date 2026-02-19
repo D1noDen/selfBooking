@@ -53,20 +53,21 @@ const MainLayout = () => {
     "scheduler": "upcoming schedule",
     "continue as": "continue as mobile",
     "for who": "for who mobile",
-    "for guest page": "patient exact information",
-    "for someone else": "guardian exact information",
-    "for user": "patient exact information",
-    "appointment confirmation": "appointment information",
-    "final page": "final page",
+    "for guest page": "for patient mobile",
+    "for someone else": "for someone else guardian mobile",
+    "for user": "for patient mobile",
+    "appointment confirmation": "appointment information mobile",
+    "complete": "complete mobile",
     
     "visit type mobile": "visit type",
     "upcoming schedule": "scheduler",
     "choose a convenient time": "scheduler",
     "continue as mobile": "continue as",
     "for who mobile": "for who",
-    "patient exact information": "for guest page",
-    "guardian exact information": "for someone else",
-    "appointment information": "appointment confirmation",
+    "for patient mobile": "for guest page",
+    "for someone else guardian mobile": "for someone else",
+    "appointment information mobile": "appointment confirmation",
+    "complete mobile": "complete",
   };
   const historySyncRef = useRef({
     initialized: false,
@@ -78,10 +79,7 @@ const MainLayout = () => {
     const isMobile = pageSize[0] < 1024;
     const currentPageIsMobile = appPage.includes("mobile") || 
                                 appPage === "upcoming schedule" || 
-                                appPage === "choose a convenient time" ||
-                                appPage === "patient exact information" ||
-                                appPage === "guardian exact information" ||
-                                appPage === "appointment information";
+                                appPage === "choose a convenient time";
     
 
     if (isMobile && !currentPageIsMobile) {

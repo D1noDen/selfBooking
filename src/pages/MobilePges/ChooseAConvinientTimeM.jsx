@@ -20,6 +20,7 @@ import useAuth from "../../store/useAuth";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import calendar from "../../assets/images/self-booking/calendar.png";
+import { getBookingInformation } from "../../helpers/bookingStorage";
 
 const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
@@ -35,16 +36,16 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
   const dayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
   const curDate = new Date();
   const today = moment(curDate).format("YYYY-MM-DD");
-  const informationWithSorage = JSON.parse(
-    sessionStorage.getItem("BookingInformation")
-  );
+  const informationWithSorage = getBookingInformation() || {};
+  const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
+  const storedAppointmentTypeLabel = informationWithSorage?.apoimentTypeId?.lebel || "";
   const [startDate, setStartDate] = useState(new Date());
   const [doctors, setDoctors] = useState(null);
   const [events, setEvents] = useState(null);
   const [doctorWithEvents, setDoctorWithEvents] = useState([]);
   const [types, setTypes] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(
-    informationWithSorage.apoimentTypeId.id
+    storedAppointmentTypeId
   );
   const [prevButton, setPrevButton] = useState("");
   const [doctorWithEvents1, setDoctorWithEvents1] = useState([]);
@@ -85,6 +86,12 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
 
   useEffect(() => {
     if (informationWithSorage) {
+      const activeAppointmentTypeId =
+        selectedAppointment?.id || storedAppointmentTypeId;
+      if (!activeAppointmentTypeId) {
+        setAppPage("visit type mobile");
+        return;
+      }
       const start = moment(startDate).format("YYYY-MM-DD");
       let newDate = new Date(startDate);
       newDate.setDate(startDate.getDate() + 2);
@@ -96,18 +103,16 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
       }
       GetSlotApoimentInformation({
         bookingToken:auth,
-        appointmentTypeId:
-          selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
+        appointmentTypeId: activeAppointmentTypeId,
         startDate: start,
         endDate: endDate,
       });
       GetDoctorByTypeIdInformation({
         bookingToken:auth,
-        appointmentTypeId:
-          selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
+        appointmentTypeId: activeAppointmentTypeId,
       });
     }
-  }, [selectedAppointment, startDate]);
+  }, [selectedAppointment, startDate, storedAppointmentTypeId, setAppPage]);
 
   useEffect(() => {
   if(auth){
@@ -121,12 +126,13 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
     if (GetApoimentTypesSelfBookingData) {
       setTypes(GetApoimentTypesSelfBookingData?.data?.result);
       const selected = GetApoimentTypesSelfBookingData?.data?.result.filter(
-        (item) => item.id === informationWithSorage.apoimentTypeId.id
+        (item) => item.id === storedAppointmentTypeId
       );
-
-      setSelectedAppointment({ id: selected[0].id, label: selected[0].label });
+      if (selected?.[0]) {
+        setSelectedAppointment({ id: selected[0].id, label: selected[0].label });
+      }
     }
-  }, [GetApoimentTypesSelfBookingData]);
+  }, [GetApoimentTypesSelfBookingData, storedAppointmentTypeId]);
 
   useEffect(() => {
     if (GetDoctorByTypeIdData) {
@@ -258,7 +264,7 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
           </div>
           <Dropdown
             options={types}
-            activeOption={informationWithSorage.apoimentTypeId.lebel}
+            activeOption={storedAppointmentTypeLabel}
             dropdownWidth={"100%"}
           />
           <div className="flex justify-between">

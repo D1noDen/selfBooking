@@ -21,6 +21,7 @@ import chevronRight from "../../assets/images/self-booking/chevronRight.png";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import DatePicker from "react-datepicker";
+import { getBookingInformation } from "../../helpers/bookingStorage";
 const CalendarButton = forwardRef(({ onClick }, ref) => (
   <button
     ref={ref}
@@ -45,11 +46,11 @@ const {auth} = useAuth();
   const [startDate, setStartDay] = useState(new Date());
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
 
-  const informationWithSorage = JSON.parse(
-    sessionStorage.getItem("BookingInformation")
-  );
+  const informationWithSorage = getBookingInformation() || {};
+  const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
+  const storedAppointmentTypeLabel = informationWithSorage?.apoimentTypeId?.lebel || "";
   const [selectedAppointment, setSelectedAppointment] = useState(
-    informationWithSorage.apoimentTypeId.id
+    storedAppointmentTypeId
   );
   const {
     data: GetDoctorByTypeIdData,
@@ -91,29 +92,33 @@ const {auth} = useAuth();
     if (GetApoimentTypesSelfBookingData) {
       setTypes(GetApoimentTypesSelfBookingData?.data?.result);
       const selected = GetApoimentTypesSelfBookingData?.data?.result.filter(
-        (item) => item.id === informationWithSorage.apoimentTypeId.id
+        (item) => item.id === storedAppointmentTypeId
       );
     }
   }, [GetApoimentTypesSelfBookingData]);
 
   useEffect(() => {
     if (informationWithSorage) {
+      const activeAppointmentTypeId =
+        selectedAppointment?.id || storedAppointmentTypeId;
+      if (!activeAppointmentTypeId) {
+        setAppPage("visit type mobile");
+        return;
+      }
       const start = moment(startDate).format("YYYY-MM-DD");
       const endDate = moment(startDate).format("YYYY-MM-DD");
       GetSlotApoimentInformation({
         bookingToken:auth,
-        appointmentTypeId:
-          selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
+        appointmentTypeId: activeAppointmentTypeId,
         startDate: start,
         endDate: endDate,
       });
       GetDoctorByTypeIdInformation({
         bookingToken:auth,
-        appointmentTypeId:
-          selectedAppointment?.id || informationWithSorage.apoimentTypeId.id,
+        appointmentTypeId: activeAppointmentTypeId,
       });
     }
-  }, [selectedAppointment, startDate]);
+  }, [selectedAppointment, startDate, storedAppointmentTypeId, setAppPage]);
   useEffect(() => {
     if (GetDoctorByTypeIdData) {
       setDoctors(GetDoctorByTypeIdData.data.result);
@@ -193,7 +198,7 @@ const {auth} = useAuth();
             isIconNeeded={false}
             icon={""}
             iconWidth="0"
-            activeOption={informationWithSorage.apoimentTypeId.lebel}
+            activeOption={storedAppointmentTypeLabel}
             dropdownWidth={"100%"}
             setSesionStorage={setSesionStorage}
             setSelectedAppointment={setSelectedAppointment}
@@ -350,9 +355,7 @@ const Dropdown = ({
   setSesionStorage,
   setSelectedAppointment,
 }) => {
-  const informationWithSorage = JSON.parse(
-    sessionStorage.getItem("BookingInformation")
-  );
+  const informationWithSorage = getBookingInformation() || {};
   const [selectedOption, setSelectedOption] = useState(activeOption);
   const [visibleAppList, setVisibleAppList] = useState(false);
   const [rotate, setRotate] = useState(false);

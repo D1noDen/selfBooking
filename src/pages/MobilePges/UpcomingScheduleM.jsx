@@ -9,6 +9,8 @@ import {
 import dateFormat from "dateformat";
 import SelfBookingStore from "../../store/SelfBookingStore";
 import moment from "moment";
+import "moment/locale/pl";
+import "moment/locale/uk";
 //import useAuth from "../../../Routes/useAuth";
 import useAuth from "../../store/useAuth";
 import Spinner from "../helpers/Spinner";
@@ -22,6 +24,7 @@ import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import DatePicker from "react-datepicker";
 import { getBookingInformation } from "../../helpers/bookingStorage";
+import { getDateFnsLocale, getIntlLocale } from "../../i18n/dateLocale";
 const CalendarButton = forwardRef(({ onClick }, ref) => (
   <button
     ref={ref}
@@ -34,6 +37,11 @@ const CalendarButton = forwardRef(({ onClick }, ref) => (
 ));
 const UpcomingScheduleM = ({ setSesionStorage }) => {
 const {auth} = useAuth();
+  const language = SelfBookingStore((state) => state.language || "en");
+  useEffect(() => {
+    const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
+    moment.locale(momentLocale);
+  }, [language]);
   const languages = [
     { label: "English", id: 0 },
     { label: "Polish", id: 1 },
@@ -48,7 +56,10 @@ const {auth} = useAuth();
 
   const informationWithSorage = getBookingInformation() || {};
   const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
-  const storedAppointmentTypeLabel = informationWithSorage?.apoimentTypeId?.lebel || "";
+  const storedAppointmentTypeLabel =
+    informationWithSorage?.apoimentTypeId?.label ||
+    informationWithSorage?.apoimentTypeId?.lebel ||
+    "";
   const [selectedAppointment, setSelectedAppointment] = useState(
     storedAppointmentTypeId
   );
@@ -204,7 +215,12 @@ const {auth} = useAuth();
             setSelectedAppointment={setSelectedAppointment}
           />
         </div>
-        <DateSwiper selectedDate={startDate} setStartDay={setStartDay}  onDateChange={setStartDay} />
+        <DateSwiper
+          selectedDate={startDate}
+          setStartDay={setStartDay}
+          onDateChange={setStartDay}
+          language={language}
+        />
         <div className="flex flex-col gap-[12px]">
           {doctorsWithEvents?.map((item, i) => (
             <DoctorBlock
@@ -215,6 +231,7 @@ const {auth} = useAuth();
               key={i}
               doctorId={item.id}
               date={item.time}
+              language={language}
               informationWithSorage={informationWithSorage}
               setSesionStorage={setSesionStorage}
             />
@@ -227,7 +244,7 @@ const {auth} = useAuth();
 
 export default UpcomingScheduleM;
 
-const DateSwiper = ({ selectedDate, onDateChange, setStartDay }) => {
+const DateSwiper = ({ selectedDate, onDateChange, setStartDay, language }) => {
   const [currentWeekStart, setCurrentWeekStart] = useState(
     moment(selectedDate).startOf('day')
   );
@@ -288,6 +305,7 @@ const DateSwiper = ({ selectedDate, onDateChange, setStartDay }) => {
         <DatePicker
         startDate={selectedDate}
         onChange={(date) => setStartDay(date)}
+        locale={getDateFnsLocale(language)}
         customInput={<CalendarButton />}
         />
         
@@ -537,7 +555,7 @@ const Dropdown = ({
   return <div className={``}>{dropdown}</div>;
 };
 
-const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSesionStorage , informationWithSorage }) => {
+const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSesionStorage , informationWithSorage, language }) => {
   console.log(item , 'item in doctor block');
   let dateArr = [];
   const options = { weekday: "long", day: "numeric", month: "long" };
@@ -575,7 +593,7 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
         <div className="flex flex-col   ">
           <div className="flex gap-[8px] items-center">
             <p className="font-hebrew text-[14px] text-[#4A5565]">
-              {new Date(slotDate).toLocaleDateString("en-US", options)}
+              {new Date(slotDate).toLocaleDateString(getIntlLocale(language), options)}
             </p>
           </div>
           <div className="flex gap-[4px] flex-wrap items-center">

@@ -8,6 +8,9 @@ const SelfBookingStore = create(
       headerPage: 0,
       setHeaderPage: (page) => set({ headerPage: page }),
 
+      language: "en",
+      setLanguage: (language) => set({ language }),
+
     appointmentData : null ,
     setAppointmentData : (data) => {
       set({ appointmentData: data });

@@ -9,8 +9,8 @@ import {
   splitPhoneByCountryCode,
 } from "./helpers/phoneCountry";
 import DatePickerField from "./components/DatePickerField";
+import { useAppTranslation } from "../i18n/useAppTranslation";
 
-const genderOptions = ["Male", "Female", "Other"];
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
 const allowedNameCharsRegExp = /[^\p{L}\p{M}\s'-]/gu;
@@ -18,6 +18,8 @@ const allowedNameCharsRegExp = /[^\p{L}\p{M}\s'-]/gu;
 const sanitizeNameInput = (value = "") => value.replace(allowedNameCharsRegExp, "");
 
 const ForSomeoneElsePage = () => {
+  const { t } = useAppTranslation();
+  const genderOptions = [t("male", "Male"), t("female", "Female"), t("other", "Other")];
   const {
     register,
     control,
@@ -153,10 +155,10 @@ const ForSomeoneElsePage = () => {
     <div className="pb-3 relative mx-auto" style={{ width: widthBlock }}>
       <div className="bg-white rounded-[10px] p-6 overflow-auto scrollmainContent shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)] h-max">
         <div className="text-[24px] font-sans text-[#333] font-semibold mb-1">
-          Who are you scheduling for?
+          {t("who_are_you_scheduling_for", "Who are you scheduling for?")}
         </div>
         <div className="text-[16px] font-sans text-[#6A7282] mb-8">
-          Please fill in the information below
+          {t("please_fill_below", "Please fill in the information below")}
         </div>
 
         <form
@@ -164,48 +166,49 @@ const ForSomeoneElsePage = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="max-w-[1040px] mx-auto flex flex-wrap justify-between"
         >
-          <SectionTitle text="Patient details" />
-          <Field label="Pesel/Passport*" width="w-full">
+          <SectionTitle text={t("patient_details_short", "Patient details")} />
+          <Field label={t("pesel_passport", "PESEL/PASSPORT *")} width="w-full">
             <Input
               register={register}
               id="pesel"
-              placeholder="Enter pesel/passport"
+              placeholder={t("enter_pesel_passport", "Enter PESEL/PASSPORT")}
               errors={errors}
-              rules={{ required: "Field is required" }}
+              rules={{ required: t("field_required", "Field is required") }}
             />
           </Field>
-          <Field label="First Name *" width="w-[calc(50%-8px)]">
+          <Field label={t("first_name", "First Name *")} width="w-[calc(50%-8px)]">
             <Input
               register={register}
               id="firstName"
-              placeholder="Enter first name"
+              placeholder={t("enter_first_name", "Enter first name")}
               errors={errors}
-              rules={{ required: "Field is required" }}
+              rules={{ required: t("field_required", "Field is required") }}
               sanitizeInput={sanitizeNameInput}
             />
           </Field>
-          <Field label="Last Name *" width="w-[calc(50%-8px)]">
+          <Field label={t("last_name", "Last Name *")} width="w-[calc(50%-8px)]">
             <Input
               register={register}
               id="lastName"
-              placeholder="Enter last name"
+              placeholder={t("enter_last_name", "Enter last name")}
               errors={errors}
-              rules={{ required: "Field is required" }}
+              rules={{ required: t("field_required", "Field is required") }}
               sanitizeInput={sanitizeNameInput}
             />
           </Field>
           <DatePickerField
-            label="Date of Birth *"
+            label={t("date_of_birth_required", "Date of Birth *")}
             width="w-[calc(50%-8px)]"
             id="dateOfBirth"
-            placeholder="Enter date of birth"
+            placeholder={t("enter_date_of_birth", "Enter date of birth")}
             control={control}
             errors={errors}
-            rules={{ required: "Select date" }}
+            rules={{ required: t("select_date", "Select date") }}
             maxDate={new Date()}
           />
-          <Field label="Gender *" width="w-[calc(50%-8px)]">
+          <Field label={t("gender_required", "Gender *")} width="w-[calc(50%-8px)]">
             <GenderDropdown
+              options={genderOptions}
               value={patientGender}
               open={showPatientGender}
               setOpen={setShowPatientGender}
@@ -218,46 +221,47 @@ const ForSomeoneElsePage = () => {
             <input type="hidden" {...register("gender", { required: true })} value={patientGender} />
             {errors?.gender && (
               <p className="mt-1 text-red-500 text-[12px]/[14px]">
-                Field is required
+                {t("field_required", "Field is required")}
               </p>
             )}
           </Field>
 
-          <SectionTitle text="Booking person" />
-          <Field label="First Name *" width="w-[calc(50%-8px)]">
+          <SectionTitle text={t("booking_person", "Booking person")} />
+          <Field label={t("first_name", "First Name *")} width="w-[calc(50%-8px)]">
             <Input
               register={register}
               id="guardianFirstName"
-              placeholder="Enter first name"
+              placeholder={t("enter_first_name", "Enter first name")}
               disabled={isGuardianDisabled}
               errors={errors}
               rules={{
                 validate: (value) =>
                   isGuardianDisabled || value?.trim()
                     ? true
-                    : "Field is required",
+                    : t("field_required", "Field is required"),
               }}
               sanitizeInput={sanitizeNameInput}
             />
           </Field>
-          <Field label="Last Name *" width="w-[calc(50%-8px)]">
+          <Field label={t("last_name", "Last Name *")} width="w-[calc(50%-8px)]">
             <Input
               register={register}
               id="guardianLastName"
-              placeholder="Enter last name"
+              placeholder={t("enter_last_name", "Enter last name")}
               disabled={isGuardianDisabled}
               errors={errors}
               rules={{
                 validate: (value) =>
                   isGuardianDisabled || value?.trim()
                     ? true
-                    : "Field is required",
+                    : t("field_required", "Field is required"),
               }}
               sanitizeInput={sanitizeNameInput}
             />
           </Field>
-          <Field label="Gender *" width="w-[calc(50%-8px)]">
+          <Field label={t("gender_required", "Gender *")} width="w-[calc(50%-8px)]">
             <GenderDropdown
+              options={genderOptions}
               value={guardianGender}
               open={showGuardianGender}
               setOpen={setShowGuardianGender}
@@ -272,7 +276,7 @@ const ForSomeoneElsePage = () => {
               type="hidden"
               {...register("guardianGender", {
                 validate: (value) =>
-                  isGuardianDisabled || value ? true : "Field is required",
+                  isGuardianDisabled || value ? true : t("field_required", "Field is required"),
               })}
               value={guardianGender}
               disabled={isGuardianDisabled}
@@ -286,51 +290,51 @@ const ForSomeoneElsePage = () => {
 
           <div className="w-full flex items-center gap-6 mb-6">
             <div className="text-[15px] text-[#333333] font-sans font-medium">
-              Are you the parent or legal guardian of the patient?
+              {t("are_you_parent_guardian", "Are you the parent or legal guardian of the patient?")}
             </div>
             <label className="flex items-center gap-2 text-[15px] font-sans text-[#333333]">
               <input type="radio" name="guardianRadio" checked={activePatientGuardian === "Yes"} onChange={() => setActivePatientGuardian("Yes")} />
-              Yes
+              {t("yes", "Yes")}
             </label>
             <label className="flex items-center gap-2 text-[15px] font-sans text-[#333333]">
               <input type="radio" name="guardianRadio" checked={activePatientGuardian === "No"} onChange={() => setActivePatientGuardian("No")} />
-              No
+              {t("no", "No")}
             </label>
           </div>
 
-          <Field label="Passport/pesel *" width="w-[calc(50%-8px)]">
+          <Field label={t("passport_pesel_required", "Passport/pesel *")} width="w-[calc(50%-8px)]">
             <Input
               register={register}
               id="guardianPesel"
-              placeholder="Enter passport/pesel"
+              placeholder={t("enter_passport_pesel", "Enter passport/pesel")}
               disabled={isGuardianDisabled}
               errors={errors}
               rules={{
                 validate: (value) =>
                   isGuardianDisabled || value?.trim()
                     ? true
-                    : "Field is required",
+                    : t("field_required", "Field is required"),
               }}
             />
           </Field>
           <DatePickerField
-            label="Date of Birth *"
+            label={t("date_of_birth_required", "Date of Birth *")}
             width="w-[calc(50%-8px)]"
             id="guardianDateOfBirth"
-            placeholder="Enter date of birth"
+            placeholder={t("enter_date_of_birth", "Enter date of birth")}
             control={control}
             disabled={isGuardianDisabled}
             errors={errors}
             rules={{
               validate: (value) =>
-                isGuardianDisabled || value ? true : "Select date",
+                isGuardianDisabled || value ? true : t("select_date", "Select date"),
             }}
             maxDate={new Date()}
           />
 
-          <SectionTitle text="Contact Information" />
+          <SectionTitle text={t("contact_information", "Contact Information")} />
           <PhoneNumberField
-            label="Phone Number *"
+            label={t("phone_number", "Phone Number *")}
             widthClass="w-[calc(50%-8px)]"
             phoneFieldName="phoneNumber"
             countryFieldName="phoneNumberCountryCode"
@@ -342,34 +346,34 @@ const ForSomeoneElsePage = () => {
             selectedCountryCode={selectedPhoneCountryCode}
             setSelectedCountryCode={setSelectedPhoneCountryCode}
           />
-          <Field label="Email *" width="w-[calc(50%-8px)]">
+          <Field label={`${t("email", "Email")} *`} width="w-[calc(50%-8px)]">
             <Input
               register={register}
               id="email"
-              placeholder="Enter email"
+              placeholder={t("enter_email", "Enter email")}
               errors={errors}
               rules={{
-                required: "Field is required",
-                pattern: { value: emailRegExp, message: "Enter valid email" },
+                required: t("field_required", "Field is required"),
+                pattern: { value: emailRegExp, message: t("enter_valid_email", "Enter valid email") },
               }}
             />
           </Field>
-          <Field label="City *" width="w-[calc(50%-8px)]">
+          <Field label={t("city", "City *")} width="w-[calc(50%-8px)]">
             <Input
               register={register}
               id="city"
-              placeholder="Enter city"
+              placeholder={t("enter_city", "Enter city")}
               errors={errors}
-              rules={{ required: "Field is required" }}
+              rules={{ required: t("field_required", "Field is required") }}
             />
           </Field>
-          <Field label="Address *" width="w-[calc(50%-8px)]">
+          <Field label={t("address", "Address *")} width="w-[calc(50%-8px)]">
             <Input
               register={register}
               id="address"
-              placeholder="Enter address"
+              placeholder={t("enter_address", "Enter address")}
               errors={errors}
-              rules={{ required: "Field is required" }}
+              rules={{ required: t("field_required", "Field is required") }}
             />
           </Field>
 
@@ -377,7 +381,9 @@ const ForSomeoneElsePage = () => {
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
-                {...register("consent", { required: true })}
+                {...register("consent", {
+                  required: t("consent_required", "Consent is required"),
+                })}
                 checked={consentChecked}
                 onChange={(e) => {
                   setConsentChecked(e.target.checked);
@@ -385,26 +391,36 @@ const ForSomeoneElsePage = () => {
                   setValue("consent", e.target.checked, { shouldValidate: true });
                 }}
               />
-              By leaving checked, I agree with the <span className="text-[#6A6DE8] underline">Calling Consent</span>
+              {t("consent_label_prefix", "By leaving checked, I agree with the")}{" "}
+              <span className="text-[#6A6DE8] underline">
+                {t("calling_consent", "Calling Consent")}
+              </span>
             </label>
             {errors?.consent && (
               <p className="mt-1 text-red-500 text-[12px]/[14px]">
-                Consent is required
+                {t("consent_required", "Consent is required")}
               </p>
             )}
           </div>
 
-          <SectionTitle text="Other details" />
+          <SectionTitle text={t("other_details", "Other details")} />
           <div className="w-full mb-3 text-[15px] font-sans text-[#4E5565]">
-            Comments or special requests <span className="text-[#95A0B5]">Optional</span>
+            {t("comments_optional", "Comments or special requests")}{" "}
+            <span className="text-[#95A0B5]">{t("comments_optional_short", "Optional")}</span>
           </div>
           <textarea
             className="w-full h-[86px] border border-[#D8DBE2] rounded-[8px] px-4 py-3 text-[15px] font-sans text-[#4E5565] mb-4"
-            placeholder="Any additional information or special requirements..."
+            placeholder={t(
+              "comments_placeholder",
+              "Any additional information or special requirements..."
+            )}
             {...register("comment")}
           />
           <div className="w-full text-[15px] font-sans text-[#7A8294] mb-6">
-            For Emergency Consultation Appointments, please provide us with more information regarding your appointment request
+            {t(
+              "emergency_consultation_note",
+              "For Emergency Consultation Appointments, please provide us with more information regarding your appointment request"
+            )}
           </div>
 
           <input type="submit" className="hidden" />
@@ -437,6 +453,7 @@ const Input = ({
   rules = {},
   sanitizeInput,
 }) => {
+  const { t } = useAppTranslation();
   const registerOptions = sanitizeInput
     ? {
         ...rules,
@@ -459,14 +476,22 @@ const Input = ({
       />
       {errors?.[id] && (
         <p className="mt-1 text-red-500 text-[12px]/[14px]">
-          {errors[id]?.message || "Field is required"}
+          {errors[id]?.message || t("field_required", "Field is required")}
         </p>
       )}
     </div>
   );
 };
 
-const GenderDropdown = ({ value, open, setOpen, onSelect, dropdownRef, disabled = false }) => (
+const GenderDropdown = ({
+  options = [],
+  value,
+  open,
+  setOpen,
+  onSelect,
+  dropdownRef,
+  disabled = false,
+}) => (
   <div
     ref={dropdownRef}
     className={`relative border-[2px] border-[#E8E8E9] rounded-[10px] px-[12px] py-[8px] flex items-center justify-between ${
@@ -484,7 +509,7 @@ const GenderDropdown = ({ value, open, setOpen, onSelect, dropdownRef, disabled 
     </span>
     {open && !disabled && (
       <div className="absolute top-[48px] left-0 w-full z-20 border border-[#D8DBE2] rounded-[8px] bg-white overflow-hidden">
-        {genderOptions.map((item) => (
+        {options.map((item) => (
           <button
             type="button"
             key={item}

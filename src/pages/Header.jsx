@@ -1,8 +1,11 @@
 import SelfBookingStore from "../store/SelfBookingStore";
+import { useAppTranslation } from "../i18n/useAppTranslation";
+import DesktopLanguageSelector from "./components/DesktopLanguageSelector";
 
 const Header = () => {
   const headerPage = SelfBookingStore((state) => state.headerPage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
+  const { t } = useAppTranslation();
 
   let pointPositions = [
     "left-[calc(20%-6px)]",
@@ -62,18 +65,19 @@ const Header = () => {
             } duration-700 bg-[#7C67FF] rounded-[18px] flex justify-center items-center text-white text-[15px]/[20px] font-medium font-hebrew tracking-[0.675px]`}
           >
             {headerPage === 0
-              ? "Visite type"
+              ? t("step_visit_type", "Visit type")
               : headerPage === 1
-              ? "Schelude"
+              ? t("step_schedule", "Schedule")
               : headerPage === 2
-              ? "Booking"
+              ? t("step_booking", "Booking")
               : headerPage === 3
-              ? "Confirmation"
+              ? t("step_confirmation", "Confirmation")
               : headerPage === 4
-              ? "Complete"
+              ? t("step_complete", "Complete")
               : ""}
           </div>
         </div>
+        <DesktopLanguageSelector />
       </div>
     </div>
   );

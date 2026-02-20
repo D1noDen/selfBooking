@@ -1,6 +1,8 @@
 import SelfBookingStore from "../store/SelfBookingStore";
+import { useAppTranslation } from "../i18n/useAppTranslation";
 
 const StepNavigationFooter = () => {
+  const { t } = useAppTranslation();
   const headerPage = SelfBookingStore((state) => state.headerPage);
   const appPage = SelfBookingStore((state) => state.appPage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
@@ -55,8 +57,6 @@ const StepNavigationFooter = () => {
   };
 
   const isBackDisabled = headerPage === 0;
-  const isStepBackDisabled = headerPage === 0;
-  const isStepNextDisabled = headerPage === 4;
   const isForUserPage = appPage === "for user";
   const isForWhoPage = appPage === "for who";
   const isForSomeoneElsePage = appPage === "for someone else";
@@ -86,10 +86,6 @@ const StepNavigationFooter = () => {
       return;
     }
     form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-  };
-
-  const handleTempStepSwitch = (direction) => {
-    navigateToStep(headerPage + direction);
   };
 
   return (
@@ -129,7 +125,7 @@ const StepNavigationFooter = () => {
               strokeLinejoin="round"
             />
           </svg>
-          <span>Back</span>
+          <span>{t("back", "Back")}</span>
         </button>
 
         {/* Temp without pick time */}
@@ -171,7 +167,7 @@ const StepNavigationFooter = () => {
             onClick={handleContinue}
             disabled={isContinueDisabled}
           >
-            Continue
+            {t("continue", "Continue")}
           </button>
         )}
       </div>

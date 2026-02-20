@@ -220,7 +220,7 @@ const DatePickerField = ({
       {label && (
         <label
           htmlFor={id}
-          className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-[2px]"
+          className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-2"
         >
           {label}
         </label>
@@ -269,7 +269,7 @@ const DatePickerField = ({
             disabled={disabled}
             placeholder={placeholder}
             autoComplete="off"
-            className={`w-full px-[12px] py-[8px] pr-[38px] border-[2px] border-[#E8E8E9] rounded-[10px] text-[15px]/[18px] text-left font-sans tracking-[0.675px] ${
+            className={`w-full px-[12px] py-[8px] pr-[38px] border-[2px] border-[#E8E8E9] rounded-[10px] text-[15px]/[18px] text-left font-sans tracking-[0.675px] focus:border focus:border-[#6C6AC7] ${
               disabled ? "bg-[#F0F2F6] text-[#A4ABBC] cursor-not-allowed" : "bg-white text-[#333]"
             }`}
           />

@@ -436,7 +436,7 @@ const SectionTitle = ({ text }) => (
 
 const Field = ({ label, width, children }) => (
   <div className={`${width} mb-[26px]`}>
-    <div className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-[2px]">
+    <div className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-2">
       {label}
     </div>
     {children}

@@ -184,7 +184,7 @@ const ForUserPage = () => {
             maxDate={new Date()}
           />
 
-          <div className="flex flex-col w-[calc(50%-8px)] mb-[26px] relative z-50">
+          <div className="flex flex-col gap-2 w-[calc(50%-8px)] mb-[26px] relative z-50">
             <div className="text-[15px]/[18px] text-[#333] font-sans font-[500] mb-[4px]">
               {t("gender_required", "Gender *")}
             </div>
@@ -289,7 +289,7 @@ const ForUserPage = () => {
           />
 
           <div className="flex flex-col w-full mb-[24px]">
-            <label htmlFor="comments" className="text-[18px] text-[#4E5565] font-medium mb-[6px]">
+            <label htmlFor="comments" className="text-[18px] text-[#4E5565] font-medium mb-2">
               {t("comments_optional", "Comments or special requests (Optional)")}
             </label>
             <textarea
@@ -323,7 +323,7 @@ const InputBlock = ({ label, placeholder, width, id, type, register, errors, rul
 
   return (
     <div className={`inputBlock flex flex-col ${width} mb-[26px]`}>
-      <label htmlFor={id} className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-[2px]">
+      <label htmlFor={id} className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-2">
         {label}
       </label>
       <input

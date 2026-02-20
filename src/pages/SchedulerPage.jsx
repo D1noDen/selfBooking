@@ -692,7 +692,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
   const TimeAppointment = (eventInfo) => {
     if (eventInfo.event.extendedProps.isEmpty) {
       return (
-        <div className="bg-[#F4F5FA] text-[18px]/[24px] text-[#A7ACBD] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center border border-solid border-[#E8E8E9] rounded-[10px] mb-[12px] cursor-default">
+        <div className="bg-[#F4F5FA] text-[18px]/[24px] text-[#A7ACBD] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center rounded-[10px] mb-[12px] cursor-default">
           —
         </div>
       );
@@ -704,10 +704,10 @@ const SchedulerPage = ({ setSesionStorage }) => {
 
     return (
       <div
-        className={`text-[18px]/[24px] font-hebrew tracking-[0.63px] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center border border-solid rounded-[10px] cursor-pointer mb-[12px] ${
+        className={`text-[18px]/[24px] font-hebrew tracking-[0.63px] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center rounded-[10px] cursor-pointer mb-[12px] ${
           isSelected
-            ? "bg-[#8380FF] text-white border-[#8380FF]"
-            : "bg-white text-[#8380FF] border-[#E8E8E9] hover:bg-[#8380FF] hover:text-white"
+            ? "bg-[#8380FF] text-white"
+            : "bg-white text-[#8380FF] hover:bg-[#8380FF] hover:text-white"
         }`}
         style={{
           boxShadow: "0 2px 8px 0 rgba(0, 0, 0, 0.10)"
@@ -968,7 +968,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 onChange={handleVisitTypeChange}
               >
                 <div className="relative w-[260px] font-sans text-[14px] text-[#333333] font-[400]">
-                  <Listbox.Button className="h-[40px] w-full rounded-[8px] border border-[#0000001F] px-3 bg-white focus:outline-none focus:border-[#8380FF] flex items-center justify-between">
+                  <Listbox.Button className="h-[40px] w-full rounded-[8px] border border-[#0000001F] px-3 bg-white focus:outline-none focus:border focus:border-[#6C6AC7] flex items-center justify-between">
                     <span className="truncate">{selectedAppointmentLabel}</span>
                     <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M5 7.5L10 12.5L15 7.5" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

@@ -336,7 +336,7 @@ console.log("chosenDoctor:", chosenDoctor);
           <div className={`flex flex-col w-full mb-[30px]`}>
             <label
               htmlFor="comments"
-              className={`text-[15px]/[18px] text-[#5E5E5E] font-inter tracking-[0.675px] mb-[2px]`}
+              className={`text-[15px]/[18px] text-[#5E5E5E] font-inter tracking-[0.675px] mb-2`}
             >
               Comments or special requests
             </label>
@@ -594,10 +594,10 @@ const InputBlock = ({
 
   return (
     <div className={`inputBlock flex flex-col w-${width} mb-[15px] relative`}>
-      <div>
+      <div className="mb-2">
         <label
           htmlFor={id}
-          className={`text-[15px]/[18px] text-[#5E5E5E] font-inter tracking-[0.675px] mb-[2px] mr-[9px]`}
+          className={`text-[15px]/[18px] text-[#5E5E5E] font-inter tracking-[0.675px] mr-[9px]`}
         >
           {label}
         </label>

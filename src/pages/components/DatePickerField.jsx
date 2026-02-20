@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useController } from "react-hook-form";
 import { useOnClickOutside } from "../helpers/helpers";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { getIntlLocale } from "../../i18n/dateLocale";
 
 const toIsoDate = (date) => {
   const year = date.getFullYear();
@@ -42,10 +44,6 @@ const fromIsoDate = (value) => {
   return date;
 };
 
-const monthNames = Array.from({ length: 12 }, (_, index) =>
-  new Date(2000, index, 1).toLocaleString("en-US", { month: "long" })
-);
-
 const DatePickerField = ({
   id,
   label,
@@ -60,6 +58,8 @@ const DatePickerField = ({
   minYearsFromToday,
   maxYearsFromToday,
 }) => {
+  const { language } = useAppTranslation();
+  const localeCode = getIntlLocale(language);
   const pickerRef = useRef(null);
   const monthListRef = useRef(null);
   const yearListRef = useRef(null);
@@ -73,6 +73,24 @@ const DatePickerField = ({
   useOnClickOutside(pickerRef, () => setIsOpen(false));
 
   const { field } = useController({ name: id, control, rules });
+
+  const monthNames = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, index) =>
+        new Date(2000, index, 1).toLocaleString(localeCode, { month: "long" })
+      ),
+    [localeCode]
+  );
+  const weekdayNames = useMemo(() => {
+    const mondayUtc = new Date(Date.UTC(2024, 0, 1));
+    return Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(mondayUtc);
+      day.setUTCDate(mondayUtc.getUTCDate() + index);
+      return new Intl.DateTimeFormat(localeCode, { weekday: "short" })
+        .format(day)
+        .toUpperCase();
+    });
+  }, [localeCode]);
 
   const normalizedMinDate = useMemo(() => {
     if (!minDate) return null;
@@ -380,7 +398,7 @@ const DatePickerField = ({
                         </div>
                       </div>
                       <div className="grid grid-cols-7 gap-y-2 mb-3">
-                        {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((dayName) => (
+                        {weekdayNames.map((dayName) => (
                           <span
                             key={dayName}
                             className="text-center text-[14px] text-[#33333366] font-semibold font-sans"

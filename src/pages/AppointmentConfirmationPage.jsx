@@ -11,8 +11,13 @@ import {
 import { dateHelper } from "./helpers/dateHelper";
 import Spinner from "./helpers/Spinner";
 import { getBookingInformation } from "../helpers/bookingStorage";
+import { useAppTranslation } from "../i18n/useAppTranslation";
+import { getLocalizedVisitTypeLabel } from "../i18n/visitTypeLabel";
 
 const AppointmentConfirmationPage = () => {
+  const { t, language } = useAppTranslation();
+  const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
+  moment.locale(momentLocale);
   const { auth } = useAuth();
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
@@ -30,8 +35,6 @@ const AppointmentConfirmationPage = () => {
   );
   const data = confirmationData?.formData || {};
   const source = confirmationData?.source || "for user";
-
-  console.log('data', data)
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: clinicInfoData, setText: loadClinicInfo } = get_Clinic_Info();
@@ -186,24 +189,34 @@ const AppointmentConfirmationPage = () => {
       {isSubmitting && <Spinner />}
       <div className="bg-white rounded-[10px] text-[24px] text-[#333] font-sans p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)]">
         <div className="text-[40px]/[46px] text-[#2F3441] font-semibold mb-1">
-          Confirm your appointment
+          {t("confirm_appointment_title", "Confirm your appointment")}
         </div>
         <div className="text-[16px] text-[#6A7282] mb-6">
-          Please review all details before confirming
+          {t("review_details", "Please review all details before confirming")}
         </div>
 
         <div className='grid grid-cols-2 gap-[32px]'>
           <div className="flex flex-col gap-[32px]">
           <div className="rounded-[10px] p-4" style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.05)"}}>
             <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">
-              Appointment Details
+              {t("appointment_details", "Appointment Details")}
             </div>
             <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
-              <LabelValue label="Visit Type" value={bookingInfo?.apoimentTypeId?.lebel} />
-              <LabelValue label="Location" value={clinicInfo?.clinicAddress} />
-              <LabelValue label="Doctor" value={bookingInfo?.doctor?.name} />
               <LabelValue
-                label="Date & Time"
+                label={t("visit_type_label", "Visit Type")}
+                value={
+                  getLocalizedVisitTypeLabel(
+                    bookingInfo?.apoimentTypeId || {
+                      label: bookingInfo?.apoimentTypeId?.label || bookingInfo?.apoimentTypeId?.lebel,
+                    },
+                    language
+                  ) || "-"
+                }
+              />
+              <LabelValue label={t("location", "Location")} value={clinicInfo?.clinicAddress} />
+              <LabelValue label={t("doctor", "Doctor")} value={bookingInfo?.doctor?.name} />
+              <LabelValue
+                label={t("date_time", "Date & Time")}
                 value={moment(
                   bookingInfo?.doctor?.eventStartDateTime,
                   "DD.MM.YYYY HH:mm:ss"
@@ -212,12 +225,12 @@ const AppointmentConfirmationPage = () => {
             </div>
           </div>
           <div className="rounded-[10px] p-4" style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.05)"}}>
-          <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">Your Details</div>
+          <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">{t("your_details", "Your Details")}</div>
           <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
-            <LabelValue label="Full Name" value={`${data.firstName || ""} ${data.lastName || ""}`.trim()} />
-            <LabelValue label="PESEL" value={data.pesel} />
-            <LabelValue label="Email" value={data.email} />
-            <LabelValue label="Phone" value={data.cellPhone || data.phoneNumber} />
+            <LabelValue label={t("full_name", "Full Name")} value={`${data.firstName || ""} ${data.lastName || ""}`.trim()} />
+            <LabelValue label={t("pesel", "PESEL")} value={data.pesel} />
+            <LabelValue label={t("email", "Email")} value={data.email} />
+            <LabelValue label={t("phone", "Phone")} value={data.cellPhone || data.phoneNumber} />
           </div>
         </div>
 
@@ -225,18 +238,18 @@ const AppointmentConfirmationPage = () => {
           (data.guardianFirstName || data.guardianLastName || data.guardianDateOfBirth) && (
             <div className="rounded-[10px] p-4" style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.05)"}}>
               <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">
-                Parent/Guardian
+                {t("parent_guardian", "Parent/Guardian")}
               </div>
               <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
                 <LabelValue
-                  label="Full Name"
+                  label={t("full_name", "Full Name")}
                   value={`${data.guardianFirstName || ""} ${data.guardianLastName || ""}`.trim()}
                 />
-                <LabelValue label="Date of Birth" value={data.guardianDateOfBirth} />
-                <LabelValue label="Gender" value={data.guardianGender} />
+                <LabelValue label={t("date_of_birth", "Date of Birth")} value={data.guardianDateOfBirth} />
+                <LabelValue label={t("gender", "Gender")} value={data.guardianGender} />
                 <LabelValue
-                  label="Relation"
-                  value={data.activePatientGuardian === "No" ? "Not guardian" : "Guardian"}
+                  label={t("relation", "Relation")}
+                  value={data.activePatientGuardian === "No" ? t("not_guardian", "Not guardian") : t("guardian", "Guardian")}
                 />
               </div>
             </div>
@@ -245,7 +258,7 @@ const AppointmentConfirmationPage = () => {
 
           <div className="rounded-[10px] h-max p-4" style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.05)"}}>
             <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">
-              Clinic Location
+              {t("clinic_location", "Clinic Location")}
             </div>
             <div className="bg-[#F5F5FF] flex justify-start items-start rounded-[10px] p-[17px] mb-3 text-[16px]/[22px]">
               <div className="rounded-full w-[40px] h-[40px] bg-[#8380FF] flex items-center justify-center">
@@ -292,7 +305,7 @@ const AppointmentConfirmationPage = () => {
             }
             disabled={isSubmitting}
           >
-            Edit Details
+            {t("edit_details", "Edit Details")}
           </button>
           <button
             type="button"
@@ -300,7 +313,7 @@ const AppointmentConfirmationPage = () => {
             onClick={onConfirm}
             disabled={isSubmitting}
           >
-            Confirm Appointment
+            {t("confirm_appointment", "Confirm Appointment")}
           </button>
         </div>
       </div>

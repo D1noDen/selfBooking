@@ -9,20 +9,22 @@ import {
   splitPhoneByCountryCode,
 } from "./helpers/phoneCountry";
 import DatePickerField from "./components/DatePickerField";
+import { useAppTranslation } from "../i18n/useAppTranslation";
 
-const genderOptions = ["Male", "Female", "Other"];
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
 const allowedNameCharsRegExp = /[^\p{L}\p{M}\s'-]/gu;
 
 const sanitizeNameInput = (value = "") => value.replace(allowedNameCharsRegExp, "");
-const nameRules = {
-  required: "Field is required",
-  validate: (value) =>
-    value?.trim().length > 0 ? true : "Field is required",
-};
 
 const ForUserPage = () => {
+  const { t } = useAppTranslation();
+  const genderOptions = [t("male", "Male"), t("female", "Female"), t("other", "Other")];
+  const nameRules = {
+    required: t("field_required", "Field is required"),
+    validate: (value) =>
+      value?.trim().length > 0 ? true : t("field_required", "Field is required"),
+  };
   const { register, control, handleSubmit, setValue, trigger, watch, formState: { errors } } = useForm({
     mode: "all",
   });
@@ -127,10 +129,10 @@ const ForUserPage = () => {
         style={{ boxShadow: "0 4px 20px -1px rgba(0, 0, 0, 0.06)" }}
       >
         <div className="text-[24px] text-[#30343F] font-semibold mb-1">
-          Patient Details
+          {t("patient_details", "Patient Details")}
         </div>
         <div className="text-[16px] text-[#7A8294] mb-8">
-          Please fill in the information below
+          {t("please_fill_below", "Please fill in the information below")}
         </div>
         <form
           id="for-user-form"
@@ -138,22 +140,22 @@ const ForUserPage = () => {
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="text-[18px] text-[#101828] font-medium mb-4 w-full">
-            Personal Information
+            {t("personal_information", "Personal Information")}
           </div>
           <InputBlock
-            label="PESEL/PASSPORT *"
-            placeholder="Enter PESEL/PASSPORT"
+            label={t("pesel_passport", "PESEL/PASSPORT *")}
+            placeholder={t("enter_pesel_passport", "Enter PESEL/PASSPORT")}
             width="w-full"
             id="pesel"
             register={register}
             errors={errors}
             rules={{
-              required: "Field is required",
+              required: t("field_required", "Field is required"),
             }}
           />
           <InputBlock
-            label="First Name *"
-            placeholder="Enter first name"
+            label={t("first_name", "First Name *")}
+            placeholder={t("enter_first_name", "Enter first name")}
             width="w-[calc(50%-8px)]"
             id="firstName"
             register={register}
@@ -162,8 +164,8 @@ const ForUserPage = () => {
             sanitizeInput={sanitizeNameInput}
           />
           <InputBlock
-            label="Last Name *"
-            placeholder="Enter last name"
+            label={t("last_name", "Last Name *")}
+            placeholder={t("enter_last_name", "Enter last name")}
             width="w-[calc(50%-8px)]"
             id="lastName"
             register={register}
@@ -172,19 +174,19 @@ const ForUserPage = () => {
             sanitizeInput={sanitizeNameInput}
           />
           <DatePickerField
-            label="Date of Birth *"
-            placeholder="Enter date of birth"
+            label={t("date_of_birth_required", "Date of Birth *")}
+            placeholder={t("enter_date_of_birth", "Enter date of birth")}
             width="w-[calc(50%-8px)]"
             id="dateOfBirth"
             control={control}
             errors={errors}
-            rules={{ required: "Select date" }}
+            rules={{ required: t("select_date", "Select date") }}
             maxDate={new Date()}
           />
 
           <div className="flex flex-col w-[calc(50%-8px)] mb-[26px] relative z-50">
             <div className="text-[15px]/[18px] text-[#333] font-sans font-[500] mb-[4px]">
-              Gender *
+              {t("gender_required", "Gender *")}
             </div>
             <div
               className="border-[2px] border-[#E8E8E9] relative cursor-pointer flex items-center rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] px-[12px] -mt-1 py-[9px]"
@@ -228,7 +230,7 @@ const ForUserPage = () => {
             </div>
             <input
               type="hidden"
-              {...register("gender", { required: "Field is required" })}
+              {...register("gender", { required: t("field_required", "Field is required") })}
               value={selectedGender}
             />
             {errors?.gender && (
@@ -238,29 +240,29 @@ const ForUserPage = () => {
             )}
           </div>
           <InputBlock
-            label="City *"
-            placeholder="Enter city"
+            label={t("city", "City *")}
+            placeholder={t("enter_city", "Enter city")}
             width="w-[calc(50%-8px)]"
             id="city"
             register={register}
             errors={errors}
-            rules={{ required: "Field is required" }}
+            rules={{ required: t("field_required", "Field is required") }}
           />
           <InputBlock
-            label="Address *"
-            placeholder="Enter address"
+            label={t("address", "Address *")}
+            placeholder={t("enter_address", "Enter address")}
             width="w-[calc(50%-8px)]"
             id="address"
             register={register}
             errors={errors}
-            rules={{ required: "Field is required" }}
+            rules={{ required: t("field_required", "Field is required") }}
           />
 
           <div className="text-[18px] text-[#101828] w-full font-medium mb-4 mt-2">
-            Contact Information
+            {t("contact_information", "Contact Information")}
           </div>
           <PhoneNumberField
-            label="Phone Number *"
+            label={t("phone_number", "Phone Number *")}
             widthClass="w-[calc(50%-8px)]"
             phoneFieldName="cellPhone"
             countryFieldName="cellPhoneCountryCode"
@@ -273,27 +275,30 @@ const ForUserPage = () => {
             setSelectedCountryCode={setSelectedPhoneCountryCode}
           />
           <InputBlock
-            label="Email *"
-            placeholder="Enter email"
+            label={`${t("email", "Email")} *`}
+            placeholder={t("enter_email", "Enter email")}
             width="w-[calc(50%-8px)]"
             id="email"
             register={register}
             errors={errors}
             type="email"
             rules={{
-              required: "Field is required",
-              pattern: { value: emailRegExp, message: "Enter valid email" },
+              required: t("field_required", "Field is required"),
+              pattern: { value: emailRegExp, message: t("enter_valid_email", "Enter valid email") },
             }}
           />
 
           <div className="flex flex-col w-full mb-[24px]">
             <label htmlFor="comments" className="text-[18px] text-[#4E5565] font-medium mb-[6px]">
-              Comments or special requests (Optional)
+              {t("comments_optional", "Comments or special requests (Optional)")}
             </label>
             <textarea
               id="comments"
               className="border border-[#D8DBE2] bg-white rounded-[8px] h-[72px] outline-none px-4 py-3"
-              placeholder="Any additional information or special requirements..."
+              placeholder={t(
+                "comments_placeholder",
+                "Any additional information or special requirements..."
+              )}
               {...register("comment")}
             ></textarea>
           </div>
@@ -306,6 +311,7 @@ const ForUserPage = () => {
 };
 
 const InputBlock = ({ label, placeholder, width, id, type, register, errors, rules, sanitizeInput }) => {
+  const { t } = useAppTranslation();
   const registerOptions = sanitizeInput
     ? {
         ...rules,
@@ -329,7 +335,7 @@ const InputBlock = ({ label, placeholder, width, id, type, register, errors, rul
       />
       {errors?.[id] && (
         <p className="mt-1 text-red-500 text-[12px]/[14px]">
-          {errors[id]?.message || "Field is required"}
+          {errors[id]?.message || t("field_required", "Field is required")}
         </p>
       )}
     </div>

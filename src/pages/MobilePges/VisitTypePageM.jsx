@@ -43,7 +43,10 @@ const VisiteTypePageM = ({ visitTypeArr, setSesionStorage }) => {
             setSesionStorage({
               apoimentTypeId: {
                 id: item.id,
+                label: item.label,
                 lebel: item.label,
+                ukrLabel: item.ukrLabel,
+                polLabel: item.polLabel,
               },
             });
             setAppPage("upcoming schedule");

@@ -390,7 +390,8 @@ console.log("chosenDoctor:", chosenDoctor);
               <div
                 className={`text-[#3F4455] font-hebrew tracking-[0.72px] mb-[3px]`}
               >
-                {informationWithSorage?.apoimentTypeId?.lebel}
+                {informationWithSorage?.apoimentTypeId?.label ||
+                  informationWithSorage?.apoimentTypeId?.lebel}
               </div>
               <div className={`text-[#3F4455] font-hebrew tracking-[0.72px]`}>
                 {informationWithSorage?.doctor?.eventStartDateTime

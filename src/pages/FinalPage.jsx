@@ -3,8 +3,10 @@ import SelfBookingStore from "../store/SelfBookingStore";
 import { clearBookingInformation } from "../helpers/bookingStorage";
 
 import FinalPageImage from "../assets/images/self-booking/finalPageImage.gif";
+import { useAppTranslation } from "../i18n/useAppTranslation";
 
 const FinalPage = () => {
+  const { t } = useAppTranslation();
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const setUser = SelfBookingStore((state) => state.setUser);
@@ -53,14 +55,17 @@ const FinalPage = () => {
         <div
           className={`text-[30px] text-[#8380FF] font-sans font-medium tracking-[1.62px] text-center`}
         >
-          Appointment Confirmed!
+          {t("appointment_confirmed", "Appointment Confirmed!")}
         </div>
         <div
           className={`max-w-[600px] mx-auto text-center text-[18px] text-[#4A5565] font-sans font-[400] tracking-[0.81px] ${
             _height <= 850 ? "mb-0" : "mb-[25px]"
           } `}
         >
-          Your appointment has been successfully booked. A confirmation email has been sent to your inbox.
+          {t(
+            "appointment_success_text",
+            "Your appointment has been successfully booked. A confirmation email has been sent to your inbox."
+          )}
         </div>
         {/* <div style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.06)"}} className='p-[25px] w-full max-w-[600px] mx-auto rounded-[10px] bg-white mb-[25px] mt-[30px] flex flex-col justify-start items-start'>
           <p className="text-[#101828] font-sans text-[18px]">What's Next?</p>
@@ -87,7 +92,7 @@ const FinalPage = () => {
             clearBookingInformation();
           }}
         >
-          Book another appointment
+          {t("book_another_appointment", "Book another appointment")}
         </div>
       </div>
     </div>

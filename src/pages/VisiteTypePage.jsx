@@ -1,5 +1,7 @@
 import SelfBookingStore from "../store/SelfBookingStore";
 import { useEffect, useRef, useState } from "react";
+import { useAppTranslation } from "../i18n/useAppTranslation";
+import { getLocalizedVisitTypeLabel } from "../i18n/visitTypeLabel";
 
 // const visitTypeArr = [
 //     'Cosmetic Consultation',
@@ -14,6 +16,7 @@ const VisiteTypePage = ({ visitTypeArr, setSesionStorage }) => {
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
+  const { t, language } = useAppTranslation();
 
   const [swype, setSwype] = useState([]);
 
@@ -57,7 +60,9 @@ const VisiteTypePage = ({ visitTypeArr, setSesionStorage }) => {
             setSesionStorage({
               apoimentTypeId: {
                 id: item.id,
-                lebel: item.label,
+                label: item.label,
+                ukrLabel: item.ukrLabel,
+                polLabel: item.polLabel,
               },
             });
             setHeaderPage(1);
@@ -66,7 +71,7 @@ const VisiteTypePage = ({ visitTypeArr, setSesionStorage }) => {
         }}
       >
         <div className={`z-[4] ${swype[i] ? "text-white" : ""}`}>
-          {item.label}
+          {getLocalizedVisitTypeLabel(item, language)}
         </div>
         <div
           className={`${
@@ -91,7 +96,7 @@ const VisiteTypePage = ({ visitTypeArr, setSesionStorage }) => {
         <h1
           className={`lg:w-[600px] sm:pt-[20px] sm:text-[20px] lg:mx-auto lg:text-[32px]/[44px] font-nunito font-semibold text-white text-center tracking-[1.44px] mb-10 mt-0 lg:scale-90 xl:scale-100`}
         >
-          What type of appointment would you like to schedule?
+          {t("visit_type_title", "What type of appointment would you like to schedule?")}
         </h1>
         <div
           className={` ${

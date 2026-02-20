@@ -5,6 +5,7 @@ import {
   sanitizePhoneLocal,
   validatePhoneByCountry,
 } from "../helpers/phoneCountry";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 const PhoneNumberField = ({
   label = "Phone Number *",
@@ -20,6 +21,7 @@ const PhoneNumberField = ({
   setSelectedCountryCode,
   className = "",
 }) => {
+  const { t } = useAppTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -48,7 +50,7 @@ const PhoneNumberField = ({
             type="button"
             className="h-[24px] min-w-[92px] px-[10px] bg-[#F2F3FA] rounded-[8px] flex items-center justify-between gap-[10px] text-[15px]/[20px] font-semibold text-[#333]"
             onClick={() => setIsOpen((prev) => !prev)}
-            aria-label={`Select country code, current ${currentCountry.label}`}
+            aria-label={`${t("select_country_code", "Select country code, current")} ${currentCountry.label}`}
           >
             <span>{selectedCountryCode}</span>
             <span className={`${isOpen ? "rotate-180" : ""} duration-200`}>
@@ -111,7 +113,7 @@ const PhoneNumberField = ({
               .slice(0, currentCountry.maxLength);
           }}
           {...register(phoneFieldName, {
-            required: "Field is required",
+            required: t("field_required", "Field is required"),
             setValueAs: (value) => sanitizePhoneLocal(value),
             validate: (value) => validatePhoneByCountry(value, selectedCountryCode),
           })}
@@ -122,7 +124,7 @@ const PhoneNumberField = ({
 
       {errors?.[phoneFieldName] && (
         <p className="mt-1 text-red-500 text-[12px]/[14px]">
-          {errors[phoneFieldName]?.message || "Field is required"}
+          {errors[phoneFieldName]?.message || t("field_required", "Field is required")}
         </p>
       )}
     </div>

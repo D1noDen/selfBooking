@@ -17,6 +17,8 @@ import { get_Apoiment_Types_Self_Booking } from "./request/requestSelfBooking";
 import Spinner from "./helpers/Spinner";
 import WithoutAvatar from "../assets/images/svg/NoAvatar.svg";
 import moment from "moment";
+import "moment/locale/pl";
+import "moment/locale/uk";
 import useAuth from "../store/useAuth";
 import DatePicker from "react-datepicker";
 import { selfBookingBackendHelper } from "./helpers/backendHelpers";
@@ -25,6 +27,9 @@ import {
   getBookingInformation,
   patchBookingInformation,
 } from "../helpers/bookingStorage";
+import { useAppTranslation } from "../i18n/useAppTranslation";
+import { getLocalizedVisitTypeLabel } from "../i18n/visitTypeLabel";
+import { getDateFnsLocale } from "../i18n/dateLocale";
 
 const MonthYearPickerButton = forwardRef(({ value, onClick, isOpen }, ref) => (
   <button
@@ -45,6 +50,9 @@ const MonthYearPickerButton = forwardRef(({ value, onClick, isOpen }, ref) => (
 MonthYearPickerButton.displayName = "MonthYearPickerButton";
 
 const SchedulerPage = ({ setSesionStorage }) => {
+  const { t, language } = useAppTranslation();
+  const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
+  moment.locale(momentLocale);
   const informationWithSorage = getBookingInformation();
   const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
   const storedDoctorDate = informationWithSorage?.doctor?.eventStartDateTime;
@@ -593,7 +601,12 @@ const SchedulerPage = ({ setSesionStorage }) => {
     );
 
     if (selected) {
-      setSelectedAppointment({ id: selected.id, label: selected.label });
+      setSelectedAppointment({
+        id: selected.id,
+        label: selected.label,
+        ukrLabel: selected.ukrLabel,
+        polLabel: selected.polLabel,
+      });
     }
   }, [appointmentTypeOptions, storedAppointmentTypeId]);
 
@@ -608,14 +621,21 @@ const SchedulerPage = ({ setSesionStorage }) => {
 
       setIsLoadingData(true);
       clearSelectedSlot();
-      setSelectedAppointment({ id: nextType.id, label: nextType.label });
+      setSelectedAppointment({
+        id: nextType.id,
+        label: nextType.label,
+        ukrLabel: nextType.ukrLabel,
+        polLabel: nextType.polLabel,
+      });
 
       const currentInfo = getBookingInformation();
       setSesionStorage({
         ...currentInfo,
         apoimentTypeId: {
           id: parsedNextId,
-          lebel: nextType.label,
+          label: nextType.label,
+          ukrLabel: nextType.ukrLabel,
+          polLabel: nextType.polLabel,
         },
       });
     },
@@ -631,8 +651,8 @@ const SchedulerPage = ({ setSesionStorage }) => {
   const selectedAppointmentLabel = useMemo(() => {
     const currentId = selectedAppointment?.id || storedAppointmentTypeId;
     const currentType = appointmentTypeOptions.find((item) => item.id === currentId);
-    return currentType?.label || "Select visit type";
-  }, [appointmentTypeOptions, selectedAppointment, storedAppointmentTypeId]);
+    return getLocalizedVisitTypeLabel(currentType, language) || t("select_visit_type", "Select visit type");
+  }, [appointmentTypeOptions, language, selectedAppointment, storedAppointmentTypeId, t]);
 
   const doctorsWithEvents = useMemo(() => {
     if (!doctors || !events || doctors.length === 0 || events.length === 0) {
@@ -939,10 +959,10 @@ const SchedulerPage = ({ setSesionStorage }) => {
         <div className={`flex relative bg-white border-b border-[#E5E5EA] flex-shrink-0`}>
           <div className={`lg:w-[260px] xl:w-[30%] flex flex-col items-start gap-4 text-start lg:p-4 xl:px-10`}>
             <div className={`text-[30px] text-[#333] font-semibold font-sans`}>
-              Select date and time
+              {t("select_date_time", "Select date and time")}
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-[16px] font-sans text-[#333333] font-[600]">Visit type</span>
+              <span className="text-[16px] font-sans text-[#333333] font-[600]">{t("visit_type", "Visit type")}</span>
               <Listbox
                 value={selectedAppointment?.id || storedAppointmentTypeId || ""}
                 onChange={handleVisitTypeChange}
@@ -973,7 +993,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
                         >
                           {({ selected }) => (
                             <span className={selected ? "font-semibold" : "font-normal"}>
-                              {item.label}
+                              {getLocalizedVisitTypeLabel(item, language)}
                             </span>
                           )}
                         </Listbox.Option>
@@ -998,8 +1018,9 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 onChange={handlePickerDateChange}
                 minDate={todayDate}
                 maxDate={maxSelectableDate}
+                locale={getDateFnsLocale(language)}
                 dateFormat="MMMM yyyy"
-                todayButton="Today"
+                todayButton={t("today", "Today")}
                 open={isMonthYearOpen}
                 onInputClick={() => setIsMonthYearOpen(true)}
                 onClickOutside={() => setIsMonthYearOpen(false)}
@@ -1044,7 +1065,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
                     >
                       {day.isToday && (
                         <span className="absolute top-[10px] right-0 rounded-[4px] bg-[#8380FF] px-[8px] py-[4px] text-[10px] font-[400] font-sans leading-none text-white">
-                          Today
+                          {t("today", "Today")}
                         </span>
                       )}
                       <span
@@ -1197,7 +1218,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 })
               ) : (
                 <div className="flex items-center justify-center py-10 text-gray-500">
-                  No slots available
+                  {t("no_slots_available", "No slots available")}
                 </div>
               )}
             </div>

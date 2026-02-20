@@ -10,6 +10,8 @@ import {
 import DatePicker from "react-datepicker";
 import interactionPlugin from "@fullcalendar/interaction";
 import moment from "moment";
+import "moment/locale/pl";
+import "moment/locale/uk";
 //import useAuth from "../../../Routes/useAuth";
 import dateFormat from "dateformat";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -21,9 +23,11 @@ import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import calendar from "../../assets/images/self-booking/calendar.png";
 import { getBookingInformation } from "../../helpers/bookingStorage";
+import { getIntlLocale } from "../../i18n/dateLocale";
 
 const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
+  const language = SelfBookingStore((state) => state.language || "en");
   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
   const calendarApi = SelfBookingStore((state) => state.calendarApi);
   const setCalendarApi = SelfBookingStore((state) => state.setCalendarApi);
@@ -38,7 +42,10 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
   const today = moment(curDate).format("YYYY-MM-DD");
   const informationWithSorage = getBookingInformation() || {};
   const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
-  const storedAppointmentTypeLabel = informationWithSorage?.apoimentTypeId?.lebel || "";
+  const storedAppointmentTypeLabel =
+    informationWithSorage?.apoimentTypeId?.label ||
+    informationWithSorage?.apoimentTypeId?.lebel ||
+    "";
   const [startDate, setStartDate] = useState(new Date());
   const [doctors, setDoctors] = useState(null);
   const [events, setEvents] = useState(null);
@@ -69,6 +76,12 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
   } = get_Apoiment_Types_Self_Booking();
 
   let calendarRef = useRef(null);
+  const localeCode = getIntlLocale(language);
+
+  useEffect(() => {
+    const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
+    moment.locale(momentLocale);
+  }, [language]);
 
   function formatAMPM(date) {
     let hours = +date?.split(":")[0];
@@ -204,10 +217,10 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
 
   const dayFormat = (data) => {
     const dateObject = new Date(data.date);
-    const dayOfWeek = dateObject.getDay();
     const dayNumber = dateObject.getDate();
-    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const dayOfWeekName = daysOfWeek[dayOfWeek];
+    const dayOfWeekName = new Intl.DateTimeFormat(localeCode, {
+      weekday: "short",
+    }).format(dateObject);
     return (
       <div
         className={`flex h-[65px] w-[50px] appointEvent rounded-[15px] flex-col font-nunito text-[16px] py-[10px] px-[7px] `}
@@ -273,6 +286,7 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
           <div className="headerCalendar">
             <FullCalendar
               ref={calendarRef}
+              locale={language === "uk" ? "uk" : language === "pl" ? "pl" : "en"}
               firstDay={0}
               headerToolbar={{
                 left: prevButton,

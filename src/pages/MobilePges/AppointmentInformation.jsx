@@ -201,7 +201,7 @@ console.log("patientInfo", patientInfo);
       primaryDoctorId: 0,
       billingStreet: patientInfo.adress,
       billingHouseNumber: "",
-      billingCity: data.city,
+      billingCity: patientInfo.city || "",
       billingRegionId: 0,
       billingZipCode: "",
       billingCountry: "",

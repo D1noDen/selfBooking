@@ -1,9 +1,7 @@
 import { useForm } from "react-hook-form";
-import { useState, useEffect } from "react";
 import SelfBookingStore from "../../store/SelfBookingStore";
 
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
-import { values } from "lodash";
 
 const GuardianExactInformation = () => {
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
@@ -11,17 +9,17 @@ const GuardianExactInformation = () => {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
-  } = useForm();
-
-  const [submit, setSubmit] = useState(false);
+  } = useForm({
+    defaultValues: {
+      isParent: true,
+    },
+  });
 
   const emailRegExp =
     /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
 
   const onSubmit = async (data) => {
-    setSubmit(!submit);
     console.log(data);
     setGuardianInfo(data);
     setAppPage("for patient mobile");
@@ -237,10 +235,10 @@ const GuardianExactInformation = () => {
                 <label className="label">
                   <input
                     type="radio"
-                    name="radio"
-                    checked
-                    {...register("isParent")}
-                    value={true}
+                    {...register("isParent", {
+                      setValueAs: (value) => value === "true",
+                    })}
+                    value="true"
                   />
                   <span className="check"></span>
                 </label>
@@ -250,9 +248,10 @@ const GuardianExactInformation = () => {
                 <label className="label">
                   <input
                     type="radio"
-                    name="radio"
-                    {...register("isParent")}
-                    value={false}
+                    {...register("isParent", {
+                      setValueAs: (value) => value === "true",
+                    })}
+                    value="false"
                   />
                   <span className="check"></span>
                 </label>
@@ -265,6 +264,7 @@ const GuardianExactInformation = () => {
             Book Appointment
           </button>
           <button
+            type="button"
             onClick={() => {
               setAppPage("for who mobile");
             }}

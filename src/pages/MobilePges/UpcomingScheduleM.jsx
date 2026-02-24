@@ -555,16 +555,21 @@ const DoctorBlock = ({
   formatInTimeZone,
 }) => {
   console.log(item , 'item in doctor block');
-  const [open , setOpen] = useState(false);
+  const [open , setOpen] = useState(Boolean(item.time?.length));
   const slotDate = item.time?.[0]?.dateStart;
 
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setChosenDoctor = SelfBookingStore((state) => state.setChosenDoctor);
+
+  useEffect(() => {
+    if ((item.time?.length || 0) > 0) {
+      setOpen(true);
+    } else {
+      setOpen(false);
+    }
+  }, [item.time?.length]);
   return (
-    <div
-      className="px-[12px] doctorBlock py-[16px] rounded-[12px] flex flex-col gap-[12px]"
-      key={key}
-    >
+    <div className="px-[12px] doctorBlock py-[16px] rounded-[12px] flex flex-col gap-[12px]">
       <div className="flex items-center justify-between">
         <div className="flex gap-[10px] items-center">
        <div className="w-[47px] h-[47px] flex items-center justify-center rounded-full bg-[#E8E5FF]">

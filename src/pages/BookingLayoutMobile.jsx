@@ -23,6 +23,15 @@ const BookingLayoutMobile = ({
   const mainBlock = useRef(0);
   const pageSize = useResize();
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    if (mainBlock.current && typeof mainBlock.current.scrollTo === "function") {
+      mainBlock.current.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [appPage]);
+
   let _width = window.innerWidth;
   let _height = window.innerHeight;
   return (

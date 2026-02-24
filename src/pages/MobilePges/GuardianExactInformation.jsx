@@ -1,29 +1,63 @@
 import { useForm } from "react-hook-form";
 import SelfBookingStore from "../../store/SelfBookingStore";
+import { useEffect, useState } from "react";
+import PhoneNumberField from "../components/PhoneNumberField";
+import {
+  DEFAULT_COUNTRY_CODE,
+  joinPhoneByCountryCode,
+  splitPhoneByCountryCode,
+} from "../helpers/phoneCountry";
 
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 
 const GuardianExactInformation = () => {
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
+  const guardianInfo = SelfBookingStore((state) => state.guardianInfo);
   const setGuardianInfo = SelfBookingStore((state) => state.setGuardianInfo);
   const {
     register,
     handleSubmit,
+    setValue,
+    trigger,
     formState: { errors },
   } = useForm({
     defaultValues: {
       isParent: true,
     },
   });
+  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(
+    DEFAULT_COUNTRY_CODE
+  );
 
   const emailRegExp =
     /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
 
   const onSubmit = async (data) => {
-    console.log(data);
-    setGuardianInfo(data);
+    const { phoneNumberCountryCode, ...rest } = data;
+    const payload = {
+      ...rest,
+      phoneNumber: joinPhoneByCountryCode(
+        phoneNumberCountryCode || selectedPhoneCountryCode,
+        data.phoneNumber
+      ),
+    };
+    setGuardianInfo(payload);
     setAppPage("for patient mobile");
   };
+
+  useEffect(() => {
+    if (Object.keys(guardianInfo).length === 0) return;
+    setValue("pesel", guardianInfo.pesel || "");
+    setValue("firstName", guardianInfo.firstName || "");
+    setValue("lastName", guardianInfo.lastName || "");
+    setValue("email", guardianInfo.email || "");
+    setValue("comments", guardianInfo.comments || "");
+    setValue("isParent", guardianInfo.isParent ?? true);
+    const parsedPhone = splitPhoneByCountryCode(guardianInfo.phoneNumber || "");
+    setSelectedPhoneCountryCode(parsedPhone.countryCode);
+    setValue("phoneNumber", parsedPhone.localNumber || "");
+    setValue("phoneNumberCountryCode", parsedPhone.countryCode);
+  }, [guardianInfo, setValue]);
 
   return (
     <div>
@@ -50,12 +84,12 @@ const GuardianExactInformation = () => {
         >
           <div className={`w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
-              PESEL
+              PESEL/PASSPORT
             </div>
             {
               <input
                 type="text"
-                placeholder="Input PESEL"
+                placeholder="Input PESEL/PASSPORT"
                 id={"pesel"}
                 className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px] "
                 {...register("pesel", {
@@ -166,54 +200,20 @@ const GuardianExactInformation = () => {
             )}
           </div>
 
-          <div className={`w-[340px] flex flex-col relative`}>
-            <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
-              Phone Number
-            </div>
-            {
-              <input
-                type="tel"
-                placeholder="(000) 000 0000"
-                id={"phoneNumber"}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={9}
-                className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px] "
-                onInput={(event) => {
-                  event.target.value = event.target.value.replace(/\D/g, "").slice(0, 9);
-                }}
-                {...register("phoneNumber", {
-                  required: true,
-                  minLength: 9,
-                  maxLength: 9,
-                })}
-              />
-            }
-            {errors
-              ? Object.keys(errors).includes("phoneNumber") && (
-                  <p
-                    className={` absolute top-[70px]  bg-white  text-red-500 text-[12px]/[14px]`}
-                  >
-                    Field is requaired!
-                  </p>
-                )
-              : null}
-            {errors?.phoneNumber?.type === "required" && (
-              <p
-                className={` absolute top-[70px]  bg-white  text-red-500 text-[12px]/[14px]`}
-              >
-                Field is required!
-              </p>
-            )}
-            {(errors?.phoneNumber?.type === "minLength" ||
-              errors?.phoneNumber?.type === "maxLength") && (
-              <p
-                className={`absolute top-[70px]  bg-white  text-red-500 text-[12px]/[14px]`}
-              >
-                Must be 9 digit!
-              </p>
-            )}
-          </div>
+          <PhoneNumberField
+            label="Phone Number"
+            widthClass="w-[340px]"
+            phoneFieldName="phoneNumber"
+            countryFieldName="phoneNumberCountryCode"
+            placeholder="000000000"
+            register={register}
+            setValue={setValue}
+            trigger={trigger}
+            errors={errors}
+            selectedCountryCode={selectedPhoneCountryCode}
+            setSelectedCountryCode={setSelectedPhoneCountryCode}
+            className="mb-0"
+          />
 
           <div className={`w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>

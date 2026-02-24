@@ -5,7 +5,7 @@ export const COUNTRY_PHONE_OPTIONS = [
   { key: "DE", label: "Germany", code: "+49", minLength: 10, maxLength: 11 },
 ];
 
-export const DEFAULT_COUNTRY_CODE = "+380";
+export const DEFAULT_COUNTRY_CODE = "+48";
 
 export const sanitizePhoneLocal = (value = "") => String(value).replace(/\D/g, "");
 

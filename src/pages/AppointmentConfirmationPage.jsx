@@ -165,9 +165,9 @@ const AppointmentConfirmationPage = () => {
               },
               {
                 onSuccess: (contactRes) => {
+                  console.log("Contact person created:", contactRes);
                   const contactPersonId =
-                    contactRes?.data?.patientContactPersonId ||
-                    contactRes?.data?.contactPersonId ||
+                    contactRes?.data?.id ||
                     null;
                   finalizeBooking(contactPersonId);
                 },
@@ -177,7 +177,7 @@ const AppointmentConfirmationPage = () => {
             return;
           }
 
-          finalizeBooking(null);
+           finalizeBooking(null);
         },
         onError: () => setIsSubmitting(false),
       }

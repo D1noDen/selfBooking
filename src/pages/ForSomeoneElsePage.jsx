@@ -10,6 +10,7 @@ import {
 } from "./helpers/phoneCountry";
 import DatePickerField from "./components/DatePickerField";
 import { useAppTranslation } from "../i18n/useAppTranslation";
+import { GENDER_VALUES, getGenderLabel, normalizeGender } from "../i18n/gender";
 
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
@@ -19,7 +20,7 @@ const sanitizeNameInput = (value = "") => value.replace(allowedNameCharsRegExp, 
 
 const ForSomeoneElsePage = () => {
   const { t } = useAppTranslation();
-  const genderOptions = [t("male", "Male"), t("female", "Female"), t("other", "Other")];
+  const genderOptions = GENDER_VALUES;
   const {
     register,
     control,
@@ -90,10 +91,12 @@ const ForSomeoneElsePage = () => {
     setValue("comment", appointmentData.comment || "");
     setValue("consent", !!appointmentData.consent);
 
-    setPatientGender(appointmentData.gender || genderOptions[0]);
-    setGuardianGender(appointmentData.guardianGender || genderOptions[0]);
-    setValue("gender", appointmentData.gender || genderOptions[0]);
-    setValue("guardianGender", appointmentData.guardianGender || genderOptions[0]);
+    const normalizedPatientGender = normalizeGender(appointmentData.gender);
+    const normalizedGuardianGender = normalizeGender(appointmentData.guardianGender);
+    setPatientGender(normalizedPatientGender);
+    setGuardianGender(normalizedGuardianGender);
+    setValue("gender", normalizedPatientGender);
+    setValue("guardianGender", normalizedGuardianGender);
     setActivePatientGuardian(appointmentData.activePatientGuardian || "Yes");
     setConsentChecked(!!appointmentData.consent);
     setForSomeoneElseConsent(!!appointmentData.consent);
@@ -210,6 +213,7 @@ const ForSomeoneElsePage = () => {
             <GenderDropdown
               options={genderOptions}
               value={patientGender}
+              getOptionLabel={(value) => getGenderLabel(t, value)}
               open={showPatientGender}
               setOpen={setShowPatientGender}
               onSelect={(value) => {
@@ -263,6 +267,7 @@ const ForSomeoneElsePage = () => {
             <GenderDropdown
               options={genderOptions}
               value={guardianGender}
+              getOptionLabel={(value) => getGenderLabel(t, value)}
               open={showGuardianGender}
               setOpen={setShowGuardianGender}
               disabled={isGuardianDisabled}
@@ -486,6 +491,7 @@ const Input = ({
 const GenderDropdown = ({
   options = [],
   value,
+  getOptionLabel = (optionValue) => optionValue,
   open,
   setOpen,
   onSelect,
@@ -501,7 +507,9 @@ const GenderDropdown = ({
       if (!disabled) setOpen(!open);
     }}
   >
-    <span className="text-[15px]/[18px] font-sans tracking-[0.675px]">{value}</span>
+    <span className="text-[15px]/[18px] font-sans tracking-[0.675px]">
+      {getOptionLabel(value)}
+    </span>
     <span className={`${open ? "rotate-180" : ""} duration-200`}>
       <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M11 1L6 6L1 1" stroke="#99A1AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -519,7 +527,7 @@ const GenderDropdown = ({
               setOpen(false);
             }}
           >
-            {item}
+            {getOptionLabel(item)}
           </button>
         ))}
       </div>

@@ -13,6 +13,7 @@ import Spinner from "./helpers/Spinner";
 import { getBookingInformation } from "../helpers/bookingStorage";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { getLocalizedVisitTypeLabel } from "../i18n/visitTypeLabel";
+import { getGenderLabel, normalizeGender } from "../i18n/gender";
 
 const AppointmentConfirmationPage = () => {
   const { t, language } = useAppTranslation();
@@ -69,7 +70,7 @@ const AppointmentConfirmationPage = () => {
           nip: "",
           isBlackListed: false,
           dateOfBirth: data.dateOfBirth,
-          gender: data.gender,
+          gender: normalizeGender(data.gender),
           pesel: data.pesel || "",
           maidenName: "",
           nationality: "",
@@ -151,8 +152,8 @@ const AppointmentConfirmationPage = () => {
                   email: data.email || "",
                   cellPhone: data.phoneNumber || "",
                   gender: usePatientAsGuardian
-                    ? data.gender
-                    : data.guardianGender || data.gender,
+                    ? normalizeGender(data.gender)
+                    : normalizeGender(data.guardianGender || data.gender),
                   pesel: data.pesel || "",
                   dateOfBirth: usePatientAsGuardian
                     ? data.dateOfBirth
@@ -246,7 +247,10 @@ const AppointmentConfirmationPage = () => {
                   value={`${data.guardianFirstName || ""} ${data.guardianLastName || ""}`.trim()}
                 />
                 <LabelValue label={t("date_of_birth", "Date of Birth")} value={data.guardianDateOfBirth} />
-                <LabelValue label={t("gender", "Gender")} value={data.guardianGender} />
+                <LabelValue
+                  label={t("gender", "Gender")}
+                  value={getGenderLabel(t, data.guardianGender)}
+                />
                 <LabelValue
                   label={t("relation", "Relation")}
                   value={data.activePatientGuardian === "No" ? t("not_guardian", "Not guardian") : t("guardian", "Guardian")}

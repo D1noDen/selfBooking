@@ -22,7 +22,7 @@ const GuardianExactInformation = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      isParent: true,
+      isParent: "true",
     },
   });
   const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(
@@ -52,7 +52,12 @@ const GuardianExactInformation = () => {
     setValue("lastName", guardianInfo.lastName || "");
     setValue("email", guardianInfo.email || "");
     setValue("comments", guardianInfo.comments || "");
-    setValue("isParent", guardianInfo.isParent ?? true);
+    setValue(
+      "isParent",
+      guardianInfo.isParent === false || guardianInfo.isParent === "false"
+        ? "false"
+        : "true"
+    );
     const parsedPhone = splitPhoneByCountryCode(guardianInfo.phoneNumber || "");
     setSelectedPhoneCountryCode(parsedPhone.countryCode);
     setValue("phoneNumber", parsedPhone.localNumber || "");
@@ -235,9 +240,7 @@ const GuardianExactInformation = () => {
                 <label className="label">
                   <input
                     type="radio"
-                    {...register("isParent", {
-                      setValueAs: (value) => value === "true",
-                    })}
+                    {...register("isParent", { required: true })}
                     value="true"
                   />
                   <span className="check"></span>
@@ -248,9 +251,7 @@ const GuardianExactInformation = () => {
                 <label className="label">
                   <input
                     type="radio"
-                    {...register("isParent", {
-                      setValueAs: (value) => value === "true",
-                    })}
+                    {...register("isParent", { required: true })}
                     value="false"
                   />
                   <span className="check"></span>

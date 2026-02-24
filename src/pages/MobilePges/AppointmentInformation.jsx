@@ -15,6 +15,7 @@ import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import Spinner from "../helpers/Spinner";
 import { getBookingInformation } from "../../helpers/bookingStorage";
+import { getLocalizedVisitTypeLabel } from "../../i18n/visitTypeLabel";
 
 const AppointmentInformation = () => {
   const {auth} = useAuth();
@@ -38,6 +39,19 @@ const AppointmentInformation = () => {
   const [submit, setSubmit] = useState(false);
   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
 console.log("informationWithSorage", informationWithSorage);
+  const guardianIsParent =
+    guardianInfo?.isParent === true || guardianInfo?.isParent === "true";
+  const bookingForLabel =
+    Object.keys(guardianInfo).length > 0
+      ? guardianIsParent
+        ? "Child"
+        : "Adult"
+      : "Self";
+  const visitTypeLabel =
+    getLocalizedVisitTypeLabel(informationWithSorage?.apoimentTypeId, "en") ||
+    informationWithSorage?.apoimentTypeId?.label ||
+    informationWithSorage?.apoimentTypeId?.lebel ||
+    "-";
   let start = moment(
     dateHelper(informationWithSorage.doctor?.eventStartDateTime)
   );
@@ -276,6 +290,10 @@ console.log("patientInfo", patientInfo);
           </p>
           <div className="w-full text-[14px] flex flex-col gap-[12px]">
             <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">Visit type</p>
+              <p className="text-[#111113]">{visitTypeLabel}</p>
+            </div>
+            <div className="flex justify-between">
               <p className="text-[#B1B1B1] ">Date</p>
               <p className="text-[#111113]">
                 {moment(appointmentTime.eventStartDateTime).format(
@@ -291,12 +309,19 @@ console.log("patientInfo", patientInfo);
             </div>
             <div className="flex justify-between">
               <p className="text-[#B1B1B1] ">Booking for</p>
+              <p className="text-[#111113]">{bookingForLabel}</p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">Doctor</p>
               <p className="text-[#111113]">
-                {Object.keys(guardianInfo).length > 0
-                  ? guardianInfo.isParent === "true"
-                    ? "Child"
-                    : "Adult"
-                  : "Self"}
+                {doctor[0]?.firstName || informationWithSorage?.doctor?.name || "-"}{" "}
+                {doctor[0]?.lastName || ""}
+              </p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">Specialty</p>
+              <p className="text-[#111113]">
+                {doctor[0]?.specializationLabel || informationWithSorage?.doctor?.speciality || "-"}
               </p>
             </div>
           </div>
@@ -317,14 +342,42 @@ console.log("patientInfo", patientInfo);
               <p className="text-[#111113]">{patientInfo.Gender}</p>
             </div>
             <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">Date of birth</p>
+              <p className="text-[#111113]">{patientInfo.dateOfBirth || "-"}</p>
+            </div>
+            <div className="flex justify-between">
               <p className="text-[#B1B1B1] ">Age</p>
               <p className="text-[#111113]">
                 {calcAge(patientInfo.dateOfBirth)}
               </p>
             </div>
             <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">PESEL/PASSPORT</p>
+              <p className="text-[#111113]">{patientInfo.pesel || "-"}</p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">Email</p>
+              <p className="text-[#111113]">{patientInfo.email || "-"}</p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">Phone</p>
+              <p className="text-[#111113]">{patientInfo.phoneNumber || "-"}</p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">City</p>
+              <p className="text-[#111113]">{patientInfo.city || "-"}</p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">Address</p>
+              <p className="text-[#111113]">{patientInfo.adress || "-"}</p>
+            </div>
+            <div className="flex justify-between">
               <p className="text-[#B1B1B1] ">Problem</p>
-              <p className="text-[#111113]">{patientInfo.problem}</p>
+              <p className="text-[#111113]">{patientInfo.problem || "-"}</p>
+            </div>
+            <div className="flex justify-between">
+              <p className="text-[#B1B1B1] ">Comments</p>
+              <p className="text-[#111113]">{patientInfo.comments || "-"}</p>
             </div>
           </div>
         </div>
@@ -341,12 +394,26 @@ console.log("patientInfo", patientInfo);
                 </p>
               </div>
               <div className="flex justify-between">
-                <p className="text-[#B1B1B1] ">Gender</p>
-                <p className="text-[#111113]"></p>
+                <p className="text-[#B1B1B1] ">Relation</p>
+                <p className="text-[#111113]">
+                  {guardianIsParent ? "Parent/Guardian" : "Not guardian"}
+                </p>
               </div>
               <div className="flex justify-between">
-                <p className="text-[#B1B1B1] ">Age</p>
-                <p className="text-[#111113]">{}</p>
+                <p className="text-[#B1B1B1] ">PESEL/PASSPORT</p>
+                <p className="text-[#111113]">{guardianInfo.pesel || "-"}</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-[#B1B1B1] ">Email</p>
+                <p className="text-[#111113]">{guardianInfo.email || "-"}</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-[#B1B1B1] ">Phone</p>
+                <p className="text-[#111113]">{guardianInfo.phoneNumber || "-"}</p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-[#B1B1B1] ">Comments</p>
+                <p className="text-[#111113]">{guardianInfo.comments || "-"}</p>
               </div>
             </div>
           </div>

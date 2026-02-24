@@ -6,7 +6,6 @@ import {
   get_Apoiment_Types_Self_Booking,
   get_Slot_Apoiment,
 } from "../request/requestSelfBooking";
-import dateFormat from "dateformat";
 import SelfBookingStore from "../../store/SelfBookingStore";
 import moment from "moment";
 import "moment/locale/pl";
@@ -25,6 +24,7 @@ import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import DatePicker from "react-datepicker";
 import { getBookingInformation } from "../../helpers/bookingStorage";
 import { getDateFnsLocale, getIntlLocale } from "../../i18n/dateLocale";
+import useTimezoneFormatter from "../../hooks/useTimezoneFormatter";
 const CalendarButton = forwardRef(({ onClick }, ref) => (
   <button
     ref={ref}
@@ -38,6 +38,10 @@ const CalendarButton = forwardRef(({ onClick }, ref) => (
 const UpcomingScheduleM = ({ setSesionStorage }) => {
 const {auth} = useAuth();
   const language = SelfBookingStore((state) => state.language || "en");
+  const { formatInTimeZone, formatTimeInTimeZone } = useTimezoneFormatter({
+    locale: getIntlLocale(language),
+    timeZone: "Europe/Warsaw",
+  });
   useEffect(() => {
     const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
     moment.locale(momentLocale);
@@ -78,18 +82,6 @@ const {auth} = useAuth();
     isLoading: GetApoimentTypesSelfBookingLoading,
     setText: GetApoimentTypesSelfBookingInformation,
   } = get_Apoiment_Types_Self_Booking();
-
-  function formatAMPM(date) {
-    let hours = +date?.split(":")[0];
-    let minutes = +date?.split(":")[1];
-    let ampm = hours >= 12 ? "pm" : "am";
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    minutes =
-      minutes === 0 ? ":00" : minutes < 10 ? ":0" + minutes : ":" + minutes;
-    let strTime = hours + minutes + " " + ampm;
-    return strTime;
-  }
 
   useEffect(() => {
    if(auth){
@@ -152,25 +144,17 @@ const {auth} = useAuth();
         time: events
           .filter((filter) => filter.shift.userId == item.userId)
           .flatMap((event) =>
-            event.appointmentSlot.map((apoiment) => {
-              const date = apoiment.startTime.split(" ")[0];
-              const time = apoiment.startTime.split(" ")[1];
-              const day = date.split(".")[0];
-              const month = date.split(".")[1];
-              const year = date.split(".")[2];
-              return {
-                title: time.slice(0, -3),
-                date: dateFormat(Date.parse(date), "yyyy-dd-mm"),
-                dateStart: apoiment.startTime,
-                dateEnd: apoiment.endTime,
-              };
-            })
+            event.appointmentSlot.map((apoiment) => ({
+              title: formatTimeInTimeZone(apoiment.startTime),
+              dateStart: apoiment.startTime,
+              dateEnd: apoiment.endTime,
+            }))
           ),
       }));
       console.log(newArrayDoctors , 'newArrayDoctors');
       setDoctorsWithEvents(newArrayDoctors);
     }
-  }, [doctors, events]);
+  }, [doctors, events, formatTimeInTimeZone]);
 
   return (
     <div>
@@ -220,6 +204,7 @@ const {auth} = useAuth();
           setStartDay={setStartDay}
           onDateChange={setStartDay}
           language={language}
+          formatInTimeZone={formatInTimeZone}
         />
         <div className="flex flex-col gap-[12px]">
           {doctorsWithEvents?.map((item, i) => (
@@ -234,6 +219,7 @@ const {auth} = useAuth();
               language={language}
               informationWithSorage={informationWithSorage}
               setSesionStorage={setSesionStorage}
+              formatInTimeZone={formatInTimeZone}
             />
           ))}
         </div>
@@ -244,7 +230,13 @@ const {auth} = useAuth();
 
 export default UpcomingScheduleM;
 
-const DateSwiper = ({ selectedDate, onDateChange, setStartDay, language }) => {
+const DateSwiper = ({
+  selectedDate,
+  onDateChange,
+  setStartDay,
+  language,
+  formatInTimeZone,
+}) => {
   const [currentWeekStart, setCurrentWeekStart] = useState(
     moment(selectedDate).startOf('day')
   );
@@ -341,10 +333,10 @@ const DateSwiper = ({ selectedDate, onDateChange, setStartDay, language }) => {
                   }`}
                 >
                   <span className={`text-[10px] font-medium uppercase ${selected ? 'text-white' : 'text-[#8696BB]'}`}>
-                    {day.format('dd')}
+                    {formatInTimeZone(day.toDate(), { weekday: "short" })}
                   </span>
                   <span className={`text-[18px] font-semibold mt-[2px] ${selected ? 'text-white' : 'text-[#0D1B34]'}`}>
-                    {day.format('D')}
+                    {formatInTimeZone(day.toDate(), { day: "numeric" })}
                   </span>
                 </button>
               );
@@ -555,13 +547,16 @@ const Dropdown = ({
   return <div className={``}>{dropdown}</div>;
 };
 
-const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSesionStorage , informationWithSorage, language }) => {
+const DoctorBlock = ({
+  item,
+  name,
+  setSesionStorage,
+  informationWithSorage,
+  formatInTimeZone,
+}) => {
   console.log(item , 'item in doctor block');
-  let dateArr = [];
-  const options = { weekday: "long", day: "numeric", month: "long" };
   const [open , setOpen] = useState(false);
-
-  const slotDate = dateFormat(Date.parse(dateArr[0]?.date), "yyyy-mm-dd");
+  const slotDate = item.time?.[0]?.dateStart;
 
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setChosenDoctor = SelfBookingStore((state) => state.setChosenDoctor);
@@ -593,7 +588,13 @@ const DoctorBlock = ({item ,  name, img, speciality, key, doctorId, date , setSe
         <div className="flex flex-col   ">
           <div className="flex gap-[8px] items-center">
             <p className="font-hebrew text-[14px] text-[#4A5565]">
-              {new Date(slotDate).toLocaleDateString(getIntlLocale(language), options)}
+              {slotDate
+                ? formatInTimeZone(slotDate, {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                  })
+                : ""}
             </p>
           </div>
           <div className="flex gap-[4px] flex-wrap items-center">

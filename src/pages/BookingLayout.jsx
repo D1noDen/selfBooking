@@ -75,23 +75,27 @@ const MainLayout = () => {
   });
 
   useEffect(() => {
-   
     const isMobile = pageSize[0] < 1024;
-    const currentPageIsMobile = appPage.includes("mobile") || 
-                                appPage === "upcoming schedule" || 
-                                appPage === "choose a convenient time";
-    
+    const currentPageIsMobile =
+      appPage.includes("mobile") ||
+      appPage === "upcoming schedule" ||
+      appPage === "choose a convenient time";
 
     if (isMobile && !currentPageIsMobile) {
-     
       const mappedPage = pageMapping[appPage] || "visit type mobile";
-      setAppPage(mappedPage);
-    } else if (!isMobile && currentPageIsMobile) {
-     
-      const mappedPage = pageMapping[appPage] || "visit type";
-      setAppPage(mappedPage);
+      if (mappedPage !== appPage) {
+        setAppPage(mappedPage);
+      }
+      return;
     }
-  }, [pageSize[0]]);
+
+    if (!isMobile && currentPageIsMobile) {
+      const mappedPage = pageMapping[appPage] || "visit type";
+      if (mappedPage !== appPage) {
+        setAppPage(mappedPage);
+      }
+    }
+  }, [appPage, pageSize, setAppPage]);
 
   useEffect(() => {
     if (appPage !== "for guest page") return;
@@ -244,11 +248,24 @@ const MainLayout = () => {
 
   useEffect(() => {
     const handlePopState = (event) => {
-      const nextPage = event.state?.bookingFlow?.appPage;
+      const nextPageRaw = event.state?.bookingFlow?.appPage;
       const nextHeader = event.state?.bookingFlow?.headerPage;
-      if (typeof nextPage !== "string" || typeof nextHeader !== "number") {
+      if (typeof nextPageRaw !== "string" || typeof nextHeader !== "number") {
         return;
       }
+
+      const isMobile = pageSize[0] < 1024;
+      const nextPageIsMobile =
+        nextPageRaw.includes("mobile") ||
+        nextPageRaw === "upcoming schedule" ||
+        nextPageRaw === "choose a convenient time";
+      const nextPage = isMobile
+        ? nextPageIsMobile
+          ? nextPageRaw
+          : pageMapping[nextPageRaw] || "visit type mobile"
+        : nextPageIsMobile
+        ? pageMapping[nextPageRaw] || "visit type"
+        : nextPageRaw;
 
       historySyncRef.current.skipNextPush = true;
       setHeaderPage(nextHeader);
@@ -257,7 +274,7 @@ const MainLayout = () => {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [setAppPage, setHeaderPage]);
+  }, [pageSize, setAppPage, setHeaderPage]);
 
   // useEffect(() => {
   //   setAppPage("continue as");

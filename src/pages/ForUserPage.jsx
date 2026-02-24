@@ -10,6 +10,7 @@ import {
 } from "./helpers/phoneCountry";
 import DatePickerField from "./components/DatePickerField";
 import { useAppTranslation } from "../i18n/useAppTranslation";
+import { GENDER_VALUES, getGenderLabel, normalizeGender } from "../i18n/gender";
 
 const emailRegExp =
   /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
@@ -19,7 +20,7 @@ const sanitizeNameInput = (value = "") => value.replace(allowedNameCharsRegExp, 
 
 const ForUserPage = () => {
   const { t } = useAppTranslation();
-  const genderOptions = [t("male", "Male"), t("female", "Female"), t("other", "Other")];
+  const genderOptions = GENDER_VALUES;
   const nameRules = {
     required: t("field_required", "Field is required"),
     validate: (value) =>
@@ -74,8 +75,9 @@ const ForUserPage = () => {
     setValue("city", savedData.city || "");
     setValue("address", savedData.address || "");
     setValue("comment", savedData.comment || "");
-    setSelectedGender(savedData.gender || genderOptions[0]);
-    setValue("gender", savedData.gender || genderOptions[0]);
+    const normalizedGender = normalizeGender(savedData.gender);
+    setSelectedGender(normalizedGender);
+    setValue("gender", normalizedGender);
     hasHydratedRef.current = true;
   }, [appointmentData, confirmationData, setValue]);
 
@@ -198,7 +200,7 @@ const ForUserPage = () => {
               onMouseLeave={() => setArrowHover(false)}
               ref={genderSelect}
             >
-              {selectedGender}
+              {getGenderLabel(t, selectedGender)}
               <div
                 className={`absolute top-[48px] left-0 w-full ${
                   showList ? "opacity-100 visible" : "opacity-0 invisible"
@@ -214,7 +216,7 @@ const ForUserPage = () => {
                       setValue("gender", item, { shouldValidate: true });
                     }}
                   >
-                    {item}
+                    {getGenderLabel(t, item)}
                   </div>
                 ))}
               </div>

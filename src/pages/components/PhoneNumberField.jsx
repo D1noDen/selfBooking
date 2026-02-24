@@ -8,6 +8,7 @@ import {
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 const PhoneNumberField = ({
+  isMobile = false,
   label = "Phone Number *",
   widthClass = "w-[calc(50%-8px)]",
   phoneFieldName,
@@ -39,12 +40,12 @@ const PhoneNumberField = ({
     <div className={`flex flex-col ${widthClass} mb-[26px] relative ${className}`}>
       <label
         htmlFor={phoneFieldName}
-        className="text-[15px]/[18px] text-[#333] font-sans font-[500] tracking-[0.675px] mb-2"
+        className={`${isMobile ? 'text-[14px] text-[#5E5E5E]' : "text-[15px]/[18px] mb-2 tracking-[0.675px] text-[#333]"} font-sans font-[500]`}
       >
         {label}
       </label>
 
-      <div className="border-[2px] border-[#E8E8E9] bg-white rounded-[10px] h-auto py-[7px] px-[8px] flex items-center gap-[10px] focus-within:border focus-within:border-[#6C6AC7]">
+      <div className={`${isMobile ? 'border-[1px] border-[#11111333] rounded-[4px]' : "border-[2px] border-[#E8E8E9] rounded-[10px]"} bg-white h-auto py-[7px] px-[8px] flex items-center gap-[10px] focus-within:border focus-within:border-[#6C6AC7]`}>
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"

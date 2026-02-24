@@ -29,7 +29,8 @@ import {
 } from "../helpers/bookingStorage";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { getLocalizedVisitTypeLabel } from "../i18n/visitTypeLabel";
-import { getDateFnsLocale } from "../i18n/dateLocale";
+import { getDateFnsLocale, getIntlLocale } from "../i18n/dateLocale";
+import useTimezoneFormatter from "../hooks/useTimezoneFormatter";
 
 const MonthYearPickerButton = forwardRef(({ value, onClick, isOpen }, ref) => (
   <button
@@ -51,6 +52,10 @@ MonthYearPickerButton.displayName = "MonthYearPickerButton";
 
 const SchedulerPage = ({ setSesionStorage }) => {
   const { t, language } = useAppTranslation();
+  const { formatInTimeZone, formatTimeInTimeZone } = useTimezoneFormatter({
+    locale: getIntlLocale(language),
+    timeZone: "Europe/Warsaw",
+  });
   const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
   moment.locale(momentLocale);
   const informationWithSorage = getBookingInformation();
@@ -108,7 +113,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
       slotKey: `${storedDoctor.id}-${storedDoctor.eventStartDateTime}-${storedDoctor.eventEnd}`,
       doctor: storedDoctor,
       dateStart: storedDoctor.eventStartDateTime,
-      time: moment(storedDoctor.eventStartDateTime, "DD.MM.YYYY HH:mm:ss").format("HH:mm"),
+      time: formatTimeInTimeZone(storedDoctor.eventStartDateTime),
     };
   });
   const [isMonthYearOpen, setIsMonthYearOpen] = useState(false);
@@ -678,7 +683,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
             const year = date.split(".")[2];
 
             return {
-              title: moment(time, "HH:mm:ss").format("HH:mm "),
+              title: formatTimeInTimeZone(`${year}-${month}-${day}T${time}`),
               date: year + "-" + month + "-" + day,
               dateStart: apoiment.startTime,
               dateEnd: apoiment.endTime,
@@ -687,7 +692,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
           })
         ),
     }));
-  }, [doctors, events]);
+  }, [doctors, events, formatTimeInTimeZone]);
 
   const TimeAppointment = (eventInfo) => {
     if (eventInfo.event.extendedProps.isEmpty) {
@@ -843,14 +848,14 @@ const SchedulerPage = ({ setSesionStorage }) => {
       return {
         date: day,
         iso: dayIso,
-        dayNumber: day.getDate(),
-        dayName: moment(day).format("ddd"),
+        dayNumber: formatInTimeZone(day, { day: "numeric" }),
+        dayName: formatInTimeZone(day, { weekday: "short" }),
         isToday: day.getTime() === todayDate.getTime(),
         isDisabled,
         isSelectedColumn: selectedSlotDayIso === dayIso,
       };
     });
-  }, [maxSelectableDate, selectedSlotDayIso, startDate, todayDate]);
+  }, [formatInTimeZone, maxSelectableDate, selectedSlotDayIso, startDate, todayDate]);
   const selectedColumnIndex = useMemo(
     () => weekDays.findIndex((day) => day.iso === selectedSlotDayIso),
     [selectedSlotDayIso, weekDays]

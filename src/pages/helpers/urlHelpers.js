@@ -1,4 +1,4 @@
-export const BASE_URL = 'https://dentasoftapi-tst.azurewebsites.net'
+export const BASE_URL = 'https://dentasoftdatainsertapi-asf0f0a3czhnfvch.polandcentral-01.azurewebsites.net'
 
 
 export const GET_APOIMENT_TYPES_BOOKING = '/api/PatientAppointmentBooking/getallselfappointmenttypes'

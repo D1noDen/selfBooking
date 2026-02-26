@@ -45,6 +45,7 @@ const ForSomeoneElsePage = () => {
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const setAppointmentData = SelfBookingStore((state) => state.setAppointmentData);
   const appointmentData = SelfBookingStore((state) => state.appointmentData);
+  const confirmationData = SelfBookingStore((state) => state.confirmationData);
   const setConfirmationData = SelfBookingStore((state) => state.setConfirmationData);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const setForSomeoneElseConsent = SelfBookingStore((state) => state.setForSomeoneElseConsent);
@@ -60,12 +61,14 @@ const ForSomeoneElsePage = () => {
   useOnClickOutside(guardianGenderRef, () => setShowGuardianGender(false));
 
   useEffect(() => {
-    if (!appointmentData) {
-      hasHydratedRef.current = true;
-      return;
-    }
+    if (hasHydratedRef.current) return;
 
-    if (Object.keys(appointmentData).length === 0) {
+    const savedData =
+      confirmationData?.source === "for someone else"
+        ? confirmationData?.formData
+        : appointmentData;
+
+    if (!savedData || Object.keys(savedData).length === 0) {
       setValue("gender", patientGender);
       setValue("guardianGender", guardianGender);
       setActivePatientGuardian("Yes");
@@ -74,34 +77,35 @@ const ForSomeoneElsePage = () => {
       return;
     }
 
-    setValue("firstName", appointmentData.firstName || "");
-    setValue("dateOfBirth", appointmentData.dateOfBirth || "");
-    setValue("lastName", appointmentData.lastName || "");
-    setValue("guardianFirstName", appointmentData.guardianFirstName || "");
-    setValue("guardianLastName", appointmentData.guardianLastName || "");
-    setValue("guardianPesel", appointmentData.guardianPesel || "");
-    setValue("guardianDateOfBirth", appointmentData.guardianDateOfBirth || "");
-    setValue("email", appointmentData.email || "");
-    const parsedPhone = splitPhoneByCountryCode(appointmentData.phoneNumber || "");
+    setValue("firstName", savedData.firstName || "");
+    setValue("dateOfBirth", savedData.dateOfBirth || "");
+    setValue("lastName", savedData.lastName || "");
+    setValue("pesel", savedData.pesel || "");
+    setValue("guardianFirstName", savedData.guardianFirstName || "");
+    setValue("guardianLastName", savedData.guardianLastName || "");
+    setValue("guardianPesel", savedData.guardianPesel || "");
+    setValue("guardianDateOfBirth", savedData.guardianDateOfBirth || "");
+    setValue("email", savedData.email || "");
+    const parsedPhone = splitPhoneByCountryCode(savedData.phoneNumber || "");
     setSelectedPhoneCountryCode(parsedPhone.countryCode);
     setValue("phoneNumber", parsedPhone.localNumber || "");
     setValue("phoneNumberCountryCode", parsedPhone.countryCode);
-    setValue("city", appointmentData.city || "");
-    setValue("address", appointmentData.address || "");
-    setValue("comment", appointmentData.comment || "");
-    setValue("consent", !!appointmentData.consent);
+    setValue("city", savedData.city || "");
+    setValue("address", savedData.address || "");
+    setValue("comment", savedData.comment || "");
+    setValue("consent", !!savedData.consent);
 
-    const normalizedPatientGender = normalizeGender(appointmentData.gender);
-    const normalizedGuardianGender = normalizeGender(appointmentData.guardianGender);
+    const normalizedPatientGender = normalizeGender(savedData.gender);
+    const normalizedGuardianGender = normalizeGender(savedData.guardianGender);
     setPatientGender(normalizedPatientGender);
     setGuardianGender(normalizedGuardianGender);
     setValue("gender", normalizedPatientGender);
     setValue("guardianGender", normalizedGuardianGender);
-    setActivePatientGuardian(appointmentData.activePatientGuardian || "Yes");
-    setConsentChecked(!!appointmentData.consent);
-    setForSomeoneElseConsent(!!appointmentData.consent);
+    setActivePatientGuardian(savedData.activePatientGuardian || "Yes");
+    setConsentChecked(!!savedData.consent);
+    setForSomeoneElseConsent(!!savedData.consent);
     hasHydratedRef.current = true;
-  }, []);
+  }, [appointmentData, confirmationData, setForSomeoneElseConsent, setValue]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;

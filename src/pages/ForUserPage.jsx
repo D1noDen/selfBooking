@@ -332,7 +332,7 @@ const InputBlock = ({ label, placeholder, width, id, type, register, errors, rul
         type={type || "text"}
         id={id}
         placeholder={placeholder}
-        className="px-[12px] py-[11px] border-[2px] border-[#E8E8E9] bg-white rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px]"
+        className={`px-[12px] py-[11px] border-[2px] border-[#E8E8E9] bg-white rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] ${type === 'email' && 'mt-0'}`}
         {...register(id, registerOptions)}
       />
       {errors?.[id] && (

@@ -307,9 +307,12 @@ const AppointmentConfirmationPage = () => {
             type="button"
             className="w-full rounded-[8px] py-[18px] text-[#0A0A0A] font-sans text-[14px]"
             style={{boxShadow: "0 2px 8px 0 rgba(0, 0, 0, 0.06)"}}
-            onClick={() =>
-              setAppPage(source === "for someone else" ? "for someone else" : "for user")
-            }
+            onClick={() => {
+              if (confirmationData?.formData) {
+                setAppointmentData(confirmationData.formData);
+              }
+              setAppPage(source === "for someone else" ? "for someone else" : "for user");
+            }}
             disabled={isSubmitting}
           >
             {t("edit_details", "Edit Details")}

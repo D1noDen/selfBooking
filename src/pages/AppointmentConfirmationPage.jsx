@@ -139,6 +139,8 @@ const AppointmentConfirmationPage = () => {
 
           if (source === "for someone else") {
             const usePatientAsGuardian = data.activePatientGuardian === "No";
+            const relationshipType =
+              data.activePatientGuardian === "Yes" ? "Parent" : "LegalGuardian";
             createContactPerson(
               {
                 data: {
@@ -158,6 +160,7 @@ const AppointmentConfirmationPage = () => {
                   dateOfBirth: usePatientAsGuardian
                     ? data.dateOfBirth
                     : data.guardianDateOfBirth || data.dateOfBirth,
+                  relationshipType,
                   zipCode: "",
                   title: "",
                   contactPersonTypeId: 0,

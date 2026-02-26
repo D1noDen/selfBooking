@@ -171,6 +171,7 @@ console.log("informationWithSorage", informationWithSorage);
   }, [createContactPersonData]);
 
   const CreateContactPerson = async () => {
+    const relationshipType = guardianIsParent ? "Parent" : "LegalGuardian";
     CreateContactPersonMutate({
       data:{
         patientId: CreatePatientData.data.patientId,
@@ -181,6 +182,7 @@ console.log("informationWithSorage", informationWithSorage);
       gender: "Other",
       pesel: guardianInfo.pesel,
       dateOfBirth: patientInfo.dateOfBirth,
+      relationshipType,
       zipCode: "",
       title: "",
       contactPersonTypeId: 0,

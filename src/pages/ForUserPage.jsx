@@ -191,7 +191,7 @@ const ForUserPage = () => {
               {t("gender_required", "Gender *")}
             </div>
             <div
-              className="border-[2px] border-[#E8E8E9] relative cursor-pointer flex items-center rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] px-[12px] -mt-1 py-[9px]"
+              className="border-[2px] border-[#E8E8E9] relative cursor-pointer flex items-center rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] px-[12px] -mt-1 py-[10px]"
               onClick={() => {
                 setShowList(!showList);
                 setValue("gender", selectedGender, { shouldValidate: true });
@@ -296,7 +296,7 @@ const ForUserPage = () => {
             </label>
             <textarea
               id="comments"
-              className="border border-[#D8DBE2] bg-white rounded-[8px] h-[72px] outline-none px-4 py-3"
+              className="border border-[#D8DBE2] bg-white rounded-[8px] h-[72px] outline-none px-4 py-[13px]"
               placeholder={t(
                 "comments_placeholder",
                 "Any additional information or special requirements..."
@@ -332,7 +332,7 @@ const InputBlock = ({ label, placeholder, width, id, type, register, errors, rul
         type={type || "text"}
         id={id}
         placeholder={placeholder}
-        className="px-[12px] py-[10px] border-[2px] border-[#E8E8E9] bg-white rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px]"
+        className={`px-[12px] py-[11px] border-[2px] border-[#E8E8E9] bg-white rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] ${type === 'email' && 'mt-0'}`}
         {...register(id, registerOptions)}
       />
       {errors?.[id] && (

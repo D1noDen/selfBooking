@@ -838,6 +838,13 @@ const SchedulerPage = ({ setSesionStorage }) => {
   }, [selectedSlot?.dateStart]);
 
   const weekDays = useMemo(() => {
+    const dayNumberFormatter = new Intl.DateTimeFormat(getIntlLocale(language), {
+      day: "numeric",
+    });
+    const dayNameFormatter = new Intl.DateTimeFormat(getIntlLocale(language), {
+      weekday: "short",
+    });
+
     return Array.from({ length: 7 }).map((_, index) => {
       const day = new Date(startDate);
       day.setDate(day.getDate() + index);
@@ -848,14 +855,14 @@ const SchedulerPage = ({ setSesionStorage }) => {
       return {
         date: day,
         iso: dayIso,
-        dayNumber: formatInTimeZone(day, { day: "numeric" }),
-        dayName: formatInTimeZone(day, { weekday: "short" }),
+        dayNumber: dayNumberFormatter.format(day),
+        dayName: dayNameFormatter.format(day),
         isToday: day.getTime() === todayDate.getTime(),
         isDisabled,
         isSelectedColumn: selectedSlotDayIso === dayIso,
       };
     });
-  }, [formatInTimeZone, maxSelectableDate, selectedSlotDayIso, startDate, todayDate]);
+  }, [language, maxSelectableDate, selectedSlotDayIso, startDate, todayDate]);
   const selectedColumnIndex = useMemo(
     () => weekDays.findIndex((day) => day.iso === selectedSlotDayIso),
     [selectedSlotDayIso, weekDays]
@@ -1045,7 +1052,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
             >
               <button
                 type="button"
-                className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute left-[1%] top-1/2 transform -translate-y-1/2 z-10"
+                className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute left-[-1%] top-1/2 transform -translate-y-1/2 z-10"
                 onClick={() => changeWeek(-1)}
                 disabled={startDate <= todayDate}
                 style={{
@@ -1090,7 +1097,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
               </div>
               <button
                 type="button"
-                className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute top-1/2 transform -translate-y-1/2 z-10 right-[1%]"
+                className="w-10 h-10 rounded-full bg-white flex justify-center items-center absolute top-1/2 transform -translate-y-1/2 z-10 -right-[1%]"
                 onClick={() => changeWeek(1)}
                 disabled={startDate >= maxSelectableDate}
                 style={{

@@ -54,7 +54,7 @@ const ForSomeoneElsePage = () => {
 
   const patientGenderRef = useRef(null);
   const guardianGenderRef = useRef(null);
-  const isGuardianDisabled = activePatientGuardian === "No";
+  const showGuardianIdentityFields = activePatientGuardian === "No";
 
   useOnClickOutside(patientGenderRef, () => setShowPatientGender(false));
   useOnClickOutside(guardianGenderRef, () => setShowGuardianGender(false));
@@ -236,14 +236,8 @@ const ForSomeoneElsePage = () => {
               register={register}
               id="guardianFirstName"
               placeholder={t("enter_first_name", "Enter first name")}
-              disabled={isGuardianDisabled}
               errors={errors}
-              rules={{
-                validate: (value) =>
-                  isGuardianDisabled || value?.trim()
-                    ? true
-                    : t("field_required", "Field is required"),
-              }}
+              rules={{ required: t("field_required", "Field is required") }}
               sanitizeInput={sanitizeNameInput}
             />
           </Field>
@@ -252,14 +246,8 @@ const ForSomeoneElsePage = () => {
               register={register}
               id="guardianLastName"
               placeholder={t("enter_last_name", "Enter last name")}
-              disabled={isGuardianDisabled}
               errors={errors}
-              rules={{
-                validate: (value) =>
-                  isGuardianDisabled || value?.trim()
-                    ? true
-                    : t("field_required", "Field is required"),
-              }}
+              rules={{ required: t("field_required", "Field is required") }}
               sanitizeInput={sanitizeNameInput}
             />
           </Field>
@@ -270,7 +258,6 @@ const ForSomeoneElsePage = () => {
               getOptionLabel={(value) => getGenderLabel(t, value)}
               open={showGuardianGender}
               setOpen={setShowGuardianGender}
-              disabled={isGuardianDisabled}
               onSelect={(value) => {
                 setGuardianGender(value);
                 setValue("guardianGender", value, { shouldValidate: true });
@@ -279,16 +266,12 @@ const ForSomeoneElsePage = () => {
             />
             <input
               type="hidden"
-              {...register("guardianGender", {
-                validate: (value) =>
-                  isGuardianDisabled || value ? true : t("field_required", "Field is required"),
-              })}
+              {...register("guardianGender", { required: t("field_required", "Field is required") })}
               value={guardianGender}
-              disabled={isGuardianDisabled}
             />
-            {errors?.guardianGender && !isGuardianDisabled && (
+            {errors?.guardianGender && (
               <p className="mt-1 text-red-500 text-[12px]/[14px]">
-                {errors.guardianGender.message}
+                {errors.guardianGender.message || t("field_required", "Field is required")}
               </p>
             )}
           </Field>
@@ -307,35 +290,29 @@ const ForSomeoneElsePage = () => {
             </label>
           </div>
 
-          <Field label={t("passport_pesel_required", "Passport/pesel *")} width="w-[calc(50%-8px)]">
-            <Input
-              register={register}
-              id="guardianPesel"
-              placeholder={t("enter_passport_pesel", "Enter passport/pesel")}
-              disabled={isGuardianDisabled}
-              errors={errors}
-              rules={{
-                validate: (value) =>
-                  isGuardianDisabled || value?.trim()
-                    ? true
-                    : t("field_required", "Field is required"),
-              }}
-            />
-          </Field>
-          <DatePickerField
-            label={t("date_of_birth_required", "Date of Birth *")}
-            width="w-[calc(50%-8px)]"
-            id="guardianDateOfBirth"
-            placeholder={t("enter_date_of_birth", "Enter date of birth")}
-            control={control}
-            disabled={isGuardianDisabled}
-            errors={errors}
-            rules={{
-              validate: (value) =>
-                isGuardianDisabled || value ? true : t("select_date", "Select date"),
-            }}
-            maxDate={new Date()}
-          />
+          {showGuardianIdentityFields && (
+            <>
+              <Field label={t("passport_pesel_required", "Passport/pesel *")} width="w-[calc(50%-8px)]">
+                <Input
+                  register={register}
+                  id="guardianPesel"
+                  placeholder={t("enter_passport_pesel", "Enter passport/pesel")}
+                  errors={errors}
+                  rules={{ required: t("field_required", "Field is required") }}
+                />
+              </Field>
+              <DatePickerField
+                label={t("date_of_birth_required", "Date of Birth *")}
+                width="w-[calc(50%-8px)]"
+                id="guardianDateOfBirth"
+                placeholder={t("enter_date_of_birth", "Enter date of birth")}
+                control={control}
+                errors={errors}
+                rules={{ required: t("select_date", "Select date") }}
+                maxDate={new Date()}
+              />
+            </>
+          )}
 
           <SectionTitle text={t("contact_information", "Contact Information")} />
           <PhoneNumberField
@@ -414,7 +391,7 @@ const ForSomeoneElsePage = () => {
             <span className="text-[#95A0B5]">{t("comments_optional_short", "Optional")}</span>
           </div>
           <textarea
-            className="w-full h-[86px] border border-[#D8DBE2] rounded-[8px] px-4 py-3 text-[15px] font-sans text-[#4E5565] mb-4"
+            className="w-full h-[86px] border border-[#D8DBE2] rounded-[8px] px-4 py-[13px] text-[15px] font-sans text-[#4E5565] mb-4"
             placeholder={t(
               "comments_placeholder",
               "Any additional information or special requirements..."
@@ -474,7 +451,7 @@ const Input = ({
         type={type}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full px-[12px] py-[8px] border-[2px] border-[#E8E8E9] rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] ${
+        className={`w-full px-[12px] py-[9px] border-[2px] border-[#E8E8E9] rounded-[10px] text-[15px]/[18px] text-[#333] font-sans tracking-[0.675px] ${
           disabled ? "bg-[#F0F2F6] text-[#A4ABBC] cursor-not-allowed" : "bg-white"
         }`}
         {...register(id, registerOptions)}
@@ -497,10 +474,13 @@ const GenderDropdown = ({
   onSelect,
   dropdownRef,
   disabled = false,
-}) => (
-  <div
+}) => {
+  const availableOptions = options.filter((item) => item !== value);
+
+  return (
+    <div
     ref={dropdownRef}
-    className={`relative border-[2px] border-[#E8E8E9] rounded-[10px] px-[12px] py-[8px] flex items-center justify-between ${
+    className={`relative border-[2px] border-[#E8E8E9] rounded-[10px] px-[12px] py-[9px] flex items-center justify-between ${
       disabled ? "bg-[#F0F2F6] text-[#A4ABBC] cursor-not-allowed" : "bg-white text-[#333] cursor-pointer"
     }`}
     onClick={() => {
@@ -517,7 +497,7 @@ const GenderDropdown = ({
     </span>
     {open && !disabled && (
       <div className="absolute top-[48px] left-0 w-full z-20 border border-[#D8DBE2] rounded-[8px] bg-white overflow-hidden">
-        {options.map((item) => (
+        {availableOptions.map((item) => (
           <button
             type="button"
             key={item}
@@ -532,7 +512,8 @@ const GenderDropdown = ({
         ))}
       </div>
     )}
-  </div>
-);
+    </div>
+  );
+};
 
 export default ForSomeoneElsePage;

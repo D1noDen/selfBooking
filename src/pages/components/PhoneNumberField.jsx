@@ -45,11 +45,11 @@ const PhoneNumberField = ({
         {label}
       </label>
 
-      <div className={`${isMobile ? 'border-[1px] border-[#11111333] rounded-[4px]' : "border-[2px] border-[#E8E8E9] rounded-[10px]"} bg-white h-auto py-[7px] px-[8px] flex items-center gap-[10px] focus-within:border focus-within:border-[#6C6AC7]`}>
+      <div className={`${isMobile ? 'border-[1px] border-[#11111333] rounded-[4px]' : "border-[2px] border-[#E8E8E9] rounded-[10px]"} bg-white h-auto py-[5px] px-[8px] flex items-center gap-[10px] focus-within:border focus-within:border-[#6C6AC7]`}>
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
-            className="w-min py-[6px] px-[12px] bg-[#F4F7FF] rounded-[4px] flex items-center justify-between gap-[9px] text-[15px]/[20px] font-[700] text-[#333333]"
+            className="w-min py-[4px] px-[12px] bg-[#F4F7FF] rounded-[4px] flex items-center justify-between gap-[9px] text-[15px]/[20px] font-[700] text-[#333333]"
             onClick={() => setIsOpen((prev) => !prev)}
             aria-label={`${t("select_country_code", "Select country code, current")} ${currentCountry.label}`}
           >

@@ -18,7 +18,7 @@ export const translations = {
     contact_information: "Contact Information",
     booking_person: "Booking person",
     other_details: "Other details",
-    comments_optional: "Comments or special requests (Optional)",
+    comments_optional: "Comments or special requests",
     comments_optional_short: "Optional",
     comments_placeholder: "Any additional information or special requirements...",
     emergency_consultation_note:
@@ -106,7 +106,7 @@ export const translations = {
     contact_information: "Контактна інформація",
     booking_person: "Особа, що записує",
     other_details: "Інші деталі",
-    comments_optional: "Коментарі або особливі побажання (Необов'язково)",
+    comments_optional: "Коментарі або особливі побажання",
     comments_optional_short: "Необов'язково",
     comments_placeholder: "Будь-яка додаткова інформація або особливі вимоги...",
     emergency_consultation_note:
@@ -193,7 +193,7 @@ export const translations = {
     contact_information: "Dane kontaktowe",
     booking_person: "Osoba rezerwująca",
     other_details: "Inne szczegóły",
-    comments_optional: "Komentarze lub dodatkowe prośby (Opcjonalnie)",
+    comments_optional: "Komentarze lub dodatkowe prośby",
     comments_optional_short: "Opcjonalnie",
     comments_placeholder: "Dodatkowe informacje lub specjalne wymagania...",
     emergency_consultation_note:

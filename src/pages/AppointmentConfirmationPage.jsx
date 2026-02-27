@@ -36,6 +36,11 @@ const AppointmentConfirmationPage = () => {
   );
   const data = confirmationData?.formData || {};
   const source = confirmationData?.source || "for user";
+  const isForSomeoneElse = source === "for someone else";
+  const guardianDetailsTitle =
+    data.activePatientGuardian === "No"
+      ? t("contact_person_details", "Contact person details")
+      : t("patient_guardian_parent", "Patient guardian/Parent");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: clinicInfoData, setText: loadClinicInfo } = get_Clinic_Info();
@@ -140,7 +145,7 @@ const AppointmentConfirmationPage = () => {
           if (source === "for someone else") {
             const usePatientAsGuardian = data.activePatientGuardian === "No";
             const relationshipType =
-              data.activePatientGuardian === "Yes" ? "Parent" : "LegalGuardian";
+              data.activePatientGuardian === "Yes" ? "LegalGuardian" : "ContactPerson";
             createContactPerson(
               {
                 data: {
@@ -229,7 +234,11 @@ const AppointmentConfirmationPage = () => {
             </div>
           </div>
           <div className="rounded-[10px] p-4" style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.05)"}}>
-          <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">{t("your_details", "Your Details")}</div>
+          <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">
+            {isForSomeoneElse
+              ? t("patient_details", "Patient Details")
+              : t("your_details", "Your Details")}
+          </div>
           <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
             <LabelValue label={t("full_name", "Full Name")} value={`${data.firstName || ""} ${data.lastName || ""}`.trim()} />
             <LabelValue label={t("pesel", "PESEL")} value={data.pesel} />
@@ -238,11 +247,11 @@ const AppointmentConfirmationPage = () => {
           </div>
         </div>
 
-        {source === "for someone else" &&
+        {isForSomeoneElse &&
           (data.guardianFirstName || data.guardianLastName || data.guardianDateOfBirth) && (
             <div className="rounded-[10px] p-4" style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.05)"}}>
               <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">
-                {t("parent_guardian", "Parent/Guardian")}
+                {guardianDetailsTitle}
               </div>
               <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
                 <LabelValue

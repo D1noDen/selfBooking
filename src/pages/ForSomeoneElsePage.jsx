@@ -294,7 +294,7 @@ const ForSomeoneElsePage = () => {
             </label>
           </div>
 
-          {showGuardianIdentityFields && (
+          {!showGuardianIdentityFields && (
             <>
               <Field label={t("passport_pesel_required", "Passport/pesel *")} width="w-[calc(50%-8px)]">
                 <Input

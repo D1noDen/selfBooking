@@ -266,6 +266,27 @@ const MainLayout = () => {
         : nextPageIsMobile
         ? pageMapping[nextPageRaw] || "visit type"
         : nextPageRaw;
+      const isCurrentComplete =
+        appPage === "complete" || appPage === "complete mobile";
+      const isNextComplete =
+        nextPage === "complete" || nextPage === "complete mobile";
+
+      if (isCurrentComplete && !isNextComplete) {
+        const lockedPage = isMobile ? "complete mobile" : "complete";
+        if (appPage !== lockedPage || headerPage !== 4) {
+          historySyncRef.current.skipNextPush = true;
+          setHeaderPage(4);
+          setAppPage(lockedPage);
+        }
+        window.history.pushState(
+          {
+            ...(window.history.state || {}),
+            bookingFlow: { appPage: lockedPage, headerPage: 4 },
+          },
+          ""
+        );
+        return;
+      }
 
       historySyncRef.current.skipNextPush = true;
       setHeaderPage(nextHeader);
@@ -274,7 +295,7 @@ const MainLayout = () => {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [pageSize, setAppPage, setHeaderPage]);
+  }, [appPage, headerPage, pageSize, setAppPage, setHeaderPage]);
 
   // useEffect(() => {
   //   setAppPage("continue as");

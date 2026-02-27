@@ -277,7 +277,7 @@ const DatePickerField = ({
             type="button"
             tabIndex={-1}
             disabled={disabled}
-            className="absolute top-1/2 right-3 -translate-y-1/2"
+            className={`absolute top-1/2 right-3 -translate-y-1/2 ${isOpen ? "rotate-180" : ""} duration-200`}
             onClick={() => {
               if (disabled) return;
               setPickerViewDate(selectedDate || effectiveMaxDate || new Date());

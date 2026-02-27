@@ -106,7 +106,7 @@ const ChoseStatus = ({
   return (
     <div className={`choseStatusPage  mx-auto font-nunito h-full`}>
       <h1
-        className={`text-[32px]/[44px] text-[#E8EAFF] font-semibold text-center relative h-[20%] flex items-center justify-center`}
+        className={`text-[24px] text-[#E8EAFF] font-semibold text-center relative h-[20%] flex items-center justify-center`}
       >
         Continue as:
         <div
@@ -238,7 +238,7 @@ const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage }) => {
         }  mx-auto relative`}
       >
         <div
-          className={`text-[32px]/[44px] text-[#E8EAFF] font-nunito font-semibold tracking-[1.44px] text-center ${
+          className={`text-[24px] text-[#E8EAFF] font-nunito font-semibold tracking-[1.44px] text-center ${
             _height <= 850 ? "mb-[13px]" : "mb-[25px]"
           }  cursor-default`}
         >

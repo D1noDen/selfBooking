@@ -53,7 +53,7 @@ const FinalPage = () => {
           />
         </div>
         <div
-          className={`text-[30px] text-[#8380FF] font-sans font-medium tracking-[1.62px] text-center`}
+          className={`text-[24px] text-[#8380FF] font-sans font-semibold tracking-[1.62px] text-center`}
         >
           {t("appointment_confirmed", "Appointment Confirmed!")}
         </div>

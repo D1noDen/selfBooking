@@ -970,7 +970,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
       >
         <div className={`flex relative bg-white border-b border-[#E5E5EA] flex-shrink-0`}>
           <div className={`lg:w-[260px] xl:w-[30%] flex flex-col items-start gap-4 text-start lg:p-4 xl:px-10`}>
-            <div className={`text-[30px] text-[#333] font-semibold font-sans`}>
+            <div className={`text-[24px] text-[#333] font-semibold font-sans`}>
               {t("select_date_time", "Select date and time")}
             </div>
             <div className="flex flex-col gap-2">

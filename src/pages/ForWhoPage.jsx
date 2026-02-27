@@ -61,7 +61,7 @@ const ForWhoPage = () => {
                 className={`mainBlock w-full font-nunito  justify-center items-center h-full ${_height < 1050 ? 'flex pt-0' : 'lg:flex xl:block lg:pt-0 xl:pt-[194px]'}`}
             >
                 <div>
-                    <h1 className={`text-[32px]/[44px] text-white font-semibold tracking-[1.44px] max-w-[587px] mx-auto text-center lg:mb-5 xl:mb-10`}>
+                    <h1 className={`text-[24px] text-white font-semibold tracking-[1.44px] max-w-[587px] mx-auto text-center lg:mb-5 xl:mb-10`}>
                         {t("for_who_title", "Are you scheduling this appointment for you, or someone else?")}
                     </h1>
                     {

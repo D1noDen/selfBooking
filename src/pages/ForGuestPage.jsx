@@ -274,7 +274,7 @@ console.log("chosenDoctor:", chosenDoctor);
         className={`xl:w-[663px] lg:w-[570px] bg-white xl:px-[50px] lg:px-[15px] pt-[47px] flex-shrink-0 shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]`}
       >
         <div
-          className={`text-[24px]/[29px] text-[#7C67FF] font-inter font-medium tracking-[1.08px] mb-10`}
+          className={`text-[24px] text-[#7C67FF] font-inter font-semibold tracking-[1.08px] mb-10`}
         >
           Please enter your exact information
         </div>

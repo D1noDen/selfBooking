@@ -94,7 +94,7 @@ const VisiteTypePage = ({ visitTypeArr, setSesionStorage }) => {
         style={{ width: window.innerWidth < 600 ? "w-auto" : widthBlock }}
       >
         <h1
-          className={`lg:w-[600px] sm:pt-[20px] sm:text-[20px] lg:mx-auto lg:text-[32px]/[44px] font-nunito font-semibold text-white text-center tracking-[1.44px] mb-10 mt-0 lg:scale-90 xl:scale-100`}
+          className={`lg:w-[600px] sm:pt-[20px] sm:text-[20px] lg:mx-auto text-[24px] font-nunito font-semibold text-white text-center tracking-[1.44px] mb-10 mt-0 lg:scale-90 xl:scale-100`}
         >
           {t("visit_type_title", "What type of appointment would you like to schedule?")}
         </h1>

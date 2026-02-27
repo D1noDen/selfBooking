@@ -192,7 +192,7 @@ const AppointmentConfirmationPage = () => {
     <div className="mx-auto" style={{ width: widthBlock }}>
       {isSubmitting && <Spinner />}
       <div className="bg-white rounded-[10px] text-[24px] text-[#333] font-sans p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)]">
-        <div className="text-[40px]/[46px] text-[#2F3441] font-semibold mb-1">
+        <div className="text-[24px] text-[#2F3441] font-semibold mb-1">
           {t("confirm_appointment_title", "Confirm your appointment")}
         </div>
         <div className="text-[16px] text-[#6A7282] mb-6">
@@ -224,7 +224,7 @@ const AppointmentConfirmationPage = () => {
                 value={moment(
                   bookingInfo?.doctor?.eventStartDateTime,
                   "DD.MM.YYYY HH:mm:ss"
-                ).format("ddd MMM DD, h:mm a")}
+                ).format("ddd MMM DD, HH:mm")}
               />
             </div>
           </div>

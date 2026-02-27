@@ -221,14 +221,14 @@ const ForUserPage = () => {
                 ))}
               </div>
               <span
-                className={`w-[18px] h-[10px] absolute top-[calc(50%-5px)] right-5 ${
+                className={`w-[18px] h-[10px] absolute flex justify-center items-center top-[calc(50%-5px)] right-5 ${
                   showList ? "rotate-180" : "rotate-0"
-                } duration-500 ${
-                  arrowHover
-                    ? 'bg-[url("./assets/images/self-booking/listArrowHover.svg")]'
-                    : 'bg-[url("./assets/images/self-booking/listArrow.svg")]'
-                }`}
-              ></span>
+                } duration-200`}
+              >
+                <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 1L6 6L1 1" stroke="#99A1AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
             </div>
             <input
               type="hidden"

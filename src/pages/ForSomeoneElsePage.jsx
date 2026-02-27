@@ -159,7 +159,7 @@ const ForSomeoneElsePage = () => {
   };
 
   return (
-    <div className="pb-3 relative mx-auto" style={{ width: widthBlock }}>
+    <div className="relative mx-auto" style={{ width: widthBlock }}>
       <div className="bg-white rounded-[10px] p-6 overflow-auto scrollmainContent shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)] h-max">
         <div className="text-[24px] font-sans text-[#333] font-semibold mb-1">
           {t("who_are_you_scheduling_for", "Who are you scheduling for?")}
@@ -496,7 +496,7 @@ const GenderDropdown = ({
     </span>
     <span className={`${open ? "rotate-180" : ""} duration-200`}>
       <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M11 1L6 6L1 1" stroke="#99A1AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M11 1L6 6L1 1" stroke="#99A1AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     </span>
     {open && !disabled && (

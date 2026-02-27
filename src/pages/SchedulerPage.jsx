@@ -50,6 +50,12 @@ const MonthYearPickerButton = forwardRef(({ value, onClick, isOpen }, ref) => (
 
 MonthYearPickerButton.displayName = "MonthYearPickerButton";
 
+const SCHEDULER_LAYOUT = Object.freeze({
+  gridWidthPercent: 90,
+  timeColumnPaddingPx: 8,
+  timeSlotHorizontalInsetPx: 22,
+});
+
 const SchedulerPage = ({ setSesionStorage }) => {
   const { t, language } = useAppTranslation();
   const { formatInTimeZone, formatTimeInTimeZone } = useTimezoneFormatter({
@@ -118,6 +124,11 @@ const SchedulerPage = ({ setSesionStorage }) => {
   });
   const [isMonthYearOpen, setIsMonthYearOpen] = useState(false);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
+  const {
+    gridWidthPercent,
+    timeColumnPaddingPx,
+    timeSlotHorizontalInsetPx,
+  } = SCHEDULER_LAYOUT;
   const [isLoadingData, setIsLoadingData] = useState(false);
   const {auth} = useAuth();
   const backendHelper = useMemo(() => selfBookingBackendHelper(), []);
@@ -695,9 +706,16 @@ const SchedulerPage = ({ setSesionStorage }) => {
   }, [doctors, events, formatTimeInTimeZone]);
 
   const TimeAppointment = (eventInfo) => {
+    const slotWidthStyle = {
+      width: `calc(100% - ${timeSlotHorizontalInsetPx}px)`,
+    };
+
     if (eventInfo.event.extendedProps.isEmpty) {
       return (
-        <div className="bg-[#F4F5FA] text-[18px]/[24px] text-[#A7ACBD] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center rounded-[10px] mb-[12px] cursor-default">
+        <div
+          className="bg-[#F4F5FA] text-[18px]/[24px] text-[#A7ACBD] lg:h-[44px] xl:h-[48px] flex justify-center items-center rounded-[10px] mb-[12px] cursor-default"
+          style={slotWidthStyle}
+        >
           —
         </div>
       );
@@ -709,12 +727,13 @@ const SchedulerPage = ({ setSesionStorage }) => {
 
     return (
       <div
-        className={`text-[18px]/[24px] font-hebrew tracking-[0.63px] w-[130px] lg:h-[44px] xl:h-[48px] flex justify-center items-center rounded-[10px] cursor-pointer mb-[12px] ${
+        className={`text-[18px]/[24px] font-hebrew tracking-[0.63px] lg:h-[44px] xl:h-[48px] flex justify-center items-center rounded-[10px] cursor-pointer mb-[12px] ${
           isSelected
             ? "bg-[#8380FF] text-white"
             : "bg-white text-[#8380FF] hover:bg-[#8380FF] hover:text-white"
         }`}
         style={{
+          ...slotWidthStyle,
           boxShadow: "0 2px 8px 0 rgba(0, 0, 0, 0.10)"
         }}
       >
@@ -867,7 +886,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
     () => weekDays.findIndex((day) => day.iso === selectedSlotDayIso),
     [selectedSlotDayIso, weekDays]
   );
-  const calendarGridWidthPercent = 90;
+  const calendarGridWidthPercent = gridWidthPercent;
   const calendarGridOffsetPercent = (100 - calendarGridWidthPercent) / 2;
 
   const weekMs = 7 * 24 * 60 * 60 * 1000;
@@ -1076,7 +1095,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
                       } ${day.isDisabled ? "opacity-40" : ""}`}
                     >
                       {day.isToday && (
-                        <span className="absolute top-[10px] right-0 rounded-[4px] bg-[#8380FF] px-[8px] py-[4px] text-[10px] font-[400] font-sans leading-none text-white">
+                        <span className="absolute top-[10px] right-[3px] rounded-[4px] bg-[#8380FF] px-[8px] py-[4px] text-[10px] font-[400] font-sans leading-none text-white">
                           {t("today", "Today")}
                         </span>
                       )}
@@ -1195,7 +1214,13 @@ const SchedulerPage = ({ setSesionStorage }) => {
                           </span>
                         </div>
                       </div>
-                      <div className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%] relative overflow-hidden`}>
+                      <div
+                        className={`eachDoctorCalendar lg:w-[77%] xl:w-[70%] relative overflow-hidden`}
+                        style={{
+                          "--scheduler-grid-width": `${gridWidthPercent}%`,
+                          "--scheduler-time-column-padding": `${timeColumnPaddingPx}px`,
+                        }}
+                      >
                         {selectedColumnIndex >= 0 && (
                           <div
                             className="pointer-events-none absolute top-0 bottom-0 z-0 bg-[#EFEEFB]"

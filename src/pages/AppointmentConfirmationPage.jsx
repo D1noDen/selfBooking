@@ -15,6 +15,33 @@ import { useAppTranslation } from "../i18n/useAppTranslation";
 import { getLocalizedVisitTypeLabel } from "../i18n/visitTypeLabel";
 import { getGenderLabel, normalizeGender } from "../i18n/gender";
 
+const formatBirthDateForApi = (value) => {
+  if (!value || typeof value !== "string") return "";
+  const rawValue = value.trim();
+  if (!rawValue) return "";
+
+  const normalizedIsoDate = moment(rawValue, "YYYY-MM-DD", true);
+  if (normalizedIsoDate.isValid()) {
+    return normalizedIsoDate.format("YYYY-MM-DD");
+  }
+
+  const dateTimeIso = moment(rawValue, moment.ISO_8601, true);
+  if (dateTimeIso.isValid()) {
+    return dateTimeIso.format("YYYY-MM-DD");
+  }
+
+  const localizedDate = moment(
+    rawValue,
+    ["DD.MM.YYYY", "D.M.YYYY", "DD/MM/YYYY", "D/M/YYYY"],
+    true
+  );
+  if (localizedDate.isValid()) {
+    return localizedDate.format("YYYY-MM-DD");
+  }
+
+  return "";
+};
+
 const AppointmentConfirmationPage = () => {
   const { t, language } = useAppTranslation();
   const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
@@ -41,6 +68,10 @@ const AppointmentConfirmationPage = () => {
     data.activePatientGuardian === "No"
       ? t("contact_person_details", "Contact person details")
       : t("patient_guardian_parent", "Patient guardian/Parent");
+  const patientDateOfBirthForApi = formatBirthDateForApi(data.dateOfBirth);
+  const contactPersonDateOfBirthForApi = formatBirthDateForApi(
+    data.guardianDateOfBirth
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { data: clinicInfoData, setText: loadClinicInfo } = get_Clinic_Info();
@@ -74,7 +105,7 @@ const AppointmentConfirmationPage = () => {
           businessPhone: "",
           nip: "",
           isBlackListed: false,
-          dateOfBirth: data.dateOfBirth,
+          dateOfBirth: patientDateOfBirthForApi,
           gender: normalizeGender(data.gender),
           pesel: data.pesel || "",
           maidenName: "",
@@ -143,28 +174,19 @@ const AppointmentConfirmationPage = () => {
           };
 
           if (source === "for someone else") {
-            const usePatientAsGuardian = data.activePatientGuardian === "No";
             const relationshipType =
               data.activePatientGuardian === "Yes" ? "LegalGuardian" : "ContactPerson";
             createContactPerson(
               {
                 data: {
                   patientId,
-                  firstName: usePatientAsGuardian
-                    ? data.firstName
-                    : data.guardianFirstName || data.firstName,
-                  lastName: usePatientAsGuardian
-                    ? data.lastName
-                    : data.guardianLastName || data.lastName,
+                  firstName: data.guardianFirstName || "",
+                  lastName: data.guardianLastName || "",
                   email: data.email || "",
                   cellPhone: data.phoneNumber || "",
-                  gender: usePatientAsGuardian
-                    ? normalizeGender(data.gender)
-                    : normalizeGender(data.guardianGender || data.gender),
-                  pesel: data.pesel || "",
-                  dateOfBirth: usePatientAsGuardian
-                    ? data.dateOfBirth
-                    : data.guardianDateOfBirth || data.dateOfBirth,
+                  gender: normalizeGender(data.guardianGender),
+                  pesel: data.guardianPesel || "",
+                  dateOfBirth: contactPersonDateOfBirthForApi,
                   relationshipType,
                   zipCode: "",
                   title: "",
@@ -242,6 +264,7 @@ const AppointmentConfirmationPage = () => {
           <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
             <LabelValue label={t("full_name", "Full Name")} value={`${data.firstName || ""} ${data.lastName || ""}`.trim()} />
             <LabelValue label={t("pesel", "PESEL")} value={data.pesel} />
+            <LabelValue label={t("date_of_birth", "Date of Birth")} value={data.dateOfBirth} />
             <LabelValue label={t("email", "Email")} value={data.email} />
             <LabelValue label={t("phone", "Phone")} value={data.cellPhone || data.phoneNumber} />
           </div>

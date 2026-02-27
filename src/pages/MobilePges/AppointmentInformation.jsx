@@ -17,6 +17,27 @@ import Spinner from "../helpers/Spinner";
 import { getBookingInformation } from "../../helpers/bookingStorage";
 import { getLocalizedVisitTypeLabel } from "../../i18n/visitTypeLabel";
 
+const formatBirthDateForApi = (value) => {
+  if (!value || typeof value !== "string") return "";
+  const rawValue = value.trim();
+  if (!rawValue) return "";
+
+  const normalizedIsoDate = moment(rawValue, "YYYY-MM-DD", true);
+  if (normalizedIsoDate.isValid()) return normalizedIsoDate.format("YYYY-MM-DD");
+
+  const dateTimeIso = moment(rawValue, moment.ISO_8601, true);
+  if (dateTimeIso.isValid()) return dateTimeIso.format("YYYY-MM-DD");
+
+  const localizedDate = moment(
+    rawValue,
+    ["DD.MM.YYYY", "D.M.YYYY", "DD/MM/YYYY", "D/M/YYYY"],
+    true
+  );
+  if (localizedDate.isValid()) return localizedDate.format("YYYY-MM-DD");
+
+  return "";
+};
+
 const AppointmentInformation = () => {
   const {auth} = useAuth();
   const informationWithSorage = getBookingInformation() || {};
@@ -64,6 +85,8 @@ console.log("informationWithSorage", informationWithSorage);
     informationWithSorage.doctor?.eventStartDateTime
   );
   const newEndDate = dateHelper(informationWithSorage?.doctor?.eventEnd);
+  const patientDateOfBirthForApi = formatBirthDateForApi(patientInfo.dateOfBirth);
+  const contactPersonDateOfBirthForApi = formatBirthDateForApi(guardianInfo.dateOfBirth);
 
   const calcAge = (birthdate) => {
     let birthdateObj = new Date(birthdate);
@@ -181,7 +204,7 @@ console.log("informationWithSorage", informationWithSorage);
       cellPhone: guardianInfo.phoneNumber,
       gender: "Other",
       pesel: guardianInfo.pesel,
-      dateOfBirth: patientInfo.dateOfBirth,
+      dateOfBirth: contactPersonDateOfBirthForApi,
       relationshipType,
       zipCode: "",
       title: "",
@@ -205,7 +228,7 @@ console.log("patientInfo", patientInfo);
       nip: "",
       
       isBlackListed: false,
-      dateOfBirth: patientInfo.dateOfBirth,
+      dateOfBirth: patientDateOfBirthForApi,
       gender: patientInfo.gender,
       pesel: patientInfo.pesel,
       maidenName: "",

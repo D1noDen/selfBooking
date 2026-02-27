@@ -224,7 +224,7 @@ const AppointmentConfirmationPage = () => {
                 value={moment(
                   bookingInfo?.doctor?.eventStartDateTime,
                   "DD.MM.YYYY HH:mm:ss"
-                ).format("ddd MMM DD, h:mm a")}
+                ).format("ddd MMM DD, HH:mm")}
               />
             </div>
           </div>

@@ -216,7 +216,10 @@ const AppointmentConfirmationPage = () => {
   };
 
   return (
-    <div className="mx-auto" style={{ width: widthBlock }}>
+    <div
+      className="mx-auto w-full px-4 lg:px-0"
+      style={{ width: window.innerWidth < 1024 ? "100%" : widthBlock }}
+    >
       {isSubmitting && <Spinner />}
       <div className="bg-white rounded-[10px] text-[24px] text-[#333] font-sans p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)]">
         <div className="text-[24px] text-[#2F3441] font-semibold mb-1">
@@ -226,13 +229,13 @@ const AppointmentConfirmationPage = () => {
           {t("review_details", "Please review all details before confirming")}
         </div>
 
-        <div className='grid grid-cols-2 gap-[32px]'>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-[24px] sm:gap-[32px]">
           <div className="flex flex-col gap-[32px]">
           <div className="rounded-[10px] p-4" style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.05)"}}>
             <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">
               {t("appointment_details", "Appointment Details")}
             </div>
-            <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-[18px]/[24px]">
               <LabelValue
                 label={t("visit_type_label", "Visit Type")}
                 value={
@@ -261,7 +264,7 @@ const AppointmentConfirmationPage = () => {
               ? t("patient_details", "Patient Details")
               : t("your_details", "Your Details")}
           </div>
-          <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-[18px]/[24px]">
             <LabelValue label={t("full_name", "Full Name")} value={`${data.firstName || ""} ${data.lastName || ""}`.trim()} />
             <LabelValue label={t("pesel", "PESEL")} value={data.pesel} />
             <LabelValue label={t("date_of_birth", "Date of Birth")} value={data.dateOfBirth} />
@@ -276,7 +279,7 @@ const AppointmentConfirmationPage = () => {
               <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">
                 {guardianDetailsTitle}
               </div>
-              <div className="grid grid-cols-2 gap-y-3 text-[18px]/[24px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-[18px]/[24px]">
                 <LabelValue
                   label={t("full_name", "Full Name")}
                   value={`${data.guardianFirstName || ""} ${data.guardianLastName || ""}`.trim()}
@@ -299,16 +302,16 @@ const AppointmentConfirmationPage = () => {
             <div className="text-[18px] font-sans text-[#101828] font-medium mb-3">
               {t("clinic_location", "Clinic Location")}
             </div>
-            <div className="bg-[#F5F5FF] flex justify-start items-start rounded-[10px] p-[17px] mb-3 text-[16px]/[22px]">
+            <div className="bg-[#F5F5FF] flex justify-start items-start rounded-[10px] p-[17px] mb-3 text-[16px]/[22px] min-w-0">
               <div className="rounded-full w-[40px] h-[40px] bg-[#8380FF] flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M16.6666 8.33366C16.6666 12.4945 12.0508 16.8278 10.5008 18.1662C10.3564 18.2747 10.1806 18.3335 9.99992 18.3335C9.81925 18.3335 9.64348 18.2747 9.49909 18.1662C7.94909 16.8278 3.33325 12.4945 3.33325 8.33366C3.33325 6.56555 4.03563 4.86986 5.28587 3.61961C6.53612 2.36937 8.23181 1.66699 9.99992 1.66699C11.768 1.66699 13.4637 2.36937 14.714 3.61961C15.9642 4.86986 16.6666 6.56555 16.6666 8.33366Z" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M10 10.833C11.3807 10.833 12.5 9.71372 12.5 8.33301C12.5 6.9523 11.3807 5.83301 10 5.83301C8.61929 5.83301 7.5 6.9523 7.5 8.33301C7.5 9.71372 8.61929 10.833 10 10.833Z" stroke="white" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
-              <div className="ml-4">
+              <div className="ml-4 min-w-0">
                 <div className="text-[#2F3441] font-semibold">{clinicInfo?.clinicName || '-'}</div>
-                <div className="text-[#6B7283]">{clinicInfo?.clinicAddress || "-"}</div>
+                <div className="text-[#6B7283] break-words">{clinicInfo?.clinicAddress || "-"}</div>
                 {/* <div
                   className="mt-3 flex items-center text-[#8380FF] text-[14px] font-sans font-medium gap-2 cursor-pointer"
                   onClick={() => {
@@ -334,7 +337,7 @@ const AppointmentConfirmationPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-[40px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-[40px]">
           <button
             type="button"
             className="w-full rounded-[8px] py-[18px] text-[#0A0A0A] font-sans text-[14px]"
@@ -364,9 +367,9 @@ const AppointmentConfirmationPage = () => {
 };
 
 const LabelValue = ({ label, value }) => (
-  <div>
+  <div className="min-w-0">
     <div className="text-[#8A93A6]">{label}</div>
-    <div className="text-[#2F3441]">{value || "-"}</div>
+    <div className="text-[#2F3441] break-words">{value || "-"}</div>
   </div>
 );
 

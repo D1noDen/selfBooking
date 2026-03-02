@@ -68,7 +68,7 @@ const GuardianExactInformation = () => {
     <div>
       <section className="mobileBG h-[100px]">
         <div className="flex h-full items-center justify-center">
-          <div className="relative w-[290px]">
+          <div className="relative w-full max-w-[290px]">
             <p className="text-[24px] text-white text-center leading-normal">
               Enter Guardian exact <br /> information
             </p>
@@ -76,7 +76,7 @@ const GuardianExactInformation = () => {
               onClick={() => {
                 setAppPage("for who mobile");
               }}
-              className="absolute top-[6px] left-[-18px] h-[16px] w-[16px]"
+              className="absolute top-[6px] left-0 h-[16px] w-[16px]"
               src={chevronLeft}
             />
           </div>
@@ -87,7 +87,7 @@ const GuardianExactInformation = () => {
           className="flex flex-col pt-[18px] items-center gap-[12px]"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <div className={`w-[340px] flex flex-col relative`}>
+          <div className={`w-full max-w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
               PESEL/PASSPORT
             </div>
@@ -112,7 +112,7 @@ const GuardianExactInformation = () => {
                 )
               : null}
           </div>
-          <div className={`w-[340px] flex flex-col relative`}>
+          <div className={`w-full max-w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
               First name
             </div>
@@ -138,7 +138,7 @@ const GuardianExactInformation = () => {
               : null}
           </div>
 
-          <div className={`w-[340px] flex flex-col relative`}>
+          <div className={`w-full max-w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
               Last name
             </div>
@@ -164,7 +164,7 @@ const GuardianExactInformation = () => {
               : null}
           </div>
 
-          <div className={`w-[340px] flex flex-col relative`}>
+          <div className={`w-full max-w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
               Email
             </div>
@@ -207,7 +207,7 @@ const GuardianExactInformation = () => {
 
           <PhoneNumberField
             label="Phone Number"
-            widthClass="w-[340px]"
+            widthClass="w-full max-w-[340px]"
             phoneFieldName="phoneNumber"
             countryFieldName="phoneNumberCountryCode"
             placeholder="000000000"
@@ -220,7 +220,7 @@ const GuardianExactInformation = () => {
             className="mb-0"
           />
 
-          <div className={`w-[340px] flex flex-col relative`}>
+          <div className={`w-full max-w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>
               Comments or special requests
             </div>
@@ -261,7 +261,7 @@ const GuardianExactInformation = () => {
             </div>
           </div>
 
-          <button className="mt-[10px] w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white">
+          <button className="mt-[10px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white">
             Book Appointment
           </button>
           <button
@@ -269,7 +269,7 @@ const GuardianExactInformation = () => {
             onClick={() => {
               setAppPage("for who mobile");
             }}
-            className="mb-[10px] w-[340px] h-[44px] font-medium rounded-[12px] border border-solid border-[#7C67FF] bg-white text-[#7C67FF]"
+            className="mb-[10px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] border border-solid border-[#7C67FF] bg-white text-[#7C67FF]"
           >
             Cancel
           </button>

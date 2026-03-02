@@ -32,11 +32,11 @@ const FinalPage = () => {
 
   return (
     <div
-      className={`pb-[30px] mx-auto`}
+      className={`pb-[30px] mx-auto w-full px-4 lg:px-0`}
       style={{
-        width: widthBlock,
-        height: _height >= 1080 ? 1080 - 114 : 780,
-        minHeight: 688,
+        width: _width < 1024 ? "100%" : widthBlock,
+        height: _width < 1024 ? "auto" : _height >= 1080 ? 1080 - 114 : 780,
+        minHeight: _width < 1024 ? "auto" : 688,
       }}
     >
       <div
@@ -47,6 +47,7 @@ const FinalPage = () => {
           <img
             src={FinalPageImage}
             alt="gif"
+            className="w-full max-w-[500px] object-contain"
             style={{
               height: _height <= 850 ? 300 : 400,
             }}
@@ -58,7 +59,7 @@ const FinalPage = () => {
           {t("appointment_confirmed", "Appointment Confirmed!")}
         </div>
         <div
-          className={`max-w-[600px] mx-auto text-center text-[18px] text-[#4A5565] font-sans font-[400] tracking-[0.81px] ${
+          className={`w-full max-w-[600px] px-2 mx-auto text-center text-[18px] text-[#4A5565] font-sans font-[400] tracking-[0.81px] ${
             _height <= 850 ? "mb-0" : "mb-[25px]"
           } `}
         >
@@ -79,7 +80,7 @@ const FinalPage = () => {
           </div>
         </div> */}
         <div
-          className={`w-full max-w-[600px] p-[16px] rounded-[8px] bg-[#8380FF] hover:bg-[#7059F6] duration-300 mx-auto flex justify-center items-center text-[14px] text-white font-sans font-medium tracking-[0.72px] cursor-pointer`}
+          className={`w-full max-w-[600px] mb-4 p-[16px] rounded-[8px] bg-[#8380FF] hover:bg-[#7059F6] duration-300 mx-auto flex justify-center items-center text-[14px] text-white font-sans font-medium tracking-[0.72px] cursor-pointer`}
           onClick={() => {
             if (_width < 1000) {
               setAppPage("visit type mobile");

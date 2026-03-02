@@ -280,12 +280,12 @@ console.log("patientInfo", patientInfo);
       {CreatePatientLoading && <Spinner />}
       <section className="mobileBG h-[75px]">
         <div className="flex h-full items-center justify-center">
-          <div className="relative w-[290px]">
+          <div className="relative w-full max-w-[290px]">
             <p className="text-[24px] text-white text-center leading-normal">
               Appointment information
             </p>
             <img
-              className="absolute top-[10px] left-[-18px] h-[16px] w-[16px]"
+              className="absolute top-[10px] left-0 h-[16px] w-[16px]"
               onClick={() => {
                 setAppPage("for patient mobile");
               }}
@@ -474,7 +474,7 @@ console.log("patientInfo", patientInfo);
             console.log(submit);
             setSubmit(!submit);
           }}
-          className="mt-[22px] w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white"
+          className="mt-[22px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white"
         >
           Book Appointment
         </button>
@@ -482,7 +482,7 @@ console.log("patientInfo", patientInfo);
           onClick={() => {
             setAppPage("for patient mobile");
           }}
-          className="mb-[10px] mt-[12px] w-[340px] h-[44px] font-medium rounded-[12px] border border-solid border-[#7C67FF] bg-white text-[#7C67FF]"
+          className="mb-[10px] mt-[12px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] border border-solid border-[#7C67FF] bg-white text-[#7C67FF]"
         >
           Edit
         </button>

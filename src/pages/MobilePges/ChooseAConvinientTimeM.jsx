@@ -236,7 +236,7 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
       {GetSlotApoimentLoading && <Spinner />}
       <section className="mobileBG h-[75px]">
         <div className="flex h-full items-center justify-center">
-          <div className="relative w-[290px]">
+          <div className="relative w-full max-w-[290px]">
             <p className="text-[24px] text-white text-center leading-normal">
               Choose a convenient time
             </p>
@@ -244,7 +244,7 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
               onClick={() => {
                 setAppPage("upcoming schedule");
               }}
-              className="absolute top-[10px] left-[-18px] h-[16px] w-[16px]"
+              className="absolute top-[10px] left-0 h-[16px] w-[16px]"
               src={chevronLeft}
             />
           </div>

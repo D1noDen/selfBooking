@@ -161,12 +161,12 @@ const {auth} = useAuth();
       {/* {doctorsWithEvents.length === 0 ? <Spinner /> : null} */}
       <section className="mobileBG h-[120px] p-[16px]">
         <div className="flex h-fit ">
-          <div className="relative flex gap-[12px] items-center h-fit w-[290px]">
+          <div className="relative flex gap-[12px] items-center h-fit w-full max-w-[290px]">
              <img
               onClick={() => {
                 setAppPage("visit type mobile");
               }}
-              className=" top-[10px] left-[-18px] h-[16px] w-[16px]"
+              className=" top-[10px] left-0 h-[16px] w-[16px]"
               src={chevronLeft}
             />
             <p className="text-[24px] text-white text-center leading-normal">

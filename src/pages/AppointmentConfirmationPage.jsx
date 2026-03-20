@@ -175,7 +175,7 @@ const AppointmentConfirmationPage = () => {
 
           if (source === "for someone else") {
             const relationshipType =
-              data.activePatientGuardian === "Yes" ? "LegalGuardian" : "ContactPerson";
+              data.activePatientGuardian === "Yes" ? "Parent" : "Other";
             createContactPerson(
               {
                 data: {
@@ -186,7 +186,9 @@ const AppointmentConfirmationPage = () => {
                   cellPhone: data.phoneNumber || "",
                   gender: normalizeGender(data.guardianGender),
                   pesel: data.guardianPesel || "",
-                  dateOfBirth: contactPersonDateOfBirthForApi,
+                  ...(contactPersonDateOfBirthForApi?.length > 0
+                    ? { dateOfBirth: contactPersonDateOfBirthForApi }
+                    : {}),
                   relationshipType,
                   zipCode: "",
                   title: "",

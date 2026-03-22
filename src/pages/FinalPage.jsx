@@ -56,7 +56,7 @@ const FinalPage = () => {
         <div
           className={`text-[24px] text-[#8380FF] font-sans font-semibold tracking-[1.62px] text-center`}
         >
-          {t("appointment_confirmed", "Appointment Confirmed!")}
+          {t("appointment_confirmed", "Request sent for clinic review")}
         </div>
         <div
           className={`w-full max-w-[600px] px-2 mx-auto text-center text-[18px] text-[#4A5565] font-sans font-[400] tracking-[0.81px] ${
@@ -65,7 +65,7 @@ const FinalPage = () => {
         >
           {t(
             "appointment_success_text",
-            "Your appointment has been successfully booked. A confirmation email has been sent to your inbox."
+            "We'll email you once the clinic reviews your request."
           )}
         </div>
         {/* <div style={{boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.06)"}} className='p-[25px] w-full max-w-[600px] mx-auto rounded-[10px] bg-white mb-[25px] mt-[30px] flex flex-col justify-start items-start'>

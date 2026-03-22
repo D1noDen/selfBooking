@@ -22,6 +22,8 @@ export const selfBookingBackendHelper = () => {
 
   const createBooking = (params) =>
     apiClient.create(`${BASE_URL}${url.CREATE_BOOKING}?bookingToken=${params?.token}`, params?.data);
+  const submitDraft = (params) =>
+    apiClient.create(`${BASE_URL}${url.SUBMIT_DRAFT}?bookingToken=${params?.token}`, params?.data);
  const getClinicInfo = (params) => 
   apiClient.get(`${BASE_URL}/api/PatientAppointmentBooking/${params}/clinic-info`);
   return {
@@ -31,6 +33,7 @@ export const selfBookingBackendHelper = () => {
     createPatient,
     createContactPerson,
     createBooking,
+    submitDraft,
     getClinicInfo
   };
 };

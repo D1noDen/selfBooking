@@ -97,20 +97,9 @@ const GuardianExactInformation = () => {
                 placeholder="Input PESEL/PASSPORT"
                 id={"pesel"}
                 className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px] "
-                {...register("pesel", {
-                  required: true,
-                })}
+                {...register("pesel")}
               />
             }
-            {errors
-              ? Object.keys(errors).includes("pesel") && (
-                  <p
-                    className={` absolute top-[70px]  bg-white  text-red-500 text-[12px]/[14px]`}
-                  >
-                    Field is requaired!
-                  </p>
-                )
-              : null}
           </div>
           <div className={`w-full max-w-[340px] flex flex-col relative`}>
             <div className={`text-[14px] text-[#5E5E5E] font-medium`}>

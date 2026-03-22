@@ -6,9 +6,7 @@ import { dateHelper } from "../helpers/dateHelper";
 //import useAuth from "../../../Routes/useAuth";
 import useAuth from "../../store/useAuth";
 import {
-  create_Booking,
-  create_Patient,
-  create_Contact_Person,
+  submit_Draft,
 } from "../request/requestSelfBooking";
 
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
@@ -16,6 +14,7 @@ import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import Spinner from "../helpers/Spinner";
 import { getBookingInformation } from "../../helpers/bookingStorage";
 import { getLocalizedVisitTypeLabel } from "../../i18n/visitTypeLabel";
+import RecaptchaModal from "../components/RecaptchaModal";
 
 const formatBirthDateForApi = (value) => {
   if (!value || typeof value !== "string") return "";
@@ -57,7 +56,9 @@ const AppointmentInformation = () => {
   const appointmentTime = SelfBookingStore((state) => state.appointmentTime);
  
   const [doctor, setDoctor] = useState([]);
-  const [submit, setSubmit] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [pendingSubmitPayload, setPendingSubmitPayload] = useState(null);
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
 console.log("informationWithSorage", informationWithSorage);
   const guardianIsParent =
@@ -126,158 +127,165 @@ console.log("informationWithSorage", informationWithSorage);
   }, [GetDoctorByTypeIdData]);
 
   const {
-    mutate: CreateBookingMutate,
-    isLoading: CreateBookingLoading,
-    data: CreateBookingData,
-  } = create_Booking();
-  const {
-    mutate: CreateContactPersonMutate,
-    isLoading: createContactPersonLoading,
-    data: createContactPersonData,
-  } = create_Contact_Person();
-  const {
-    mutate: CreatePatientMutate,
-    isLoading: CreatePatientLoading,
-    data: CreatePatientData,
-  } = create_Patient();
+    mutate: submitDraft,
+    isLoading: submitDraftLoading,
+  } = submit_Draft();
 
-  useEffect(() => {
-    if (submit) {
-      (async function () {
-        try {
-          await createPatient();
-        } catch (error) {
-          console.error("Error in useEffect:", error);
-        }
-      })();
+  const generateIdempotencyKey = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
     }
-  }, [submit]);
-
-  useEffect(() => {
-    if (CreateBookingData) {
-      setAppPage("complete mobile");
-    }
-  }, [CreateBookingData]);
-
-  useEffect(() => {
-    if (CreatePatientData) {
-      if (Object.keys(guardianInfo).length > 0) {
-        (async function () {
-          try {
-            await CreateContactPerson();
-          } catch (error) {
-            console.error(error);
-          }
-        })();
-      } else {
-        (async function () {
-          try {
-            await CreateBooking();
-          } catch (error) {
-            console.error(error);
-          }
-        })();
-      }
-    }
-  }, [CreatePatientData]);
-
-  useEffect(() => {
-    if (createContactPersonData) {
-      (async function () {
-        try {
-          await CreateBooking();
-        } catch (error) {
-          console.error(error);
-        }
-      })();
-    }
-  }, [createContactPersonData]);
-
-  const CreateContactPerson = async () => {
-    const relationshipType = guardianIsParent ? "Parent" : "LegalGuardian";
-    CreateContactPersonMutate({
-      data:{
-        patientId: CreatePatientData.data.patientId,
-      firstName: guardianInfo.firstName,
-      lastName: guardianInfo.lastName,
-      email: guardianInfo.email,
-      cellPhone: guardianInfo.phoneNumber,
-      gender: "Other",
-      pesel: guardianInfo.pesel,
-      dateOfBirth: contactPersonDateOfBirthForApi,
-      relationshipType,
-      zipCode: "",
-      title: "",
-      contactPersonTypeId: 0,
-      },
-      token:auth,
-    });
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   };
-console.log("patientInfo", patientInfo);
-  const createPatient = async () => {
 
-    CreatePatientMutate({
-     
-     data:{
-       title: "",
-      firstName: patientInfo.firstName,
-      lastName: patientInfo.lastName,
-      email: patientInfo.email,
-      cellPhone: patientInfo.phoneNumber,
+  const handleSubmitDraft = () => {
+    const hasGuardian = Object.keys(guardianInfo).length > 0;
+    const captchaToken = null;
+    const idempotencyKey = generateIdempotencyKey();
+    const relationshipType = guardianIsParent ? "Parent" : "LegalGuardian";
+
+    const patient = {
+      title: "",
+      firstName: patientInfo.firstName || "",
+      lastName: patientInfo.lastName || "",
+      email: patientInfo.email || "",
+      cellPhone: patientInfo.phoneNumber || "",
       businessPhone: "",
       nip: "",
-      
+      mailingStreet: "",
+      mailingHouseNumber: "",
+      mailingCity: "",
+      mailingRegion: "",
+      mailingZipCode: "",
+      mailingCountry: "",
       isBlackListed: false,
-      dateOfBirth: patientDateOfBirthForApi,
-      gender: patientInfo.gender,
-      pesel: patientInfo.pesel,
+      dateOfBirth: patientDateOfBirthForApi || "",
+      gender: patientInfo.gender || patientInfo.Gender || "",
+      pesel: patientInfo.pesel || "",
       maidenName: "",
       nationality: "",
       allergies: [],
       phobias: [],
-      notes: "",
+      notes: patientInfo.comments || "",
       patientTypeId: 0,
       primaryDoctorId: 0,
-      billingStreet: patientInfo.adress,
+      lastVisitDate: null,
+      billingStreet: patientInfo.adress || "",
       billingHouseNumber: "",
       billingCity: patientInfo.city || "",
-      billingRegionId: 0,
+      billingRegion: "",
       billingZipCode: "",
       billingCountry: "",
       isVip: false,
       isDifficult: false,
-      communicationLanguageId: 0,
+      isDeposit: false,
+      communicationLanguage: "",
       patientDiscountId: 0,
       referralReversalId: 0,
       patientGuardianId: 0,
       isChild: false,
       patientChildId: 0,
       patientParentId: 0,
-     },
-     token:auth,
-    });
-  };
-  const CreateBooking = async () => {
-    CreateBookingMutate({
-     data:{
+    };
+
+    const appointment = {
       eventStartDateTime: newStartDate,
       eventEndDateTime: newEndDate,
-      appointmentDescription: CreatePatientData.data.comments,
-      appointmentTypeId: informationWithSorage?.apoimentTypeId?.id,
-      userId: informationWithSorage?.doctor?.id,
-      patientId: CreatePatientData.data.patientId,
-      patientContactPersonId: CreatePatientData.data.patientContactPersonId,
-      cabinetId: informationWithSorage?.doctor?.cabinetId,
-     },
-      token:auth,
-    });
+      appointmentDescription: patientInfo.comments || "",
+      appointmentTypeId: informationWithSorage?.apoimentTypeId?.id || 0,
+      userId: informationWithSorage?.doctor?.id || 0,
+      cabinetId: informationWithSorage?.doctor?.cabinetId || 0,
+      patientId: 0,
+      patientContactPersonId: 0,
+    };
+
+    const contactPerson = hasGuardian
+      ? {
+          linkedToPatientId: 0,
+          isPatinet: false,
+          patientId: 0,
+          firstName: guardianInfo.firstName || "",
+          lastName: guardianInfo.lastName || "",
+          email: guardianInfo.email || "",
+          cellPhone: guardianInfo.phoneNumber || "",
+          gender: guardianInfo.gender || guardianInfo.Gender || "Other",
+          pesel: guardianInfo.pesel || "",
+          dateOfBirth: contactPersonDateOfBirthForApi || "",
+          title: "",
+          relationshipType,
+          mailingStreet: guardianInfo.mailingStreet || "",
+          mailingHouseNumber: guardianInfo.mailingHouseNumber || "",
+          mailingCity: guardianInfo.mailingCity || "",
+          mailingRegion: guardianInfo.mailingRegion || "",
+          mailingZipCode: guardianInfo.mailingZipCode || "",
+          mailingCountry: guardianInfo.mailingCountry || "",
+        }
+      : null;
+
+    const submitPayload = {
+      idempotencyKey,
+      captchaToken,
+      patient,
+      appointment,
+      ...(contactPerson ? { contactPerson } : {}),
+    };
+
+    if (!recaptchaSiteKey) {
+      submitDraft(
+        {
+          data: submitPayload,
+          token: auth,
+        },
+        {
+          onSuccess: () => {
+            setAppPage("complete mobile");
+          },
+          onError: (error) => {
+            console.error("submitDraft error:", error);
+          },
+        }
+      );
+      return;
+    }
+
+    setPendingSubmitPayload(submitPayload);
+    setShowCaptcha(true);
   };
 
   return (
     <div>
-      {CreateBookingLoading && <Spinner />}
-      {createContactPersonLoading && <Spinner />}
-      {CreatePatientLoading && <Spinner />}
+      {submitDraftLoading && <Spinner />}
+      <RecaptchaModal
+        open={showCaptcha}
+        siteKey={recaptchaSiteKey}
+        onClose={() => {
+          setShowCaptcha(false);
+          setPendingSubmitPayload(null);
+        }}
+        onVerify={(token) => {
+          if (!pendingSubmitPayload) return;
+          const payloadWithCaptcha = {
+            ...pendingSubmitPayload,
+            captchaToken: token,
+          };
+          setShowCaptcha(false);
+          setPendingSubmitPayload(null);
+          submitDraft(
+            {
+              data: payloadWithCaptcha,
+              token: auth,
+            },
+            {
+              onSuccess: () => {
+                setAppPage("complete mobile");
+              },
+              onError: (error) => {
+                console.error("submitDraft error:", error);
+              },
+            }
+          );
+        }}
+      />
       <section className="mobileBG h-[75px]">
         <div className="flex h-full items-center justify-center">
           <div className="relative w-full max-w-[290px]">
@@ -471,8 +479,7 @@ console.log("patientInfo", patientInfo);
         </div>
         <button
           onClick={() => {
-            console.log(submit);
-            setSubmit(!submit);
+            handleSubmitDraft();
           }}
           className="mt-[22px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white"
         >

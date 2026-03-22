@@ -3,9 +3,7 @@ import moment from "moment";
 import SelfBookingStore from "../store/SelfBookingStore";
 import useAuth from "../store/useAuth";
 import {
-  create_Booking,
-  create_Contact_Person,
-  create_Patient,
+  submit_Draft,
   get_Clinic_Info,
 } from "./request/requestSelfBooking";
 import { dateHelper } from "./helpers/dateHelper";
@@ -14,6 +12,7 @@ import { getBookingInformation } from "../helpers/bookingStorage";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 import { getLocalizedVisitTypeLabel } from "../i18n/visitTypeLabel";
 import { getGenderLabel, normalizeGender } from "../i18n/gender";
+import RecaptchaModal from "./components/RecaptchaModal";
 
 const formatBirthDateForApi = (value) => {
   if (!value || typeof value !== "string") return "";
@@ -40,6 +39,13 @@ const formatBirthDateForApi = (value) => {
   }
 
   return "";
+};
+
+const generateIdempotencyKey = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
 const AppointmentConfirmationPage = () => {
@@ -74,11 +80,11 @@ const AppointmentConfirmationPage = () => {
   );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   const { data: clinicInfoData, setText: loadClinicInfo } = get_Clinic_Info();
 
-  const { mutate: createPatient } = create_Patient();
-  const { mutate: createContactPerson } = create_Contact_Person();
-  const { mutate: createBooking } = create_Booking();
+  const { mutate: submitDraft } = submit_Draft();
 
   useEffect(() => {
     if (auth) {
@@ -88,133 +94,128 @@ const AppointmentConfirmationPage = () => {
 
   const clinicInfo = clinicInfoData?.data?.result || {};
 
-  const onConfirm = () => {
-    if (!auth || !data || isSubmitting) return;
-    setIsSubmitting(true);
+  const submitWithCaptcha = (captchaToken) => {
+    if (!auth || !data) return;
+    const appointmentStart = dateHelper(bookingInfo?.doctor?.eventStartDateTime);
+    const appointmentEnd = dateHelper(bookingInfo?.doctor?.eventEnd);
+    const idempotencyKey = generateIdempotencyKey();
+    const relationshipType =
+      data.activePatientGuardian === "Yes" ? "Parent" : "Other";
 
-    createPatient(
-      {
-        data: {
-          companyId: auth.companyId,
-          clinicId: auth.clinicId,
+    const patient = {
+      title: "",
+      firstName: data.firstName || "",
+      lastName: data.lastName || "",
+      email: source === "for user" ? data.email || "" : "",
+      cellPhone: source === "for user" ? data.cellPhone || data.phoneNumber || "" : "",
+      businessPhone: "",
+      nip: "",
+      mailingStreet: data.address || "",
+      mailingHouseNumber: "",
+      mailingCity: data.city || "",
+      mailingRegion: "",
+      mailingZipCode: "",
+      mailingCountry: "",
+      isBlackListed: false,
+      dateOfBirth: patientDateOfBirthForApi || "",
+      gender: normalizeGender(data.gender),
+      pesel: data.pesel || "",
+      maidenName: "",
+      nationality: "",
+      allergies: [],
+      phobias: [],
+      notes: data.comment || "",
+      patientTypeId: 0,
+      primaryDoctorId: 0,
+      lastVisitDate: null,
+      billingStreet: data.address || "",
+      billingHouseNumber: "",
+      billingCity: data.city || "",
+      billingRegion: "",
+      billingZipCode: "",
+      billingCountry: "",
+      isVip: false,
+      isDifficult: false,
+      isDeposit: false,
+      communicationLanguage: "",
+      patientDiscountId: 0,
+      referralReversalId: 0,
+      patientGuardianId: 0,
+      isChild: false,
+      patientChildId: 0,
+      patientParentId: 0,
+    };
+
+    const appointment = {
+      companyId: clinicInfo?.companyId || bookingInfo?.companyId,
+      clinicId: clinicInfo?.clinicId || bookingInfo?.clinicId,
+      eventStartDateTime: appointmentStart,
+      eventEndDateTime: appointmentEnd,
+      appointmentDescription: data.comment || "",
+      appointmentTypeId: bookingInfo?.apoimentTypeId?.id || 0,
+      cabinetId: bookingInfo?.doctor?.cabinetId || 0,
+      userId: bookingInfo?.doctor?.id || 0,
+      patientId: 0,
+      patientContactPersonId: 0,
+    };
+
+    const contactPerson = isForSomeoneElse
+      ? {
+          linkedToPatientId: 0,
+          isPatinet: false,
+          patientId: 0,
+          firstName: data.guardianFirstName || "",
+          lastName: data.guardianLastName || "",
+          email: data.email || "",
+          cellPhone: data.phoneNumber || "",
+          gender: normalizeGender(data.guardianGender),
+          pesel: data.guardianPesel || "",
+          dateOfBirth: contactPersonDateOfBirthForApi || "",
           title: "",
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: source === "for user" ? data.email : "",
-          cellPhone: source === "for user" ? data.cellPhone || data.phoneNumber : "",
-          businessPhone: "",
-          nip: "",
-          isBlackListed: false,
-          dateOfBirth: patientDateOfBirthForApi,
-          gender: normalizeGender(data.gender),
-          pesel: data.pesel || "",
-          maidenName: "",
-          nationality: "",
-          allergies: [],
-          phobias: [],
-          notes: data.comment || "",
-          patientTypeId: 0,
-          primaryDoctorId: 0,
-          lastVisitDate: "2023-11-10T17:29:20.219Z",
-          billingStreet: data.address || "",
-          billingHouseNumber: "",
-          billingCity: data.city || "",
-          billingRegionId: 0,
-          billingZipCode: "",
-          billingCountry: "",
-          isVip: false,
-          isDifficult: false,
-          communicationLanguageId: 0,
-          patientDiscountId: 0,
-          referralReversalId: 0,
-          patientGuardianId: 0,
-          isChild: false,
-          patientChildId: 0,
-          patientParentId: 0,
-        },
+          relationshipType,
+          mailingStreet: data.address || "",
+          mailingHouseNumber: "",
+          mailingCity: data.city || "",
+          mailingRegion: "",
+          mailingZipCode: "",
+          mailingCountry: "",
+        }
+      : null;
+
+    const payload = {
+      idempotencyKey,
+      captchaToken,
+      patient,
+      appointment,
+      ...(contactPerson ? { contactPerson } : {}),
+    };
+
+    submitDraft(
+      {
+        data: payload,
         token: auth,
       },
       {
-        onSuccess: (patientRes) => {
-          const patientId = patientRes?.data?.patientId;
-          if (!patientId) {
-            setIsSubmitting(false);
-            return;
-          }
-
-          const finalizeBooking = (contactPersonId = null) => {
-            const newStartDate = dateHelper(bookingInfo?.doctor?.eventStartDateTime);
-            const newEndDate = dateHelper(bookingInfo?.doctor?.eventEnd);
-
-            createBooking(
-              {
-                data: {
-                  eventStartDateTime: newStartDate,
-                  eventEndDateTime: newEndDate,
-                  appointmentTypeId: bookingInfo?.apoimentTypeId?.id,
-                  userId: bookingInfo?.doctor?.id,
-                  cabinetId: bookingInfo?.doctor?.cabinetId,
-                  patientContactPersonId: contactPersonId,
-                  patientId,
-                  appointmentDescription: data.comment || "",
-                },
-                token: auth,
-              },
-              {
-                onSuccess: () => {
-                  setConfirmationData(null);
-                  setAppointmentData({});
-                  setForSomeoneElseConsent(false);
-                  setHeaderPage(4);
-                  setAppPage("complete");
-                },
-                onError: () => setIsSubmitting(false),
-              }
-            );
-          };
-
-          if (source === "for someone else") {
-            const relationshipType =
-              data.activePatientGuardian === "Yes" ? "Parent" : "Other";
-            createContactPerson(
-              {
-                data: {
-                  patientId,
-                  firstName: data.guardianFirstName || "",
-                  lastName: data.guardianLastName || "",
-                  email: data.email || "",
-                  cellPhone: data.phoneNumber || "",
-                  gender: normalizeGender(data.guardianGender),
-                  pesel: data.guardianPesel || "",
-                  ...(contactPersonDateOfBirthForApi?.length > 0
-                    ? { dateOfBirth: contactPersonDateOfBirthForApi }
-                    : {}),
-                  relationshipType,
-                  zipCode: "",
-                  title: "",
-                  contactPersonTypeId: 0,
-                },
-                token: auth,
-              },
-              {
-                onSuccess: (contactRes) => {
-                  console.log("Contact person created:", contactRes);
-                  const contactPersonId =
-                    contactRes?.data?.id ||
-                    null;
-                  finalizeBooking(contactPersonId);
-                },
-                onError: () => setIsSubmitting(false),
-              }
-            );
-            return;
-          }
-
-           finalizeBooking(null);
+        onSuccess: () => {
+          setConfirmationData(null);
+          setAppointmentData({});
+          setForSomeoneElseConsent(false);
+          setHeaderPage(4);
+          setAppPage("complete");
         },
         onError: () => setIsSubmitting(false),
       }
     );
+  };
+
+  const onConfirm = () => {
+    if (!auth || !data || isSubmitting) return;
+    if (!recaptchaSiteKey) {
+      setIsSubmitting(true);
+      submitWithCaptcha(null);
+      return;
+    }
+    setShowCaptcha(true);
   };
 
   return (
@@ -223,6 +224,16 @@ const AppointmentConfirmationPage = () => {
       style={{ width: window.innerWidth < 1024 ? "100%" : widthBlock }}
     >
       {isSubmitting && <Spinner />}
+      <RecaptchaModal
+        open={showCaptcha}
+        siteKey={recaptchaSiteKey}
+        onClose={() => setShowCaptcha(false)}
+        onVerify={(token) => {
+          setShowCaptcha(false);
+          setIsSubmitting(true);
+          submitWithCaptcha(token);
+        }}
+      />
       <div className="bg-white rounded-[10px] text-[24px] text-[#333] font-sans p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.10),0_1px_2px_-1px_rgba(0,0,0,0.10)]">
         <div className="text-[24px] text-[#2F3441] font-semibold mb-1">
           {t("confirm_appointment_title", "Confirm your appointment")}

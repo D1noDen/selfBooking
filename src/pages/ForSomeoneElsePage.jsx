@@ -174,13 +174,12 @@ const ForSomeoneElsePage = () => {
           className="max-w-[1040px] mx-auto flex flex-wrap justify-between"
         >
           <SectionTitle text={t("patient_details_short", "Patient details")} />
-          <Field label={t("pesel_passport", "PESEL/PASSPORT *")} width="w-full">
+          <Field label={t("pesel_passport", "PESEL/PASSPORT")} width="w-full">
             <Input
               register={register}
               id="pesel"
               placeholder={t("enter_pesel_passport", "Enter PESEL/PASSPORT")}
               errors={errors}
-              rules={{ required: t("field_required", "Field is required") }}
             />
           </Field>
           <Field label={t("first_name", "First Name *")} width="w-[calc(50%-8px)]">
@@ -296,13 +295,12 @@ const ForSomeoneElsePage = () => {
 
           {!showGuardianIdentityFields && (
             <>
-              <Field label={t("passport_pesel_required", "Passport/pesel *")} width="w-[calc(50%-8px)]">
+              <Field label={t("passport_pesel_required", "Passport/pesel")} width="w-[calc(50%-8px)]">
                 <Input
                   register={register}
                   id="guardianPesel"
                   placeholder={t("enter_passport_pesel", "Enter passport/pesel")}
                   errors={errors}
-                  rules={{ required: t("field_required", "Field is required") }}
                 />
               </Field>
               <DatePickerField

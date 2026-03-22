@@ -7,3 +7,4 @@ export const GET_DOCTOR_BY_TYPEID = '/api/PatientAppointmentBooking/getusersbyse
 export const CREATE_PATIENT = '/api/PatientAppointmentBooking/createpatient'
 export const CREATE_CONTACT_PERSON = '/api/PatientAppointmentBooking/createpatientcontactperson'
 export const CREATE_BOOKING = '/api/PatientAppointmentBooking/createappointmentsoftbooking'
+export const SUBMIT_DRAFT = '/api/PatientAppointmentBooking/submitdraft'

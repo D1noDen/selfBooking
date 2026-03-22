@@ -4,10 +4,9 @@ import { useForm } from "react-hook-form";
 import moment from "moment";
 import avatar67 from "../assets/images/self-booking/avatar67.png";
 import {
-  create_Booking,
-  create_Patient,
-  create_Contact_Person,
+  submit_Draft,
 } from "./request/requestSelfBooking";
+import RecaptchaModal from "./components/RecaptchaModal";
 import WithoutAvatar from "../assets/images/svg/NoAvatar.svg";
 import useAuth from "../store/useAuth";
 // import useAuth from "../../Routes/useAuth";
@@ -37,18 +36,15 @@ const ForGuestPage = () => {
   );
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
-  const newStartDate = dateHelper(
-    informationWithSorage?.doctor?.eventStartDateTime
-  );
-  const newEndDate = dateHelper(informationWithSorage?.doctor?.eventEnd);
   const someOneElsePage = SelfBookingStore((state) => state.someOneElsePage);
    const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
 console.log("chosenDoctor:", chosenDoctor);
-  const [submit, setSubmit] = useState(false);
-  const [formData, setFormData] = useState(null);
   const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(
     DEFAULT_COUNTRY_CODE
   );
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [pendingSubmitPayload, setPendingSubmitPayload] = useState(null);
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   const watchedValues = watch();
   const hasHydratedRef = useRef(false);
   const lastDraftRef = useRef("");
@@ -59,20 +55,16 @@ console.log("chosenDoctor:", chosenDoctor);
   // }
   const {auth} = useAuth();
   const {
-    mutate: CreateBookingMutate,
-    isLoading: CreateBookingLoading,
-    data: CreateBookingData,
-  } = create_Booking();
-  const {
-    mutate: CreatePatientMutate,
-    isLoading: CreatePatientLoading,
-    data: CreatePatientData,
-  } = create_Patient();
-  const {
-    mutate: CreateContactPersonMutate,
-    isLoading: createContactPersonLoading,
-    data: createContactPersonData,
-  } = create_Contact_Person();
+    mutate: submitDraft,
+    isLoading: submitDraftLoading,
+  } = submit_Draft();
+
+  const generateIdempotencyKey = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  };
   const onSubmit = async (data) => {
     const { phoneNumberCountryCode, ...rest } = data;
     const payload = {
@@ -82,147 +74,108 @@ console.log("chosenDoctor:", chosenDoctor);
         data.phoneNumber
       ),
     };
-    setSubmit(!submit);
-    setFormData(payload);
-  };
+    const appointmentStart = dateHelper(
+      informationWithSorage?.doctor?.eventStartDateTime
+    );
+    const appointmentEnd = dateHelper(informationWithSorage?.doctor?.eventEnd);
+    const captchaToken = null;
+    const idempotencyKey = generateIdempotencyKey();
 
-  const onError = (errors) => {
-    console.log("Validation errors:", errors);
-  };
-
-  const createPatient = async () => {
-    CreatePatientMutate(
-      {
-         data:{
-      
+    const patient = {
       title: "",
-      firstName: appointmentData.firstName,
-      lastName: appointmentData.lastName,
-      email: "",
-      cellPhone: "",
+      firstName: payload.firstName || "",
+      lastName: payload.lastName || "",
+      email: payload.email || "",
+      cellPhone: payload.phoneNumber || "",
       businessPhone: "",
       nip: "",
       mailingStreet: "",
       mailingHouseNumber: "",
-      mailingCityId: 0,
-      mailingRegionId: 0,
+      mailingCity: "",
+      mailingRegion: "",
       mailingZipCode: "",
       mailingCountry: "",
       isBlackListed: false,
-      dateOfBirth: appointmentData.dateOfBirth,
-      gender: appointmentData.gender,
-      pesel: "",
+      dateOfBirth: appointmentData?.dateOfBirth || "",
+      gender: appointmentData?.gender || "",
+      pesel: payload.pesel || "",
       maidenName: "",
       nationality: "",
       allergies: [],
       phobias: [],
-      notes: "",
+      notes: payload.comments || "",
       patientTypeId: 0,
       primaryDoctorId: 0,
-      lastVisitDate: "2023-11-10T17:29:20.219Z",
+      lastVisitDate: null,
       billingStreet: "",
       billingHouseNumber: "",
-      billingCityId: 0,
-      billingRegionId: 0,
+      billingCity: "",
+      billingRegion: "",
       billingZipCode: "",
       billingCountry: "",
       isVip: false,
       isDifficult: false,
-      communicationLanguageId: 0,
+      isDeposit: false,
+      communicationLanguage: "",
       patientDiscountId: 0,
       referralReversalId: 0,
       patientGuardianId: 0,
       isChild: false,
       patientChildId: 0,
       patientParentId: 0,
-    
-    },
-    token:auth
-      });
+    };
+
+    const appointment = {
+      eventStartDateTime: appointmentStart,
+      eventEndDateTime: appointmentEnd,
+      appointmentDescription: payload.comments || "",
+      appointmentTypeId: informationWithSorage?.apoimentTypeId?.id || 0,
+      cabinetId: informationWithSorage?.doctor?.cabinetId || 0,
+      userId: informationWithSorage?.doctor?.id || 0,
+      patientId: 0,
+      patientContactPersonId: 0,
+    };
+
+    const submitPayload = {
+      idempotencyKey,
+      captchaToken,
+      patient,
+      appointment,
+    };
+
+    if (!recaptchaSiteKey) {
+      submitDraft(
+        {
+          data: submitPayload,
+          token: auth,
+        },
+        {
+          onSuccess: () => {
+            setAppPage("complete");
+            setHeaderPage(4);
+            setAppointmentData({});
+          },
+          onError: (error) => {
+            console.error("submitDraft error:", error);
+          },
+        }
+      );
+      return;
+    }
+
+    setPendingSubmitPayload(submitPayload);
+    setShowCaptcha(true);
   };
-  const CreateBooking = async () => {
-    
-    CreateBookingMutate({
-      data:{
-        eventStartDateTime: newStartDate,
-      eventEndDateTime: newEndDate,
-      appointmentDescription: CreatePatientData.data.comments,
-      appointmentTypeId: informationWithSorage?.apoimentTypeId?.id,
-      userId: informationWithSorage?.doctor?.id,
-      patientId: CreatePatientData.data.patientId,
-      patientContactPersonId: CreatePatientData.data.patientContactPersonId,
-      cabinetId: informationWithSorage?.doctor?.cabinetId,
-      },
-      token:auth
-    });
-  };
-  
-  const CreateContactPerson = async () => {
-   
-    CreateContactPersonMutate({
-      data:{
-      patientId: CreatePatientData.data.patientId,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      cellPhone: formData.phoneNumber,
-      gender: appointmentData.gender,
-      pesel: formData.pesel,
-      dateOfBirth: formData.dateOfBirth,
-      zipCode: "",
-      title: "",
-      contactPersonTypeId: 0,
-      },
-      token:auth
-    });
+
+  const onError = (errors) => {
+    console.log("Validation errors:", errors);
   };
 
   useEffect(() => {
-    if (formData) {
-      console.log("useEffect formData triggered:", formData);
-      (async function () {
-        try {
-          await createPatient();
-        } catch (error) {
-          console.error("Error in useEffect:", error);
-        }
-      })();
+    if (submitDraftLoading) {
+      console.log("submitDraft loading...");
     }
-  }, [formData]);
-  useEffect(() => {
-    if (CreatePatientData) {
-      console.log("CreatePatientData received:", CreatePatientData);
-      (async function () {
-        try {
-          await CreateContactPerson();
-        } catch (error) {
-          console.error("Error in useEffect:", error);
-        }
-      })();
-    }
-  }, [CreatePatientData]);
-
-  useEffect(() => {
-    if (createContactPersonData) {
-      console.log("createContactPersonData received:", createContactPersonData);
-      (async function () {
-        try {
-          await CreateBooking();
-        } catch (error) {
-          console.error(error);
-        }
-      })();
-    }
-  }, [createContactPersonData]);
-
-  useEffect(() => {
-    if (CreateBookingData) {
-      console.log("CreateBookingData received:", CreateBookingData);
-      setAppPage("complete");
-      setHeaderPage(4);
-      setAppointmentData({});
-    }
-  }, [CreateBookingData]);
+  }, [submitDraftLoading]);
 
   useEffect(() => {
     const parsedPhone = splitPhoneByCountryCode(appointmentData?.phoneNumber || "");
@@ -270,6 +223,39 @@ console.log("chosenDoctor:", chosenDoctor);
         minHeight: 688,
       }}
     >
+      <RecaptchaModal
+        open={showCaptcha}
+        siteKey={recaptchaSiteKey}
+        onClose={() => {
+          setShowCaptcha(false);
+          setPendingSubmitPayload(null);
+        }}
+        onVerify={(token) => {
+          if (!pendingSubmitPayload) return;
+          const payloadWithCaptcha = {
+            ...pendingSubmitPayload,
+            captchaToken: token,
+          };
+          setShowCaptcha(false);
+          setPendingSubmitPayload(null);
+          submitDraft(
+            {
+              data: payloadWithCaptcha,
+              token: auth,
+            },
+            {
+              onSuccess: () => {
+                setAppPage("complete");
+                setHeaderPage(4);
+                setAppointmentData({});
+              },
+              onError: (error) => {
+                console.error("submitDraft error:", error);
+              },
+            }
+          );
+        }}
+      />
       <div
         className={`xl:w-[663px] lg:w-[570px] bg-white xl:px-[50px] lg:px-[15px] pt-[47px] flex-shrink-0 shadow-[0px_4px_17px_0px_rgba(0,0,0,0.08)]`}
       >

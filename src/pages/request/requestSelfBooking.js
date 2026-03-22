@@ -58,6 +58,14 @@ export const create_Booking = () => {
   return { mutate, data, isLoading, isSuccess, error };
 };
 
+export const submit_Draft = () => {
+  const helper = selfBookingBackendHelper();
+  const { mutate, data, isLoading, isSuccess, error } = useMutation((data) =>
+    helper.submitDraft(data)
+  );
+  return { mutate, data, isLoading, isSuccess, error };
+};
+
 export const get_Clinic_Info = () => {
   const helper = selfBookingBackendHelper();
   const [text, setText] = useState(null);

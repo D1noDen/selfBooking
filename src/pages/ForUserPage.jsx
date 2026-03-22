@@ -145,15 +145,12 @@ const ForUserPage = () => {
             {t("personal_information", "Personal Information")}
           </div>
           <InputBlock
-            label={t("pesel_passport", "PESEL/PASSPORT *")}
+            label={t("pesel_passport", "PESEL/PASSPORT")}
             placeholder={t("enter_pesel_passport", "Enter PESEL/PASSPORT")}
             width="w-full"
             id="pesel"
             register={register}
             errors={errors}
-            rules={{
-              required: t("field_required", "Field is required"),
-            }}
           />
           <InputBlock
             label={t("first_name", "First Name *")}

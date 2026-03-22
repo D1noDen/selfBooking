@@ -8,14 +8,55 @@ const SCRIPT_URLS = [
   "https://www.recaptcha.net/recaptcha/api.js?render=explicit",
 ].filter(Boolean);
 
+let recaptchaLoadPromise = null;
+
+const waitForGrecaptcha = (maxAttempts = 40, intervalMs = 50) =>
+  new Promise((resolve, reject) => {
+    let attempts = 0;
+
+    const check = () => {
+      const { grecaptcha } = window;
+      if (grecaptcha) {
+        if (typeof grecaptcha.ready === "function") {
+          grecaptcha.ready(() => resolve(grecaptcha));
+          return;
+        }
+        resolve(grecaptcha);
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        reject(new Error("reCAPTCHA not available after script load"));
+        return;
+      }
+
+      attempts += 1;
+      setTimeout(check, intervalMs);
+    };
+
+    check();
+  });
+
 const loadScript = (src) =>
   new Promise((resolve, reject) => {
+    const existing = document.getElementById(RECAPTCHA_SCRIPT_ID);
+    if (existing) {
+      const existingSrc = existing.getAttribute("src") || "";
+      if (existingSrc.includes(src)) {
+        waitForGrecaptcha().then(resolve).catch(reject);
+        return;
+      }
+      existing.remove();
+    }
+
     const script = document.createElement("script");
     script.id = RECAPTCHA_SCRIPT_ID;
     script.src = src;
     script.async = true;
     script.defer = true;
-    script.onload = () => resolve(window.grecaptcha);
+    script.onload = () => {
+      waitForGrecaptcha().then(resolve).catch(reject);
+    };
     script.onerror = () => {
       script.remove();
       reject(new Error(`Failed to load ${src}`));
@@ -25,23 +66,31 @@ const loadScript = (src) =>
 
 const loadRecaptchaScript = () => {
   if (typeof window === "undefined") return Promise.resolve(null);
-  if (window.grecaptcha) return Promise.resolve(window.grecaptcha);
-  const existing = document.getElementById(RECAPTCHA_SCRIPT_ID);
-  if (existing) {
-    if (window.grecaptcha) return Promise.resolve(window.grecaptcha);
-    existing.remove();
-  }
+  if (window.grecaptcha) return waitForGrecaptcha();
+  if (recaptchaLoadPromise) return recaptchaLoadPromise;
 
-  return SCRIPT_URLS.reduce((promise, src) => {
+  recaptchaLoadPromise = SCRIPT_URLS.reduce((promise, src) => {
     return promise.catch(() => loadScript(src));
-  }, Promise.reject(new Error("No script loaded")));
+  }, Promise.reject(new Error("No script loaded")))
+    .then((grecaptcha) => grecaptcha)
+    .catch((error) => {
+      recaptchaLoadPromise = null;
+      throw error;
+    });
+
+  return recaptchaLoadPromise;
 };
 
 const RecaptchaModal = ({ open, siteKey, onVerify, onClose }) => {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
+  const onVerifyRef = useRef(onVerify);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    onVerifyRef.current = onVerify;
+  }, [onVerify]);
 
   useEffect(() => {
     if (!open) return;
@@ -57,11 +106,11 @@ const RecaptchaModal = ({ open, siteKey, onVerify, onClose }) => {
     loadRecaptchaScript()
       .then((grecaptcha) => {
         if (cancelled || !grecaptcha || !containerRef.current) return;
-        if (widgetIdRef.current !== null) return;
+        containerRef.current.innerHTML = "";
         widgetIdRef.current = grecaptcha.render(containerRef.current, {
           sitekey: siteKey,
           callback: (token) => {
-            if (typeof onVerify === "function") onVerify(token);
+            if (typeof onVerifyRef.current === "function") onVerifyRef.current(token);
           },
           "expired-callback": () => {
             if (typeof grecaptcha.reset === "function" && widgetIdRef.current !== null) {
@@ -80,13 +129,14 @@ const RecaptchaModal = ({ open, siteKey, onVerify, onClose }) => {
     return () => {
       cancelled = true;
     };
-  }, [open, siteKey, onVerify]);
+  }, [open, siteKey]);
 
   useEffect(() => {
     if (open) return;
     if (window.grecaptcha && widgetIdRef.current !== null) {
       window.grecaptcha.reset(widgetIdRef.current);
     }
+    widgetIdRef.current = null;
   }, [open]);
 
   if (!open) return null;
@@ -102,7 +152,7 @@ const RecaptchaModal = ({ open, siteKey, onVerify, onClose }) => {
         </div>
         <div ref={containerRef} className="min-h-[78px]" />
         {loading && (
-          <div className="mt-3 text-[12px] text-[#6A7282]">Loading captcha…</div>
+          <div className="mt-3 text-[12px] text-[#6A7282]">Loading captcha...</div>
         )}
         {error && (
           <div className="mt-3 text-[12px] text-red-500">{error}</div>

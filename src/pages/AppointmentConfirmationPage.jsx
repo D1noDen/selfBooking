@@ -52,7 +52,7 @@ const AppointmentConfirmationPage = () => {
   const { t, language } = useAppTranslation();
   const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
   moment.locale(momentLocale);
-  const { auth } = useAuth();
+  const { auth, setAuth } = useAuth();
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const confirmationData = SelfBookingStore((state) => state.confirmationData);
@@ -61,6 +61,7 @@ const AppointmentConfirmationPage = () => {
   const setForSomeoneElseConsent = SelfBookingStore(
     (state) => state.setForSomeoneElseConsent
   );
+  const setFlashMessage = SelfBookingStore((state) => state.setFlashMessage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
 
   const bookingInfo = useMemo(
@@ -85,6 +86,17 @@ const AppointmentConfirmationPage = () => {
   const { data: clinicInfoData, setText: loadClinicInfo } = get_Clinic_Info();
 
   const { mutate: submitDraft } = submit_Draft();
+  const handleInvalidToken = () => {
+    setAuth(null);
+    setHeaderPage(0);
+    setAppPage(window.innerWidth < 1024 ? "visit type mobile" : "visit type");
+    setFlashMessage(
+      t(
+        "invalid_booking_link",
+        "Your booking link is invalid or has expired. Please start over."
+      )
+    );
+  };
 
   useEffect(() => {
     if (auth) {
@@ -203,7 +215,14 @@ const AppointmentConfirmationPage = () => {
           setHeaderPage(4);
           setAppPage("complete");
         },
-        onError: () => setIsSubmitting(false),
+        onError: (error) => {
+          if (error?.response?.status === 404) {
+            setIsSubmitting(false);
+            handleInvalidToken();
+            return;
+          }
+          setIsSubmitting(false);
+        },
       }
     );
   };

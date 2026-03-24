@@ -12,10 +12,11 @@ import {
   getBookingInformation,
   setBookingInformation,
 } from "../helpers/bookingStorage";
+import { useAppTranslation } from "../i18n/useAppTranslation";
 const MainLayout = () => {
   const pageSize = useResize();
  
-  const {data:DataClinicInfo , isLoading:LoadingClinicInfo , setText:UseClinicInfo} = get_Clinic_Info()
+  const { data: DataClinicInfo, isLoading: LoadingClinicInfo, error: clinicInfoError, setText: UseClinicInfo } = get_Clinic_Info();
   const {setAuth , auth} = useAuth();
   const appPage = SelfBookingStore((state) => state.appPage);
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
@@ -30,12 +31,17 @@ const MainLayout = () => {
   const appointmentTime = SelfBookingStore((state) => state.appointmentTime);
   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
   const confirmationData = SelfBookingStore((state) => state.confirmationData);
+  const flashMessage = SelfBookingStore((state) => state.flashMessage);
+  const setFlashMessage = SelfBookingStore((state) => state.setFlashMessage);
+  const clearFlashMessage = SelfBookingStore((state) => state.clearFlashMessage);
   const [types, setTypes] = useState(null);
   const width = GlobalHookWindowSummary();
   const height = GlobalHookWindowHeight();
+  const { t } = useAppTranslation();
   const {
     data: GetApoimentTypesSelfBookingData,
     isLoading: GetApoimentTypesSelfBookingLoading,
+    error: appointmentTypesError,
     setText: GetApoimentTypesSelfBookingInformation,
   } = get_Apoiment_Types_Self_Booking();
   useEffect(() => {
@@ -46,6 +52,32 @@ const MainLayout = () => {
     UseClinicInfo(auth)
     }
   }, [auth]);
+  const invalidTokenHandledRef = useRef(false);
+  useEffect(() => {
+    if (invalidTokenHandledRef.current) return;
+    const status =
+      clinicInfoError?.response?.status || appointmentTypesError?.response?.status;
+    if (status !== 404) return;
+    invalidTokenHandledRef.current = true;
+    setAuth(null);
+    setHeaderPage(0);
+    setAppPage(pageSize[0] < 1024 ? "visit type mobile" : "visit type");
+    setFlashMessage(
+      t(
+        "invalid_booking_link",
+        "Your booking link is invalid or has expired. Please start over."
+      )
+    );
+  }, [
+    appointmentTypesError,
+    clinicInfoError,
+    pageSize,
+    setAppPage,
+    setAuth,
+    setFlashMessage,
+    setHeaderPage,
+    t,
+  ]);
 
   const pageMapping = {
    
@@ -167,6 +199,17 @@ const MainLayout = () => {
       setTypes(GetApoimentTypesSelfBookingData?.data?.result);
     }
   }, [GetApoimentTypesSelfBookingData]);
+  useEffect(() => {
+    if (!flashMessage) return;
+    if (DataClinicInfo || GetApoimentTypesSelfBookingData) {
+      clearFlashMessage();
+    }
+  }, [
+    DataClinicInfo,
+    GetApoimentTypesSelfBookingData,
+    clearFlashMessage,
+    flashMessage,
+  ]);
   useEffect(() => {
     if (width.screenSize <= 1500) {
       setWidthBlock(width.screenSize - 80);

@@ -29,6 +29,10 @@ const SelfBookingStore = create(
       humanStatus: "",
       setHumanStatus: (status) => set({ humanStatus: status }),
 
+      flashMessage: "",
+      setFlashMessage: (message) => set({ flashMessage: message }),
+      clearFlashMessage: () => set({ flashMessage: "" }),
+
       widthBlock: 0,
       setWidthBlock: (width) => set({ widthBlock: width }),
 

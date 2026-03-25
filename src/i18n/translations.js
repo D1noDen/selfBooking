@@ -86,6 +86,8 @@ export const translations = {
     gender_required: "Gender *",
     passport_pesel_required: "Passport/pesel",
     select_country_code: "Select country code, current",
+    invalid_booking_link_title: "Booking Link Invalid",
+    start_over: "Start Over",
   },
   uk: {
     language: "Мова",
@@ -173,6 +175,8 @@ export const translations = {
     gender_required: "Стать *",
     passport_pesel_required: "Паспорт/PESEL",
     select_country_code: "Оберіть код країни, поточний",
+    invalid_booking_link_title: "Посилання для запису недійсне",
+    start_over: "Почати спочатку",
   },
   pl: {
     language: "Język",
@@ -261,6 +265,8 @@ export const translations = {
     gender_required: "Płeć *",
     passport_pesel_required: "Paszport/PESEL",
     select_country_code: "Wybierz kod kraju, bieżący",
+    invalid_booking_link_title: "Link do rezerwacji jest nieprawidłowy",
+    start_over: "Zacznij od nowa",
   },
 };
 

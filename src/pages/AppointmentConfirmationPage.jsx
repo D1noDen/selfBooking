@@ -13,6 +13,10 @@ import { useAppTranslation } from "../i18n/useAppTranslation";
 import { getLocalizedVisitTypeLabel } from "../i18n/visitTypeLabel";
 import { getGenderLabel, normalizeGender } from "../i18n/gender";
 import RecaptchaModal from "./components/RecaptchaModal";
+import {
+  formatDateForDisplay,
+  formatDateTimeForDisplay,
+} from "../helpers/dateFormat";
 
 const formatBirthDateForApi = (value) => {
   if (!value || typeof value !== "string") return "";
@@ -283,10 +287,11 @@ const AppointmentConfirmationPage = () => {
               <LabelValue label={t("doctor", "Doctor")} value={bookingInfo?.doctor?.name} />
               <LabelValue
                 label={t("date_time", "Date & Time")}
-                value={moment(
-                  bookingInfo?.doctor?.eventStartDateTime,
-                  "DD.MM.YYYY HH:mm:ss"
-                ).format("ddd MMM DD, HH:mm")}
+                value={
+                  formatDateTimeForDisplay(
+                    bookingInfo?.doctor?.eventStartDateTime
+                  ) || "-"
+                }
               />
             </div>
           </div>
@@ -299,7 +304,10 @@ const AppointmentConfirmationPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-[18px]/[24px]">
             <LabelValue label={t("full_name", "Full Name")} value={`${data.firstName || ""} ${data.lastName || ""}`.trim()} />
             <LabelValue label={t("pesel", "PESEL")} value={data.pesel} />
-            <LabelValue label={t("date_of_birth", "Date of Birth")} value={data.dateOfBirth} />
+            <LabelValue
+              label={t("date_of_birth", "Date of Birth")}
+              value={formatDateForDisplay(data.dateOfBirth) || data.dateOfBirth || "-"}
+            />
             <LabelValue label={t("email", "Email")} value={data.email} />
             <LabelValue label={t("phone", "Phone")} value={data.cellPhone || data.phoneNumber} />
           </div>
@@ -316,7 +324,14 @@ const AppointmentConfirmationPage = () => {
                   label={t("full_name", "Full Name")}
                   value={`${data.guardianFirstName || ""} ${data.guardianLastName || ""}`.trim()}
                 />
-                <LabelValue label={t("date_of_birth", "Date of Birth")} value={data.guardianDateOfBirth} />
+                <LabelValue
+                  label={t("date_of_birth", "Date of Birth")}
+                  value={
+                    formatDateForDisplay(data.guardianDateOfBirth) ||
+                    data.guardianDateOfBirth ||
+                    "-"
+                  }
+                />
                 <LabelValue
                   label={t("gender", "Gender")}
                   value={getGenderLabel(t, data.guardianGender)}

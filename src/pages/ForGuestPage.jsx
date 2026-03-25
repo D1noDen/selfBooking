@@ -1,7 +1,6 @@
 import SelfBookingStore from "../store/SelfBookingStore";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import moment from "moment";
 import avatar67 from "../assets/images/self-booking/avatar67.png";
 import {
   submit_Draft,
@@ -18,6 +17,7 @@ import {
   splitPhoneByCountryCode,
 } from "./helpers/phoneCountry";
 import { getBookingInformation } from "../helpers/bookingStorage";
+import { formatDateTimeForDisplay } from "../helpers/dateFormat";
 
 const ForGuestPage = () => {
   const {
@@ -381,10 +381,9 @@ console.log("chosenDoctor:", chosenDoctor);
               </div>
               <div className={`text-[#3F4455] font-hebrew tracking-[0.72px]`}>
                 {informationWithSorage?.doctor?.eventStartDateTime
-                  ? moment(
-                      informationWithSorage?.doctor?.eventStartDateTime,
-                      "DD.MM.YYYY HH:mm:ss"
-                    ).format("ddd MMM DD YYYY [at] h:mm a")
+                  ? formatDateTimeForDisplay(
+                      informationWithSorage?.doctor?.eventStartDateTime
+                    )
                   : "Not selected"}
               </div>
             </div>

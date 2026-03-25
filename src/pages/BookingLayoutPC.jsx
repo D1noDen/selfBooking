@@ -11,6 +11,7 @@ import ForUserPage from "./ForUserPage";
 import FinalPage from "./FinalPage";
 import AppointmentConfirmationPage from "./AppointmentConfirmationPage";
 import SelfBookingStore from "../store/SelfBookingStore";
+import { useAppTranslation } from "../i18n/useAppTranslation";
 
 const BookingLayoutPC = ({
   types,
@@ -23,6 +24,7 @@ const BookingLayoutPC = ({
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const widthBlock = SelfBookingStore((state) => state.widthBlock);
   const flashMessage = SelfBookingStore((state) => state.flashMessage);
+  const { t } = useAppTranslation();
   const isDesktopNarrow = window.innerWidth < 1024;
   const isVisitTypePage = appPage === "visit type";
 
@@ -132,9 +134,27 @@ const BookingLayoutPC = ({
         )}
         {flashMessage && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-6">
-            <div className="w-full max-w-[520px] rounded-[16px] bg-white px-6 py-5 text-center shadow-[0_12px_40px_rgba(0,0,0,0.25)]">
-              <div className="text-[18px] font-semibold text-[#1F2937]">
-                {flashMessage}
+            <div className="bg-white flex flex-col rounded-2xl justify-center items-center text-center w-max px-[33.5px] py-[32px]" style={{boxShadow: '0px 15px 25px -12px #0000001F'}}>
+              <svg className="animate-pulse" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="4" width="72" height="72" rx="36" fill="#FFDBDB"/>
+                <rect x="4" y="4" width="72" height="72" rx="36" stroke="#FFF0F0" stroke-width="8"/>
+                <path d="M40 60C51.0457 60 60 51.0457 60 40C60 28.9543 51.0457 20 40 20C28.9543 20 20 28.9543 20 40C20 51.0457 28.9543 60 40 60Z" stroke="#E7000B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M40 32V40" stroke="#E7000B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M40 48H40.02" stroke="#E7000B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div className="flex flex-col mt-[12px] gap-2 max-w-[390px]">
+                <h2 className="text-[#101828] text-[20px] font-[600] font-hebrew">
+                  {t("invalid_booking_link_title", "Booking Link Invalid")}
+                </h2>
+                <p className='text-[#4A5565] text-[16px] font-[400] font-hebrew'>
+                  {flashMessage}
+                </p>
+                <button 
+                  style={{boxShadow: '0px 2px 8px 0px #0000001A'}}
+                  className="bg-[#8380FF] rounded-[10px] p-[15.5px] text-white text-[16px] font-[600] font-hebrew"
+                >
+                  {t("start_over", "Start Over")}
+                </button>
               </div>
             </div>
           </div>

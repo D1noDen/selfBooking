@@ -15,6 +15,7 @@ import Spinner from "../helpers/Spinner";
 import { getBookingInformation } from "../../helpers/bookingStorage";
 import { getLocalizedVisitTypeLabel } from "../../i18n/visitTypeLabel";
 import RecaptchaModal from "../components/RecaptchaModal";
+import { formatDateForDisplay } from "../../helpers/dateFormat";
 
 const formatBirthDateForApi = (value) => {
   if (!value || typeof value !== "string") return "";
@@ -329,9 +330,7 @@ console.log("informationWithSorage", informationWithSorage);
             <div className="flex justify-between">
               <p className="text-[#B1B1B1] ">Date</p>
               <p className="text-[#111113]">
-                {moment(appointmentTime.eventStartDateTime).format(
-                  "MMMM D, YYYY"
-                )}
+                {formatDateForDisplay(appointmentTime.eventStartDateTime) || "-"}
               </p>
             </div>
             <div className="flex justify-between">
@@ -376,7 +375,11 @@ console.log("informationWithSorage", informationWithSorage);
             </div>
             <div className="flex justify-between">
               <p className="text-[#B1B1B1] ">Date of birth</p>
-              <p className="text-[#111113]">{patientInfo.dateOfBirth || "-"}</p>
+              <p className="text-[#111113]">
+                {formatDateForDisplay(patientInfo.dateOfBirth) ||
+                  patientInfo.dateOfBirth ||
+                  "-"}
+              </p>
             </div>
             <div className="flex justify-between">
               <p className="text-[#B1B1B1] ">Age</p>

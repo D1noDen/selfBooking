@@ -2,87 +2,92 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { patchBookingInformation } from "../helpers/bookingStorage";
 
+const initialState = {
+  headerPage: 0,
+  language: "en",
+  appointmentData: null,
+  appPage: "visite type",
+  someOneElsePage: false,
+  user: false,
+  humanStatus: "",
+  flashMessage: "",
+  widthBlock: 0,
+  heigthBlock: 0,
+  paddingB: false,
+  patientInfo: {},
+  chosenDoctor: {},
+  calendarApi: {},
+  appointmentTime: {},
+  schedulerHasSelection: false,
+  guardianInfo: {},
+  forSomeoneElseConsent: false,
+  confirmationData: null,
+};
+
 const SelfBookingStore = create(
   persist(
     (set) => ({
-      headerPage: 0,
+      ...initialState,
       setHeaderPage: (page) => set({ headerPage: page }),
 
-      language: "en",
       setLanguage: (language) => set({ language }),
 
-    appointmentData : null ,
-    setAppointmentData : (data) => {
-      set({ appointmentData: data });
-      patchBookingInformation({ appointmentData: data });
-    },
-    
-      appPage: "visite type",
+      setAppointmentData: (data) => {
+        set({ appointmentData: data });
+        patchBookingInformation({ appointmentData: data });
+      },
+
       setAppPage: (namePage) => set({ appPage: namePage }),
 
-      someOneElsePage: false,
       setSomeOneElsePage: (bool) => set({ someOneElsePage: bool }),
 
-      user: false,
       setUser: (bool) => set({ user: bool }),
 
-      humanStatus: "",
       setHumanStatus: (status) => set({ humanStatus: status }),
 
-      flashMessage: "",
       setFlashMessage: (message) => set({ flashMessage: message }),
       clearFlashMessage: () => set({ flashMessage: "" }),
 
-      widthBlock: 0,
       setWidthBlock: (width) => set({ widthBlock: width }),
 
-      heigthBlock: 0,
       setHeightBlock: (height) => set({ heigthBlock: height }),
 
-      paddingB: false,
       setPaddingB: (bool) => set({ paddingB: bool }),
 
-      patientInfo: {},
       setPatientInfo: (dataObj) => {
         set({ patientInfo: dataObj });
         patchBookingInformation({ patientInfo: dataObj });
       },
 
-      chosenDoctor: {},
       setChosenDoctor: (dataObj) => {
         set({ chosenDoctor: dataObj });
         patchBookingInformation({ chosenDoctor: dataObj });
       },
 
-      calendarApi: {},
       setCalendarApi: (dataObj) => set({ calendarApi: dataObj }),
 
-      appointmentTime: {},
       setAppointmentTime: (dataObj) => {
         set({ appointmentTime: dataObj });
         patchBookingInformation({ appointmentTime: dataObj });
       },
 
-      schedulerHasSelection: false,
       setSchedulerHasSelection: (value) => set({ schedulerHasSelection: value }),
 
-      guardianInfo: {},
       setGuardianInfo: (dataObj) => {
         set({ guardianInfo: dataObj });
         patchBookingInformation({ guardianInfo: dataObj });
       },
 
-      forSomeoneElseConsent: false,
       setForSomeoneElseConsent: (bool) => set({ forSomeoneElseConsent: bool }),
 
-      confirmationData: null,
       setConfirmationData: (data) => {
         set({ confirmationData: data });
         patchBookingInformation({ confirmationData: data });
       },
-      
+
+      resetStore: () => set(initialState),
     }),
-  
+
     {
       name: "selfBooking-storage",
       storage: createJSONStorage(() => localStorage),

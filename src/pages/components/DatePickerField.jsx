@@ -12,17 +12,17 @@ const toIsoDate = (date) => {
 };
 
 const toDisplayDate = (date) =>
-  `${`${date.getDate()}`.padStart(2, "0")}.${`${date.getMonth() + 1}`.padStart(2, "0")}.${date.getFullYear()}`;
+  `${date.getFullYear()}.${`${date.getMonth() + 1}`.padStart(2, "0")}.${`${date.getDate()}`.padStart(2, "0")}`;
 
 const partialDateInputPattern =
-  /^$|^\d{1,2}$|^\d{1,2}[./]$|^\d{1,2}[./]\d{1,2}$|^\d{1,2}[./]\d{1,2}[./]$|^\d{1,2}[./]\d{1,2}[./]\d{1,4}$/;
+  /^$|^\d{1,4}$|^\d{4}[./]$|^\d{4}[./]\d{1,2}$|^\d{4}[./]\d{1,2}[./]$|^\d{4}[./]\d{1,2}[./]\d{1,2}$/;
 
 const isValidPartialDateInput = (value) => partialDateInputPattern.test(value);
 
 const parseDisplayDate = (value) => {
-  const match = value.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+  const match = value.match(/^(\d{4})[./](\d{1,2})[./](\d{1,2})$/);
   if (!match) return null;
-  const [, day, month, year] = match;
+  const [, year, month, day] = match;
   const parsed = new Date(Number(year), Number(month) - 1, Number(day));
   parsed.setHours(0, 0, 0, 0);
   if (
@@ -48,7 +48,7 @@ const DatePickerField = ({
   id,
   label,
   width,
-  placeholder = "dd.mm.yyyy",
+  placeholder = "yyyy.mm.dd",
   control,
   rules,
   errors,

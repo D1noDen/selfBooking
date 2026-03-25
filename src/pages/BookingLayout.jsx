@@ -9,8 +9,12 @@ import { get_Apoiment_Types_Self_Booking , get_Clinic_Info} from "./request/requ
 import useAuth from "../store/useAuth";
 import BookingLayoutMobile from "./BookingLayoutMobile";
 import {
+  clearBookingInformation,
+  getBookingSessionDate,
   getBookingInformation,
+  getLocalDateKey,
   setBookingInformation,
+  setBookingSessionDate,
 } from "../helpers/bookingStorage";
 import { useAppTranslation } from "../i18n/useAppTranslation";
 const MainLayout = () => {
@@ -38,6 +42,7 @@ const MainLayout = () => {
   const width = GlobalHookWindowSummary();
   const height = GlobalHookWindowHeight();
   const { t } = useAppTranslation();
+  const sessionDateCheckRef = useRef(false);
   const {
     data: GetApoimentTypesSelfBookingData,
     isLoading: GetApoimentTypesSelfBookingLoading,
@@ -52,6 +57,23 @@ const MainLayout = () => {
     UseClinicInfo(auth)
     }
   }, [auth]);
+  useEffect(() => {
+    if (sessionDateCheckRef.current) return;
+    sessionDateCheckRef.current = true;
+    const todayKey = getLocalDateKey();
+    const lastKey = getBookingSessionDate();
+    const isNewDay = Boolean(lastKey) && lastKey !== todayKey;
+
+    if (isNewDay) {
+      SelfBookingStore.getState().resetStore();
+      SelfBookingStore.persist.clearStorage();
+      clearBookingInformation();
+      setHeaderPage(0);
+      setAppPage(window.innerWidth < 1024 ? "visit type mobile" : "visit type");
+    }
+
+    setBookingSessionDate(todayKey);
+  }, [setAppPage, setHeaderPage]);
   const invalidTokenHandledRef = useRef(false);
   useEffect(() => {
     if (invalidTokenHandledRef.current) return;

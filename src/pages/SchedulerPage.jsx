@@ -1050,7 +1050,7 @@ const SchedulerPage = ({ setSesionStorage }) => {
                 minDate={todayDate}
                 maxDate={maxSelectableDate}
                 locale={getDateFnsLocale(language)}
-                dateFormat="MMMM yyyy"
+                dateFormat="yyyy.MM.dd"
                 todayButton={t("today", "Today")}
                 open={isMonthYearOpen}
                 onInputClick={() => setIsMonthYearOpen(true)}

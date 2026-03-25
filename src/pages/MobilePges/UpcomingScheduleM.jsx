@@ -23,6 +23,7 @@ import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import DatePicker from "react-datepicker";
 import { getBookingInformation } from "../../helpers/bookingStorage";
+import { formatDateForDisplay } from "../../helpers/dateFormat";
 import { getDateFnsLocale, getIntlLocale } from "../../i18n/dateLocale";
 import useTimezoneFormatter from "../../hooks/useTimezoneFormatter";
 const CalendarButton = forwardRef(({ onClick }, ref) => (
@@ -594,11 +595,7 @@ const DoctorBlock = ({
           <div className="flex gap-[8px] items-center">
             <p className="font-hebrew text-[14px] text-[#4A5565]">
               {slotDate
-                ? formatInTimeZone(slotDate, {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                  })
+                ? formatDateForDisplay(slotDate)
                 : ""}
             </p>
           </div>

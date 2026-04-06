@@ -1,7 +1,10 @@
 import dentaSoftLogo from "../../assets/images/self-booking/dentaSoftLogo.png";
-import chevronDown from "../../assets/images/self-booking/chevronDown.png";
+import LanguageSelector from "./LanguageSelector";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 const MiniFooter = () => {
+  const { t } = useAppTranslation();
+  const year = new Date().getFullYear();
   return (
     <div className="py-[24px] px-[16px] flex flex-col gap-[12px]  ">
       <div className="flex gap-[8px] justify-center ">
@@ -9,11 +12,8 @@ const MiniFooter = () => {
         <p className="text-[#535061] text-[20px]">Denta Soft</p>
       </div>
       <div className="flex justify-between w-full ">
-        <div className="flex gap-[12px]">
-          <p>English</p>
-          <img src={chevronDown} />
-        </div>
-        <p>2034 © All rights reserved</p>
+        <LanguageSelector showFlags={false} />
+        <p>{year} © {t("all_rights_reserved", "All rights reserved")}</p>
       </div>
     </div>
   );

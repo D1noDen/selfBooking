@@ -26,18 +26,20 @@ import { getBookingInformation } from "../../helpers/bookingStorage";
 import { formatDateForDisplay } from "../../helpers/dateFormat";
 import { getDateFnsLocale, getIntlLocale } from "../../i18n/dateLocale";
 import useTimezoneFormatter from "../../hooks/useTimezoneFormatter";
-const CalendarButton = forwardRef(({ onClick }, ref) => (
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+const CalendarButton = forwardRef(({ onClick, label }, ref) => (
   <button
     ref={ref}
     onClick={onClick}
     type="button"
     className="text-[12px] text-[#7D99FB]"
   >
-    📅 Calendar
+    📅 {label}
   </button>
 ));
 const UpcomingScheduleM = ({ setSesionStorage }) => {
 const {auth} = useAuth();
+  const { t } = useAppTranslation();
   const language = SelfBookingStore((state) => state.language || "en");
   const { formatInTimeZone, formatTimeInTimeZone } = useTimezoneFormatter({
     locale: getIntlLocale(language),
@@ -47,11 +49,6 @@ const {auth} = useAuth();
     const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
     moment.locale(momentLocale);
   }, [language]);
-  const languages = [
-    { label: "English", id: 0 },
-    { label: "Polish", id: 1 },
-    { label: "Test", id: 2 },
-  ];
   const [doctors, setDoctors] = useState(null);
   const [events, setEvents] = useState(null);
   const [types, setTypes] = useState(null);
@@ -171,7 +168,7 @@ const {auth} = useAuth();
               src={chevronLeft}
             />
             <p className="text-[24px] text-white text-center leading-normal">
-              Upcoming schedule
+              {t("upcoming_schedule", "Upcoming schedule")}
             </p>
            
           </div>
@@ -180,7 +177,9 @@ const {auth} = useAuth();
         <div className="flex gap-[12px] mt-[16px]">
           <div className="px-[12px] h-[35px]  bg-[rgba(255,255,255,0.10)] flex items-center  gap-[8px]  rounded-[10px] w-[242px]">
            <img className="h-[20px] w-[14px]" src={geoPoint} />
-              <p className="text-[14px] text-white font-hebrew ">Warsaw</p>
+              <p className="text-[14px] text-white font-hebrew ">
+                {t("default_city", "Warsaw")}
+              </p>
             </div>
           <LanguageSelector/>
         </div>
@@ -188,7 +187,9 @@ const {auth} = useAuth();
       </section>
       <section className="px-[16px] pt-[24px] flex flex-col gap-[20px]">
         <div className="flex flex-col gap-[8px]">
-          <label className="text-[12px] text-[#6A7282]">Service</label>
+          <label className="text-[12px] text-[#6A7282]">
+            {t("service_label", "Service")}
+          </label>
           <Dropdown
             options={types}
             isIconNeeded={false}
@@ -238,6 +239,7 @@ const DateSwiper = ({
   language,
   formatInTimeZone,
 }) => {
+  const { t } = useAppTranslation();
   const [currentWeekStart, setCurrentWeekStart] = useState(
     moment(selectedDate).startOf('day')
   );
@@ -294,12 +296,14 @@ const DateSwiper = ({
   return (
     <div className="flex flex-col gap-[12px]">
       <div className="flex justify-between items-center">
-        <p className="text-[12px] text-[#6A7282]">Select date:</p>
+        <p className="text-[12px] text-[#6A7282]">
+          {t("select_date", "Select date")}:
+        </p>
         <DatePicker
         startDate={selectedDate}
         onChange={(date) => setStartDay(date)}
         locale={getDateFnsLocale(language)}
-        customInput={<CalendarButton />}
+        customInput={<CalendarButton label={t("calendar_label", "Calendar")} />}
         />
         
       </div>
@@ -555,6 +559,7 @@ const DoctorBlock = ({
   informationWithSorage,
   formatInTimeZone,
 }) => {
+  const { t } = useAppTranslation();
   console.log(item , 'item in doctor block');
   const [open , setOpen] = useState(Boolean(item.time?.length));
   const slotDate = item.time?.[0]?.dateStart;
@@ -582,7 +587,9 @@ const DoctorBlock = ({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-[#6A7282] font-hebrew text-[12px]">slots {item.time?.length}</span>
+        <span className="text-[#6A7282] font-hebrew text-[12px]">
+          {t("slots_label", "slots")} {item.time?.length}
+        </span>
          <img onClick={() => {
           setOpen(!open)
          }} className={`h-[18px] w-[18px] duration-300 ${open ? '-rotate-90' :'rotate-90'}`} src={chevronRight} />

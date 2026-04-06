@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import SelfBookingStore from "../../store/SelfBookingStore";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { getLocalizedVisitTypeLabel } from "../../i18n/visitTypeLabel";
 
 import clinicLogo from "../../assets/images/self-booking/clinicLogo.png";
 const VisiteTypePageM = ({ visitTypeArr, setSesionStorage }) => {
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
+  const { t, language } = useAppTranslation();
 
   const [swype, setSwype] = useState([]);
 
@@ -53,7 +56,9 @@ const VisiteTypePageM = ({ visitTypeArr, setSesionStorage }) => {
           }, 500);
         }}
       >
-        <div className={`z-[4]`}>{item.label}</div>
+        <div className={`z-[4]`}>
+          {getLocalizedVisitTypeLabel(item, language) || item.label}
+        </div>
         <div
           className={`${
             (window, innerWidth < 1020 ? "" : "activeAnimation")
@@ -78,7 +83,7 @@ const VisiteTypePageM = ({ visitTypeArr, setSesionStorage }) => {
         <p
           className={`text-[24px] font-nunito font-semibold text-white text-center tracking-[1.44px]`}
         >
-          What type of appointment would you like to schedule?
+          {t("visit_type_title", "What type of appointment would you like to schedule?")}
         </p>
         <div className={`flex-col gap-[12px] justify-normal flex-nowrap flex`}>
           {visitTypeList}

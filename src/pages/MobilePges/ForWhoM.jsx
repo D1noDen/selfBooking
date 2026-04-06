@@ -1,10 +1,12 @@
 import SelfBookingStore from "../../store/SelfBookingStore";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 import clinicLogo from "../../assets/images/self-booking/clinicLogo.png";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 
 const ForWhoM = ({ setSesionStorage }) => {
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
+  const { t } = useAppTranslation();
 
   return (
     <div className="visitTypePageMobile py-[26px] px-[15px] screen-520:my-[0] gap-[16px] screen-520:mx-[auto] h-[600px] sm:m-0 sm:w-auto sm:text-[20px] mx-auto flex flex-col relatice">
@@ -23,7 +25,7 @@ const ForWhoM = ({ setSesionStorage }) => {
       <p
         className={`text-[24px] px-[15px] font-nunito font-semibold text-white text-center tracking-[1.44px]`}
       >
-        Are you scheduling this appointment for you, or someone else?
+        {t("for_who_title", "Are you scheduling this appointment for you, or someone else?")}
       </p>
       <div className={`flex-col gap-[12px] justify-normal flex-nowrap flex`}>
         <div
@@ -32,7 +34,7 @@ const ForWhoM = ({ setSesionStorage }) => {
             setAppPage("for patient mobile");
           }}
         >
-          <div className={`z-[4]`}>Scheduling for me</div>
+          <div className={`z-[4]`}>{t("scheduling_for_me", "Scheduling for me")}</div>
           <div
             className={`${
               (window, innerWidth < 1020 ? "" : "activeAnimation")
@@ -45,7 +47,9 @@ const ForWhoM = ({ setSesionStorage }) => {
             setAppPage("for someone else guardian mobile");
           }}
         >
-          <div className={`z-[4]`}>Scheduling for someone else</div>
+          <div className={`z-[4]`}>
+            {t("scheduling_for_someone_else", "Scheduling for someone else")}
+          </div>
           <div
             className={`${
               (window, innerWidth < 1020 ? "" : "activeAnimation")

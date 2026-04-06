@@ -7,8 +7,10 @@ import guestLogo from "../../assets/images/self-booking/guest.png";
 import userLogo from "../../assets/images/self-booking/user.png";
 import clinicLogo from "../../assets/images/self-booking/clinicLogo.png";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 const ContinueAsPageM = () => {
+  const { t } = useAppTranslation();
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
   const setHumanStatus = SelfBookingStore((state) => state.setHumanStatus);
@@ -41,6 +43,7 @@ const ContinueAsPageM = () => {
             setHumanStatus={setHumanStatus}
             setAppPage={setAppPage}
             setHeaderPage={setHeaderPage}
+            t={t}
           />
         ) : (
           <ChoseStatus
@@ -50,6 +53,7 @@ const ContinueAsPageM = () => {
             guestAction={guestAction}
             userAction={userAction}
             setHumanStatus={setHumanStatus}
+            t={t}
           />
         )}
       </div>
@@ -57,13 +61,13 @@ const ContinueAsPageM = () => {
   );
 };
 
-const ContinueButton = ({ label, guestAction, userAction, setUser }) => {
+const ContinueButton = ({ label, guestAction, userAction, setUser, t }) => {
   return (
     <div
       className={`w-[193px] h-10 py-[10px] bg-[#8380FF] hover:bg-[#6765de] duration-300 rounded-[5px] mx-auto text-[15px]/[20px] text-white font-semibold tracking-[0.675px] text-center cursor-pointer`}
       onClick={() => (label === "user" ? userAction(setUser) : guestAction())}
     >
-      {"Continue"}
+      {t("continue", "Continue")}
     </div>
   );
 };
@@ -76,6 +80,7 @@ const ChoseStatus = ({
   guestAction,
   userAction,
   setHumanStatus,
+  t,
 }) => {
   let _width = window.innerWidth;
   let _height = window.innerHeight;
@@ -113,28 +118,33 @@ const ChoseStatus = ({
           className={`selectGuestM flex flex-col items-center   w-[350px] rounded-[10px] px-[25px] `}
           ref={widthStatusBlockRef}
         >
-          <p className="text-[24px]">Guest</p>
+          <p className="text-[24px]">{t("guest_label", "Guest")}</p>
           <img className="w-[86px] h-[83px]" src={guestLogo} />
           <p className="text-center mb-[10px]">
-            Opting for the 'Guest' login allows you to schedule appointments
-            seamlessly, skipping the registration process.
+            {t(
+              "guest_description",
+              "Opting for the 'Guest' login allows you to schedule appointments seamlessly, skipping the registration process."
+            )}
           </p>
-          <ContinueButton guestAction={guestAction} label={"guest"} />
+          <ContinueButton guestAction={guestAction} label={"guest"} t={t} />
         </div>
         <div
           className={`selectUserM flex flex-col items-center w-[350px] rounded-[10px] px-[25px]  `}
         >
-          <p className="text-[24px]">User</p>
+          <p className="text-[24px]">{t("user_label", "User")}</p>
           <img className="w-[86px] h-[83px]" src={userLogo} />
           <p className="text-center mb-[10px]">
-            Sign up and gain access to your medical records. Register with us
-            for your personal health journey.
+            {t(
+              "user_description",
+              "Sign up and gain access to your medical records. Register with us for your personal health journey."
+            )}
           </p>
           <ContinueButton
             userAction={userAction}
             label={"user"}
             setUser={setUser}
             user={user}
+            t={t}
           />
         </div>
       </div>
@@ -142,7 +152,7 @@ const ChoseStatus = ({
         <div
           className={`text-white mt-[10px] text-[15px]/[20px] font-normal tracking-[0.675px] text-center`}
         >
-          {"Do you have an account?"}
+          {t("have_account", "Do you have an account?")}
           <span
             className={`text-[#77DEFF] hover:underline cursor-pointer duration-150`}
             onClick={() => {
@@ -150,7 +160,7 @@ const ChoseStatus = ({
               setHumanStatus("logUser");
             }}
           >
-            {" Sign in"}
+            {` ${t("sign_in_action", "Sign in")}`}
           </span>
         </div>
       </div>
@@ -158,7 +168,7 @@ const ChoseStatus = ({
   );
 };
 
-const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage }) => {
+const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage, t }) => {
   const {
     register,
     handleSubmit,
@@ -188,7 +198,7 @@ const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage }) => {
             _height <= 850 ? "mb-[13px]" : "mb-[25px]"
           }  cursor-default`}
         >
-          Sign in
+          {t("sign_in", "Sign in")}
         </div>
         <form className={`w-[265px] mx-auto`} onSubmit={handleSubmit(onSubmit)}>
           <div
@@ -200,7 +210,7 @@ const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage }) => {
               htmlFor="email"
               className={`text-[15px]/[18px] text-[#BBAFFF] font-inter font-normal tracking-[0.675px]`}
             >
-              Email
+              {t("email", "Email")}
             </label>
             <input
               type="text"
@@ -212,7 +222,7 @@ const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage }) => {
             />
             {errors.email?.type === "required" && (
               <p role="alert" className={`text-white`}>
-                Email is required
+                {t("email_required", "Email is required")}
               </p>
             )}
           </div>
@@ -225,7 +235,7 @@ const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage }) => {
               htmlFor="password"
               className={`text-[15px]/[18px] text-[#BBAFFF] font-inter font-normal tracking-[0.675px]`}
             >
-              Password
+              {t("password", "Password")}
             </label>
             <input
               type="password"
@@ -236,7 +246,7 @@ const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage }) => {
             />
           </div>
           <input
-            value={"Sign in"}
+            value={t("sign_in", "Sign in")}
             type="submit"
             className={`w-full h-10 rounded-[5px] bg-[#8380FF] text-white text-[15px]/[20px] font-nunito font-semibold tracking-[0.675px] ${
               _height <= 850 ? "mb-[15px]" : "mb-[20px]"
@@ -252,7 +262,7 @@ const SignIn = ({ setUser, setHumanStatus, setAppPage, setHeaderPage }) => {
           <span
             className={`text-[14px]/[17px] text-[#BBAFFF] font-inter font-medium mx-3 cursor-default`}
           >
-            Or Continue With
+            {t("continue_with", "Or Continue With")}
           </span>
           <hr className={`w-[70px] border-[2px] border-[#6858CC]`} />
         </div>

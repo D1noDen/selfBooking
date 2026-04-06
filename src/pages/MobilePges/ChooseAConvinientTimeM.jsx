@@ -22,10 +22,12 @@ import useAuth from "../../store/useAuth";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import calendar from "../../assets/images/self-booking/calendar.png";
-import { getBookingInformation } from "../../helpers/bookingStorage";
+import { getBookingInformation, patchBookingInformation } from "../../helpers/bookingStorage";
 import { getIntlLocale } from "../../i18n/dateLocale";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
 
 const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
+  const { t } = useAppTranslation();
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const language = SelfBookingStore((state) => state.language || "en");
   const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
@@ -46,7 +48,24 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
     informationWithSorage?.apoimentTypeId?.label ||
     informationWithSorage?.apoimentTypeId?.lebel ||
     "";
-  const [startDate, setStartDate] = useState(new Date());
+  const storedDoctorDate = informationWithSorage?.doctor?.eventStartDateTime;
+  const parsedStoredDoctorDate = storedDoctorDate
+    ? moment(storedDoctorDate, "DD.MM.YYYY HH:mm:ss", true)
+    : null;
+  const storedViewDateRaw = informationWithSorage?.schedulerViewDate;
+  const parsedStoredViewDate = storedViewDateRaw
+    ? moment(storedViewDateRaw, "YYYY-MM-DD", true)
+    : null;
+  const initialCalendarDate = parsedStoredViewDate?.isValid()
+    ? parsedStoredViewDate.toDate()
+    : parsedStoredDoctorDate?.isValid()
+    ? parsedStoredDoctorDate.toDate()
+    : new Date();
+  const [startDate, setStartDate] = useState(() => {
+    const nextDate = new Date(initialCalendarDate);
+    nextDate.setHours(0, 0, 0, 0);
+    return nextDate;
+  });
   const [doctors, setDoctors] = useState(null);
   const [events, setEvents] = useState(null);
   const [doctorWithEvents, setDoctorWithEvents] = useState([]);
@@ -126,6 +145,13 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
       });
     }
   }, [selectedAppointment, startDate, storedAppointmentTypeId, setAppPage]);
+
+  useEffect(() => {
+    if (!startDate) return;
+    patchBookingInformation({
+      schedulerViewDate: moment(startDate).format("YYYY-MM-DD"),
+    });
+  }, [startDate]);
 
   useEffect(() => {
   if(auth){
@@ -238,7 +264,7 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
         <div className="flex h-full items-center justify-center">
           <div className="relative w-full max-w-[290px]">
             <p className="text-[24px] text-white text-center leading-normal">
-              Choose a convenient time
+              {t("choose_convenient_time", "Choose a convenient time")}
             </p>
             <img
               onClick={() => {
@@ -271,8 +297,10 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
           <div className="flex flex-col gap-[4px]">
             <p></p>
             <p className="h-[45px] text-[15px] overflow-hidden">
-              Dr. Jenny Wilson Implantologist, is a Dentist in America, she has
-              20 years of... Read More
+              {t(
+                "doctor_description_short",
+                "Dr. Jenny Wilson Implantologist, is a Dentist in America, she has 20 years of... Read More"
+              )}
             </p>
           </div>
           <Dropdown
@@ -281,7 +309,7 @@ const ChooseAConvinientTimeM = ({ setSesionStorage }) => {
             dropdownWidth={"100%"}
           />
           <div className="flex justify-between">
-            <p>Next available slots:</p>
+            <p>{t("next_available_slots", "Next available slots:")}</p>
           </div>
           <div className="headerCalendar">
             <FullCalendar

@@ -47,6 +47,7 @@ const PatientExactInformation = () => {
   );
 
   const watchedValues = watch();
+  const watchedDateOfBirth = watch("dateOfBirth");
   const hasHydratedRef = useRef(false);
   const lastDraftRef = useRef("");
   const genderDropdownRef = useRef(null);
@@ -202,13 +203,14 @@ const PatientExactInformation = () => {
             value={selectedGender}
           />
 
-          <InputField
+          <DateInputField
             label={t("date_of_birth_required", "Date of Birth *")}
             id="dateOfBirth"
-            type="date"
+            placeholder={t("enter_date_of_birth", "Enter date of birth")}
             register={register}
             errors={errors}
             rules={{ required: t("select_date", "Select date") }}
+            valuePresent={Boolean(watchedDateOfBirth)}
           />
 
           <InputField
@@ -273,8 +275,8 @@ const PatientExactInformation = () => {
             ></textarea>
           </div>
           
-          <div className="w-full flex flex-wrap gap-[12px] mb-[10px] mt-4">
-            <button className="w-full mb-2 h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white">
+          <div className="w-full max-w-[340px] flex flex-wrap gap-[12px] mb-[10px] mt-4">
+            <button className="w-full h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white">
               {t("continue", "Continue")}
             </button>
             <button
@@ -311,6 +313,47 @@ const InputField = ({
         placeholder={placeholder}
         id={id}
         className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px]"
+        {...register(id, rules)}
+      />
+      {errors?.[id] && (
+        <p className="mt-1 text-red-500 text-[12px]/[14px]">
+          {errors[id]?.message || t("field_required", "Field is required")}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const DateInputField = ({
+  label,
+  id,
+  placeholder,
+  register,
+  errors,
+  rules,
+  valuePresent,
+}) => {
+  const { t } = useAppTranslation();
+  const [inputType, setInputType] = useState("text");
+
+  useEffect(() => {
+    setInputType(valuePresent ? "date" : "text");
+  }, [valuePresent]);
+
+  return (
+    <div className="w-full max-w-[340px] flex flex-col relative mb-4">
+      <div className="text-[14px] text-[#5E5E5E] font-medium">{label}</div>
+      <input
+        type={inputType}
+        placeholder={placeholder}
+        id={id}
+        className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px]"
+        onFocus={() => setInputType("date")}
+        onBlur={(event) => {
+          if (!event.target.value) {
+            setInputType("text");
+          }
+        }}
         {...register(id, rules)}
       />
       {errors?.[id] && (

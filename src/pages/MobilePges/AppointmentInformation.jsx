@@ -1,21 +1,19 @@
-import SelfBookingStore from "../../store/SelfBookingStore";
+import { useMemo, useState, useEffect } from "react";
 import moment from "moment";
-import { get_Doctor_By_Type_Id } from "../request/requestSelfBooking";
-import { useEffect, useState } from "react";
-import { dateHelper } from "../helpers/dateHelper";
-//import useAuth from "../../../Routes/useAuth";
+import SelfBookingStore from "../../store/SelfBookingStore";
 import useAuth from "../../store/useAuth";
-import {
-  submit_Draft,
-} from "../request/requestSelfBooking";
+import { submit_Draft, get_Clinic_Info } from "../request/requestSelfBooking";
+import { dateHelper } from "../helpers/dateHelper";
+import Spinner from "../helpers/Spinner";
+import { getBookingInformation } from "../../helpers/bookingStorage";
+import { useAppTranslation } from "../../i18n/useAppTranslation";
+import { getLocalizedVisitTypeLabel } from "../../i18n/visitTypeLabel";
+import { getGenderLabel, normalizeGender } from "../../i18n/gender";
+import RecaptchaModal from "../components/RecaptchaModal";
+import { formatDateForDisplay } from "../../helpers/dateFormat";
 
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
-import Spinner from "../helpers/Spinner";
-import { getBookingInformation } from "../../helpers/bookingStorage";
-import { getLocalizedVisitTypeLabel } from "../../i18n/visitTypeLabel";
-import RecaptchaModal from "../components/RecaptchaModal";
-import { formatDateForDisplay } from "../../helpers/dateFormat";
 
 const formatBirthDateForApi = (value) => {
   if (!value || typeof value !== "string") return "";
@@ -38,142 +36,108 @@ const formatBirthDateForApi = (value) => {
   return "";
 };
 
+const generateIdempotencyKey = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
 const AppointmentInformation = () => {
-  const {auth} = useAuth();
-  const informationWithSorage = getBookingInformation() || {};
-  const storedAppointmentTypeId = informationWithSorage?.apoimentTypeId?.id || null;
-  const {
-    data: GetDoctorByTypeIdData,
-    isLoading: GetDoctorByTypeIdLoading,
-    setText: GetDoctorByTypeIdInformation,
-  } = get_Doctor_By_Type_Id();
-// const auth = {
-//     clinicId: 1,
-//     companyId: "4b731791-d6f4-4f46-7363-08db9ce8963d",
-//   }
+  const { t, language } = useAppTranslation();
+  const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
+  moment.locale(momentLocale);
+  const { auth, setAuth } = useAuth();
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
-  const guardianInfo = SelfBookingStore((state) => state.guardianInfo);
-  const patientInfo = SelfBookingStore((state) => state.patientInfo);
-  const appointmentTime = SelfBookingStore((state) => state.appointmentTime);
- 
-  const [doctor, setDoctor] = useState([]);
+  const setHeaderPage = SelfBookingStore((state) => state.setHeaderPage);
+  const confirmationData = SelfBookingStore((state) => state.confirmationData);
+  const setConfirmationData = SelfBookingStore((state) => state.setConfirmationData);
+  const setAppointmentData = SelfBookingStore((state) => state.setAppointmentData);
+  const setForSomeoneElseConsent = SelfBookingStore(
+    (state) => state.setForSomeoneElseConsent
+  );
+  const setFlashMessage = SelfBookingStore((state) => state.setFlashMessage);
+
+  const bookingInfo = useMemo(() => getBookingInformation(), []);
+  const data = confirmationData?.formData || {};
+  const source = confirmationData?.source || "for user";
+  const isForSomeoneElse = source === "for someone else";
+
+  const appointmentStart = dateHelper(bookingInfo?.doctor?.eventStartDateTime);
+  const appointmentEnd = dateHelper(bookingInfo?.doctor?.eventEnd);
+  const startMoment = moment(appointmentStart);
+  const endMoment = moment(appointmentEnd);
+  const duration = endMoment.diff(startMoment, "minutes");
+  const formattedStartDate = startMoment.isValid() ? startMoment.format("HH:mm") : "-";
+  const formattedEndDate = endMoment.isValid() ? endMoment.format("HH:mm") : "-";
+
+  const patientDateOfBirthForApi = formatBirthDateForApi(data.dateOfBirth);
+  const contactPersonDateOfBirthForApi = formatBirthDateForApi(
+    data.guardianDateOfBirth
+  );
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCaptcha, setShowCaptcha] = useState(false);
-  const [pendingSubmitPayload, setPendingSubmitPayload] = useState(null);
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-  const chosenDoctor = SelfBookingStore((state) => state.chosenDoctor);
-console.log("informationWithSorage", informationWithSorage);
-  const guardianIsParent =
-    guardianInfo?.isParent === true || guardianInfo?.isParent === "true";
-  const bookingForLabel =
-    Object.keys(guardianInfo).length > 0
-      ? guardianIsParent
-        ? "Child"
-        : "Adult"
-      : "Self";
-  const visitTypeLabel =
-    getLocalizedVisitTypeLabel(informationWithSorage?.apoimentTypeId, "en") ||
-    informationWithSorage?.apoimentTypeId?.label ||
-    informationWithSorage?.apoimentTypeId?.lebel ||
-    "-";
-  let start = moment(
-    dateHelper(informationWithSorage.doctor?.eventStartDateTime)
-  );
-  let end = moment(dateHelper(informationWithSorage?.doctor?.eventEnd));
-  const duration = end.diff(start, "minutes");
-  const formattedStartDate = start.format("HH:mm");
-  const formattedEndDate = end.format("HH:mm");
+  const { data: clinicInfoData, setText: loadClinicInfo } = get_Clinic_Info();
 
-  const newStartDate = dateHelper(
-    informationWithSorage.doctor?.eventStartDateTime
-  );
-  const newEndDate = dateHelper(informationWithSorage?.doctor?.eventEnd);
-  const patientDateOfBirthForApi = formatBirthDateForApi(patientInfo.dateOfBirth);
-  const contactPersonDateOfBirthForApi = formatBirthDateForApi(guardianInfo.dateOfBirth);
+  const { mutate: submitDraft } = submit_Draft();
 
-  const calcAge = (birthdate) => {
-    let birthdateObj = new Date(birthdate);
-    let currentDate = new Date();
-    let age = currentDate.getFullYear() - birthdateObj.getFullYear();
-    if (
-      currentDate.getMonth() < birthdateObj.getMonth() ||
-      (currentDate.getMonth() === birthdateObj.getMonth() &&
-        currentDate.getDate() < birthdateObj.getDate())
-    ) {
-      age--;
-    }
-
-    return age;
+  const handleInvalidToken = () => {
+    setAuth(null);
+    setHeaderPage(0);
+    setAppPage(window.innerWidth < 1024 ? "visit type mobile" : "visit type");
+    setFlashMessage(
+      t(
+        "invalid_booking_link",
+        "Your booking link is invalid or has expired. Please start over."
+      )
+    );
   };
 
   useEffect(() => {
-    if (!storedAppointmentTypeId) {
-      setAppPage("visit type mobile");
-      return;
+    if (auth) {
+      loadClinicInfo(auth);
     }
-    if (informationWithSorage) {
-      GetDoctorByTypeIdInformation({
-          bookingToken:auth,
-        appointmentTypeId: storedAppointmentTypeId,
-      });
-    }
-  }, [auth, storedAppointmentTypeId, setAppPage]);
+  }, [auth, loadClinicInfo]);
 
-  useEffect(() => {
-    if (GetDoctorByTypeIdData) {
-      const filteredDoctors = GetDoctorByTypeIdData.data.result.filter(
-        (item) => item.userId === chosenDoctor.id
-      );
-      setDoctor(filteredDoctors);
-    }
-  }, [GetDoctorByTypeIdData]);
+  const clinicInfo = clinicInfoData?.data?.result || {};
 
-  const {
-    mutate: submitDraft,
-    isLoading: submitDraftLoading,
-  } = submit_Draft();
-
-  const generateIdempotencyKey = () => {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
-    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  };
-
-  const handleSubmitDraft = () => {
-    const hasGuardian = Object.keys(guardianInfo).length > 0;
-    const captchaToken = null;
+  const submitWithCaptcha = (captchaToken) => {
+    if (!auth || !data) return;
     const idempotencyKey = generateIdempotencyKey();
-    const relationshipType = guardianIsParent ? "Parent" : "LegalGuardian";
+    const relationshipType =
+      data.activePatientGuardian === "Yes" ? 1 : 3;
 
     const patient = {
       title: "",
-      firstName: patientInfo.firstName || "",
-      lastName: patientInfo.lastName || "",
-      email: patientInfo.email || "",
-      cellPhone: patientInfo.phoneNumber || "",
+      firstName: data.firstName || "",
+      lastName: data.lastName || "",
+      email: source === "for user" ? data.email || "" : "",
+      cellPhone: source === "for user" ? data.cellPhone || data.phoneNumber || "" : "",
       businessPhone: "",
       nip: "",
-      mailingStreet: "",
+      mailingStreet: data.address || "",
       mailingHouseNumber: "",
-      mailingCity: "",
+      mailingCity: data.city || "",
       mailingRegion: "",
       mailingZipCode: "",
       mailingCountry: "",
       isBlackListed: false,
       dateOfBirth: patientDateOfBirthForApi || "",
-      gender: patientInfo.gender || patientInfo.Gender || "",
-      pesel: patientInfo.pesel || "",
+      gender: normalizeGender(data.gender),
+      pesel: data.pesel || "",
       maidenName: "",
       nationality: "",
       allergies: [],
       phobias: [],
-      notes: patientInfo.comments || "",
+      notes: data.comment || "",
       patientTypeId: 0,
       primaryDoctorId: 0,
       lastVisitDate: null,
-      billingStreet: patientInfo.adress || "",
+      billingStreet: data.address || "",
       billingHouseNumber: "",
-      billingCity: patientInfo.city || "",
+      billingCity: data.city || "",
       billingRegion: "",
       billingZipCode: "",
       billingCountry: "",
@@ -190,40 +154,44 @@ console.log("informationWithSorage", informationWithSorage);
     };
 
     const appointment = {
-      eventStartDateTime: newStartDate,
-      eventEndDateTime: newEndDate,
-      appointmentDescription: patientInfo.comments || "",
-      appointmentTypeId: informationWithSorage?.apoimentTypeId?.id || 0,
-      userId: informationWithSorage?.doctor?.id || 0,
-      cabinetId: informationWithSorage?.doctor?.cabinetId || 0,
+      companyId: clinicInfo?.companyId || bookingInfo?.companyId,
+      clinicId: clinicInfo?.clinicId || bookingInfo?.clinicId,
+      eventStartDateTime: appointmentStart,
+      eventEndDateTime: appointmentEnd,
+      appointmentDescription: data.comment || "",
+      appointmentTypeId: bookingInfo?.apoimentTypeId?.id || 0,
+      cabinetId: bookingInfo?.doctor?.cabinetId || 0,
+      userId: bookingInfo?.doctor?.id || 0,
       patientId: 0,
       patientContactPersonId: 0,
     };
 
-    const contactPerson = hasGuardian
+    const contactPerson = isForSomeoneElse
       ? {
           linkedToPatientId: 0,
           isPatinet: false,
           patientId: 0,
-          firstName: guardianInfo.firstName || "",
-          lastName: guardianInfo.lastName || "",
-          email: guardianInfo.email || "",
-          cellPhone: guardianInfo.phoneNumber || "",
-          gender: guardianInfo.gender || guardianInfo.Gender || "Other",
-          pesel: guardianInfo.pesel || "",
-          dateOfBirth: contactPersonDateOfBirthForApi || "",
+          firstName: data.guardianFirstName || "",
+          lastName: data.guardianLastName || "",
+          email: data.email || "",
+          cellPhone: data.phoneNumber || "",
+          gender: normalizeGender(data.guardianGender),
+          pesel: data.guardianPesel || "",
+          dateOfBirth: contactPersonDateOfBirthForApi
+            ? contactPersonDateOfBirthForApi
+            : null,
           title: "",
           relationshipType,
-          mailingStreet: guardianInfo.mailingStreet || "",
-          mailingHouseNumber: guardianInfo.mailingHouseNumber || "",
-          mailingCity: guardianInfo.mailingCity || "",
-          mailingRegion: guardianInfo.mailingRegion || "",
-          mailingZipCode: guardianInfo.mailingZipCode || "",
-          mailingCountry: guardianInfo.mailingCountry || "",
+          mailingStreet: data.address || "",
+          mailingHouseNumber: "",
+          mailingCity: data.city || "",
+          mailingRegion: "",
+          mailingZipCode: "",
+          mailingCountry: "",
         }
       : null;
 
-    const submitPayload = {
+    const payload = {
       idempotencyKey,
       captchaToken,
       patient,
@@ -231,72 +199,82 @@ console.log("informationWithSorage", informationWithSorage);
       ...(contactPerson ? { contactPerson } : {}),
     };
 
-    if (!recaptchaSiteKey) {
-      submitDraft(
-        {
-          data: submitPayload,
-          token: auth,
+    submitDraft(
+      {
+        data: payload,
+        token: auth,
+      },
+      {
+        onSuccess: () => {
+          setConfirmationData(null);
+          setAppointmentData({});
+          setForSomeoneElseConsent(false);
+          setHeaderPage(4);
+          setAppPage("complete mobile");
         },
-        {
-          onSuccess: () => {
-            setAppPage("complete mobile");
-          },
-          onError: (error) => {
-            console.error("submitDraft error:", error);
-          },
-        }
-      );
+        onError: (error) => {
+          if (error?.response?.status === 404) {
+            setIsSubmitting(false);
+            handleInvalidToken();
+            return;
+          }
+          setIsSubmitting(false);
+        },
+      }
+    );
+  };
+
+  const onConfirm = () => {
+    if (!auth || !data || isSubmitting) return;
+    if (!recaptchaSiteKey) {
+      setIsSubmitting(true);
+      submitWithCaptcha(null);
       return;
     }
-
-    setPendingSubmitPayload(submitPayload);
     setShowCaptcha(true);
   };
 
+  const visitTypeLabel =
+    getLocalizedVisitTypeLabel(
+      bookingInfo?.apoimentTypeId || {
+        label: bookingInfo?.apoimentTypeId?.label || bookingInfo?.apoimentTypeId?.lebel,
+      },
+      language
+    ) ||
+    bookingInfo?.apoimentTypeId?.label ||
+    bookingInfo?.apoimentTypeId?.lebel ||
+    "-";
+
   return (
     <div>
-      {submitDraftLoading && <Spinner />}
+      {isSubmitting && <Spinner />}
       <RecaptchaModal
         open={showCaptcha}
         siteKey={recaptchaSiteKey}
-        onClose={() => {
-          setShowCaptcha(false);
-          setPendingSubmitPayload(null);
-        }}
+        onClose={() => setShowCaptcha(false)}
         onVerify={(token) => {
-          if (!pendingSubmitPayload) return;
-          const payloadWithCaptcha = {
-            ...pendingSubmitPayload,
-            captchaToken: token,
-          };
           setShowCaptcha(false);
-          setPendingSubmitPayload(null);
-          submitDraft(
-            {
-              data: payloadWithCaptcha,
-              token: auth,
-            },
-            {
-              onSuccess: () => {
-                setAppPage("complete mobile");
-              },
-              onError: (error) => {
-                console.error("submitDraft error:", error);
-              },
-            }
-          );
+          setIsSubmitting(true);
+          submitWithCaptcha(token);
         }}
       />
       <section className="mobileBG h-[75px]">
         <div className="flex h-full items-center justify-center">
-          <div className="relative w-full max-w-[290px]">
+          <div className="relative w-full max-w-[calc(100%-30px)] mx-auto">
             <p className="text-[24px] text-white text-center leading-normal">
-              Appointment information
+              {t("confirm_appointment_title", "Confirm your appointment")}
             </p>
             <img
               className="absolute top-[10px] left-0 h-[16px] w-[16px]"
               onClick={() => {
-                setAppPage("for patient mobile");
+                if (confirmationData?.formData) {
+                  setAppointmentData(confirmationData.formData);
+                }
+                setAppPage(
+                  source === "for someone else"
+                    ? "for someone else guardian mobile"
+                    : "for patient mobile"
+                );
               }}
               src={chevronLeft}
             />
@@ -307,198 +285,147 @@ console.log("informationWithSorage", informationWithSorage);
         <div className="flex gap-[12px] py-[17px] border-b border-b-solid border-b-[#0000001f]">
           <img
             className="h-[70px] w-[70px] rounded-[50%]"
-            src={doctor[0]?.profilePicture || WithoutAvatar}
+            src={bookingInfo?.doctor?.profilePicture || WithoutAvatar}
+            alt="Doctor"
           />
           <div className="flex flex-col justify-center">
             <p className="text-[20px] text-[#3F4455] font-medium">
-              {doctor[0]?.firstName} {doctor[0]?.lastName}
+              {bookingInfo?.doctor?.name || "-"}
             </p>
             <p className="text-[16px] text-[#7D749E] font-medium">
-              {doctor[0]?.specializationLabel}
+              {bookingInfo?.doctor?.speciality || "-"}
             </p>
-          </div>
-        </div>
-        <div className="py-[16px] flex flex-col gap-[12px] border-b border-b-solid border-b-[#0000001f]">
-          <p className="text-[18px] font-medium text-[#7C67FF]">
-            Scheduled appointment
-          </p>
-          <div className="w-full text-[14px] flex flex-col gap-[12px]">
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Visit type</p>
-              <p className="text-[#111113]">{visitTypeLabel}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Date</p>
-              <p className="text-[#111113]">
-                {formatDateForDisplay(appointmentTime.eventStartDateTime) || "-"}
-              </p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Time</p>
-              <p className="text-[#111113]">
-                {formattedStartDate} - {formattedEndDate} ({duration} minutes)
-              </p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Booking for</p>
-              <p className="text-[#111113]">{bookingForLabel}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Doctor</p>
-              <p className="text-[#111113]">
-                {doctor[0]?.firstName || informationWithSorage?.doctor?.name || "-"}{" "}
-                {doctor[0]?.lastName || ""}
-              </p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Specialty</p>
-              <p className="text-[#111113]">
-                {doctor[0]?.specializationLabel || informationWithSorage?.doctor?.speciality || "-"}
-              </p>
-            </div>
           </div>
         </div>
 
         <div className="py-[16px] flex flex-col gap-[12px] border-b border-b-solid border-b-[#0000001f]">
-          <p className="text-[18px] font-medium text-[#7C67FF]">Patient Info</p>
+          <p className="text-[18px] font-medium text-[#7C67FF]">
+            {t("appointment_details", "Appointment Details")}
+          </p>
           <div className="w-full text-[14px] flex flex-col gap-[12px]">
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Full name</p>
-              <p className="text-[#111113]">
-                {" "}
-                {patientInfo.firstName} {patientInfo.lastName}
-              </p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Gender</p>
-              <p className="text-[#111113]">{patientInfo.Gender}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Date of birth</p>
-              <p className="text-[#111113]">
-                {formatDateForDisplay(patientInfo.dateOfBirth) ||
-                  patientInfo.dateOfBirth ||
-                  "-"}
-              </p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Age</p>
-              <p className="text-[#111113]">
-                {calcAge(patientInfo.dateOfBirth)}
-              </p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">PESEL/PASSPORT</p>
-              <p className="text-[#111113]">{patientInfo.pesel || "-"}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Email</p>
-              <p className="text-[#111113]">{patientInfo.email || "-"}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Phone</p>
-              <p className="text-[#111113]">{patientInfo.phoneNumber || "-"}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">City</p>
-              <p className="text-[#111113]">{patientInfo.city || "-"}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Address</p>
-              <p className="text-[#111113]">{patientInfo.adress || "-"}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Problem</p>
-              <p className="text-[#111113]">{patientInfo.problem || "-"}</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Comments</p>
-              <p className="text-[#111113]">{patientInfo.comments || "-"}</p>
-            </div>
+            <Row label={t("visit_type_label", "Visit Type")} value={visitTypeLabel} />
+            <Row
+              label={t("location", "Location")}
+              value={clinicInfo?.clinicAddress || "-"}
+            />
+            <Row
+              label={t("date_time", "Date & Time")}
+              value={
+                appointmentStart
+                  ? `${formatDateForDisplay(appointmentStart) || "-"} ${formattedStartDate} - ${formattedEndDate}`
+                  : "-"
+              }
+            />
+            <Row label={t("doctor", "Doctor")} value={bookingInfo?.doctor?.name || "-"} />
           </div>
         </div>
-        {Object.keys(guardianInfo).length > 0 ? (
-          <div className="py-[16px] flex flex-col gap-[12px] border-b border-b-solid border-b-[#0000001f]">
-            <p className="text-[18px] font-medium text-[#7C67FF]">
-              Guardian info
-            </p>
-            <div className="w-full text-[14px] flex flex-col gap-[12px]">
-              <div className="flex justify-between">
-                <p className="text-[#B1B1B1] ">Full name</p>
-                <p className="text-[#111113]">
-                  {guardianInfo.firstName} {guardianInfo.lastName}
-                </p>
-              </div>
-              <div className="flex justify-between">
-                <p className="text-[#B1B1B1] ">Relation</p>
-                <p className="text-[#111113]">
-                  {guardianIsParent ? "Parent/Guardian" : "Not guardian"}
-                </p>
-              </div>
-              <div className="flex justify-between">
-                <p className="text-[#B1B1B1] ">PESEL/PASSPORT</p>
-                <p className="text-[#111113]">{guardianInfo.pesel || "-"}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="text-[#B1B1B1] ">Email</p>
-                <p className="text-[#111113]">{guardianInfo.email || "-"}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="text-[#B1B1B1] ">Phone</p>
-                <p className="text-[#111113]">{guardianInfo.phoneNumber || "-"}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="text-[#B1B1B1] ">Comments</p>
-                <p className="text-[#111113]">{guardianInfo.comments || "-"}</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          ""
-        )}
 
         <div className="py-[16px] flex flex-col gap-[12px] border-b border-b-solid border-b-[#0000001f]">
           <p className="text-[18px] font-medium text-[#7C67FF]">
-            Clinic details
+            {isForSomeoneElse
+              ? t("patient_details", "Patient Details")
+              : t("your_details", "Your Details")}
           </p>
           <div className="w-full text-[14px] flex flex-col gap-[12px]">
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">City</p>
-              <p className="text-[#111113]">Warsaw</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Street</p>
-              <p className="text-[#111113]">Topiel,11</p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Phone number</p>
-              <p className="text-[#111113]">+4 822 542 184 </p>
-            </div>
-            <div className="flex justify-between">
-              <p className="text-[#B1B1B1] ">Email</p>
-              <p className="text-[#111113]">wdc@gmail.com</p>
-            </div>
+            <Row
+              label={t("full_name", "Full Name")}
+              value={`${data.firstName || ""} ${data.lastName || ""}`.trim() || "-"}
+            />
+            <Row label={t("pesel", "PESEL")} value={data.pesel || "-"} />
+            <Row
+              label={t("date_of_birth", "Date of Birth")}
+              value={formatDateForDisplay(data.dateOfBirth) || data.dateOfBirth || "-"}
+            />
+            <Row label={t("email", "Email")} value={data.email || "-"} />
+            <Row
+              label={t("phone", "Phone")}
+              value={data.cellPhone || data.phoneNumber || "-"}
+            />
           </div>
         </div>
-        <button
-          onClick={() => {
-            handleSubmitDraft();
-          }}
-          className="mt-[22px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white"
-        >
-          Book Appointment
-        </button>
-        <button
-          onClick={() => {
-            setAppPage("for patient mobile");
-          }}
-          className="mb-[10px] mt-[12px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] border border-solid border-[#7C67FF] bg-white text-[#7C67FF]"
-        >
-          Edit
-        </button>
+
+        {isForSomeoneElse &&
+          (data.guardianFirstName || data.guardianLastName || data.guardianDateOfBirth) && (
+            <div className="py-[16px] flex flex-col gap-[12px] border-b border-b-solid border-b-[#0000001f]">
+              <p className="text-[18px] font-medium text-[#7C67FF]">
+                {data.activePatientGuardian === "No"
+                  ? t("contact_person_details", "Contact person details")
+                  : t("patient_guardian_parent", "Patient guardian/Parent")}
+              </p>
+              <div className="w-full text-[14px] flex flex-col gap-[12px]">
+                <Row
+                  label={t("full_name", "Full Name")}
+                  value={`${data.guardianFirstName || ""} ${data.guardianLastName || ""}`.trim() || "-"}
+                />
+                <Row
+                  label={t("date_of_birth", "Date of Birth")}
+                  value={
+                    formatDateForDisplay(data.guardianDateOfBirth) ||
+                    data.guardianDateOfBirth ||
+                    "-"
+                  }
+                />
+                <Row
+                  label={t("gender", "Gender")}
+                  value={getGenderLabel(t, data.guardianGender) || "-"}
+                />
+                <Row
+                  label={t("relation", "Relation")}
+                  value={
+                    data.activePatientGuardian === "No"
+                      ? t("not_guardian", "Not guardian")
+                      : t("guardian", "Guardian")
+                  }
+                />
+              </div>
+            </div>
+          )}
+
+        <div className="py-[16px] flex flex-col gap-[12px] border-b border-b-solid border-b-[#0000001f]">
+          <p className="text-[18px] font-medium text-[#7C67FF]">
+            {t("clinic_location", "Clinic Location")}
+          </p>
+          <div className="w-full text-[14px] flex flex-col gap-[12px]">
+            <Row label={t("clinic_name", "Clinic")} value={clinicInfo?.clinicName || "-"} />
+            <Row label={t("address", "Address")} value={clinicInfo?.clinicAddress || "-"} />
+          </div>
+        </div>
+
+        <div className="w-full flex flex-wrap gap-[12px] mb-[10px] mt-4">
+          <button
+            onClick={onConfirm}
+            className="w-full h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white"
+            disabled={isSubmitting}
+          >
+            {t("confirm_appointment", "Confirm Appointment")}
+          </button>
+          <button
+            onClick={() => {
+              if (confirmationData?.formData) {
+                setAppointmentData(confirmationData.formData);
+              }
+              setAppPage(
+                source === "for someone else"
+                  ? "for someone else guardian mobile"
+                  : "for patient mobile"
+              );
+            }}
+            className="w-full h-[44px] font-medium rounded-[12px] border border-solid border-[#7C67FF] bg-white text-[#7C67FF]"
+            disabled={isSubmitting}
+          >
+            {t("edit_details", "Edit Details")}
+          </button>
+        </div>
       </section>
     </div>
   );
 };
+
+const Row = ({ label, value }) => (
+  <div className="flex justify-between gap-4">
+    <p className="text-[#B1B1B1]">{label}</p>
+    <p className="text-[#111113] text-right break-words">{value || "-"}</p>
+  </div>
+);
 
 export default AppointmentInformation;

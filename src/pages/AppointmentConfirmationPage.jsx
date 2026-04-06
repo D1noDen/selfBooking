@@ -80,9 +80,7 @@ const AppointmentConfirmationPage = () => {
       ? t("contact_person_details", "Contact person details")
       : t("patient_guardian_parent", "Patient guardian/Parent");
   const patientDateOfBirthForApi = formatBirthDateForApi(data.dateOfBirth);
-  const contactPersonDateOfBirthForApi = formatBirthDateForApi(
-    data.guardianDateOfBirth
-  );
+  const contactPersonDateOfBirthForApi = formatBirthDateForApi(data.guardianDateOfBirth);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCaptcha, setShowCaptcha] = useState(false);
@@ -116,7 +114,7 @@ const AppointmentConfirmationPage = () => {
     const appointmentEnd = dateHelper(bookingInfo?.doctor?.eventEnd);
     const idempotencyKey = generateIdempotencyKey();
     const relationshipType =
-      data.activePatientGuardian === "Yes" ? "Parent" : "Other";
+      data.activePatientGuardian === "Yes" ? 1 : 3;
 
     const patient = {
       title: "",
@@ -186,7 +184,9 @@ const AppointmentConfirmationPage = () => {
           cellPhone: data.phoneNumber || "",
           gender: normalizeGender(data.guardianGender),
           pesel: data.guardianPesel || "",
-          dateOfBirth: contactPersonDateOfBirthForApi || "",
+          dateOfBirth: contactPersonDateOfBirthForApi
+            ? contactPersonDateOfBirthForApi
+            : null,
           title: "",
           relationshipType,
           mailingStreet: data.address || "",

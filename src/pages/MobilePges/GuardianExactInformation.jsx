@@ -452,7 +452,7 @@ const GuardianExactInformation = () => {
             ></textarea>
           </div>
 
-          <button className="mt-[10px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white">
+          <button className="mt-[10px] mb-[12px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white">
             {t("continue", "Continue")}
           </button>
           <button

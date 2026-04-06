@@ -54,6 +54,8 @@ const GuardianExactInformation = () => {
   const {screenSize} = GlobalHookWindowSummary();
 
   const watchedValues = watch();
+  const watchedDateOfBirth = watch("dateOfBirth");
+  const watchedGuardianDateOfBirth = watch("guardianDateOfBirth");
   const hasHydratedRef = useRef(false);
   const lastDraftRef = useRef("");
   const patientGenderRef = useRef(null);
@@ -252,13 +254,14 @@ const GuardianExactInformation = () => {
             value={patientGender}
           />
 
-          <InputField
+          <DateInputField
             label={t("date_of_birth_required", "Date of Birth *")}
             id="dateOfBirth"
-            type="date"
+            placeholder={t("enter_date_of_birth", "Enter date of birth")}
             register={register}
             errors={errors}
             rules={{ required: t("select_date", "Select date") }}
+            valuePresent={Boolean(watchedDateOfBirth)}
           />
 
           <SectionTitle text={t("booking_person", "Booking person")} />
@@ -351,13 +354,14 @@ const GuardianExactInformation = () => {
                 register={register}
                 errors={errors}
               />
-              <InputField
+              <DateInputField
                 label={t("date_of_birth_required", "Date of Birth *")}
                 id="guardianDateOfBirth"
-                type="date"
+                placeholder={t("enter_date_of_birth", "Enter date of birth")}
                 register={register}
                 errors={errors}
                 rules={{ required: t("select_date", "Select date") }}
+                valuePresent={Boolean(watchedGuardianDateOfBirth)}
               />
             </>
           )}
@@ -452,18 +456,20 @@ const GuardianExactInformation = () => {
             ></textarea>
           </div>
 
-          <button className="mt-[10px] mb-[12px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white">
-            {t("continue", "Continue")}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAppPage("for who mobile");
-            }}
-            className="mb-[10px] w-full max-w-[340px] h-[44px] font-medium rounded-[12px] border border-solid border-[#7C67FF] bg-white text-[#7C67FF]"
-          >
-            {t("cancel", "Cancel")}
-          </button>
+          <div className="w-full max-w-[340px] flex flex-wrap gap-[12px] mb-[10px] mt-4">
+            <button className="w-full h-[44px] font-medium rounded-[12px] bg-[#7C67FF] text-white">
+              {t("continue", "Continue")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAppPage("for who mobile");
+              }}
+              className="w-full h-[44px] font-medium rounded-[12px] border border-solid border-[#7C67FF] bg-white text-[#7C67FF]"
+            >
+              {t("cancel", "Cancel")}
+            </button>
+          </div>
         </form>
       </section>
     </div>
@@ -494,6 +500,47 @@ const InputField = ({
         placeholder={placeholder}
         id={id}
         className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px]"
+        {...register(id, rules)}
+      />
+      {errors?.[id] && (
+        <p className="mt-1 text-red-500 text-[12px]/[14px]">
+          {errors[id]?.message || t("field_required", "Field is required")}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const DateInputField = ({
+  label,
+  id,
+  placeholder,
+  register,
+  errors,
+  rules,
+  valuePresent,
+}) => {
+  const { t } = useAppTranslation();
+  const [inputType, setInputType] = useState("text");
+
+  useEffect(() => {
+    setInputType(valuePresent ? "date" : "text");
+  }, [valuePresent]);
+
+  return (
+    <div className="w-full max-w-[340px] flex flex-col relative mb-4">
+      <div className="text-[14px] text-[#5E5E5E] font-medium">{label}</div>
+      <input
+        type={inputType}
+        placeholder={placeholder}
+        id={id}
+        className="text-[15px] border border-solid rounded-[4px] border-[#11111333] text-[#111113] p-[12px]"
+        onFocus={() => setInputType("date")}
+        onBlur={(event) => {
+          if (!event.target.value) {
+            setInputType("text");
+          }
+        }}
         {...register(id, rules)}
       />
       {errors?.[id] && (

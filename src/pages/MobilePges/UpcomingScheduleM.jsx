@@ -56,6 +56,30 @@ const CalendarButton = forwardRef(({ onClick, label }, ref) => (
     />
   </button>
 ));
+
+const DoctorSkeleton = () => (
+  <div className="px-[12px] doctorBlock py-[16px] rounded-[12px] flex flex-col gap-[12px] animate-pulse">
+    <div className="flex items-center justify-between">
+      <div className="flex gap-[10px] items-center">
+        <div className="w-[47px] h-[47px] rounded-full bg-[#E8E8E9]" />
+        <div className="flex flex-col gap-[6px]">
+          <div className="h-[14px] w-[140px] bg-[#E8E8E9] rounded-full" />
+          <div className="h-[12px] w-[90px] bg-[#E8E8E9] rounded-full" />
+        </div>
+      </div>
+      <div className="h-[12px] w-[60px] bg-[#E8E8E9] rounded-full" />
+    </div>
+    <div className="h-[1px] bg-[#F5F5F5] w-full" />
+    <div className="flex gap-[8px] flex-wrap">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div
+          key={index}
+          className="w-[100px] h-[53px] rounded-[10px] bg-[#E8E8E9]"
+        />
+      ))}
+    </div>
+  </div>
+);
 const UpcomingScheduleM = ({ setSesionStorage }) => {
 const {auth} = useAuth();
   const { t } = useAppTranslation();
@@ -147,7 +171,13 @@ const {auth} = useAuth();
         appointmentTypeId: activeAppointmentTypeId,
       });
     }
-  }, [selectedAppointment, weekStartDate, storedAppointmentTypeId, setAppPage]);
+  }, [
+    informationWithSorage,
+    selectedAppointment,
+    weekStartDate,
+    storedAppointmentTypeId,
+    setAppPage,
+  ]);
   useEffect(() => {
     if (GetDoctorByTypeIdData) {
       setDoctors(GetDoctorByTypeIdData.data.result);
@@ -156,6 +186,21 @@ const {auth} = useAuth();
       setEvents(GetSlotApoimentData.data.result.shifts);
     }
   }, [GetDoctorByTypeIdData, GetSlotApoimentData]);
+  useEffect(() => {
+    if (
+      GetDoctorByTypeIdLoading ||
+      GetSlotApoimentLoading ||
+      GetApoimentTypesSelfBookingLoading
+    ) {
+      setDoctors(null);
+      setEvents(null);
+      setDoctorsWithEvents([]);
+    }
+  }, [
+    GetDoctorByTypeIdLoading,
+    GetSlotApoimentLoading,
+    GetApoimentTypesSelfBookingLoading,
+  ]);
   useEffect(() => {
     if (doctors && events) {
       const newArrayDoctors = doctors.map((item) => ({
@@ -243,23 +288,31 @@ const {auth} = useAuth();
           }}
           language={normalizedLanguage}
         />
-        <div className="flex flex-col gap-[12px]">
-          {doctorsWithEvents?.map((item, i) => (
-            <DoctorBlock
-            item={item}
-              name={item.name}
-              img={item.avatar}
-              speciality={item.speciality}
-              key={i}
-              doctorId={item.id}
-              date={item.time}
-              language={normalizedLanguage}
-              informationWithSorage={informationWithSorage}
-              setSesionStorage={setSesionStorage}
-              formatInTimeZone={formatInTimeZone}
-            />
-          ))}
-        </div>
+        {GetDoctorByTypeIdLoading || GetSlotApoimentLoading ? (
+          <div className="flex flex-col gap-[12px]">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <DoctorSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-[12px]">
+            {doctorsWithEvents?.map((item, i) => (
+              <DoctorBlock
+              item={item}
+                name={item.name}
+                img={item.avatar}
+                speciality={item.speciality}
+                key={i}
+                doctorId={item.id}
+                date={item.time}
+                language={normalizedLanguage}
+                informationWithSorage={informationWithSorage}
+                setSesionStorage={setSesionStorage}
+                formatInTimeZone={formatInTimeZone}
+              />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

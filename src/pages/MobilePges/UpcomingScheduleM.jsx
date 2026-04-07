@@ -21,10 +21,9 @@ import calendar from "../../assets/images/self-booking/calendar.png";
 import chevronRight from "../../assets/images/self-booking/chevronRight.png";
 import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
-import DatePicker from "react-datepicker";
 import { getBookingInformation } from "../../helpers/bookingStorage";
 import { formatDateForDisplay } from "../../helpers/dateFormat";
-import { getDateFnsLocale, getIntlLocale } from "../../i18n/dateLocale";
+import { getIntlLocale } from "../../i18n/dateLocale";
 import useTimezoneFormatter from "../../hooks/useTimezoneFormatter";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
 const CalendarButton = forwardRef(({ onClick, label }, ref) => (
@@ -240,6 +239,7 @@ const DateSwiper = ({
   formatInTimeZone,
 }) => {
   const { t } = useAppTranslation();
+  const nativeDateRef = useRef(null);
   const [currentWeekStart, setCurrentWeekStart] = useState(
     moment(selectedDate).startOf('day')
   );
@@ -293,17 +293,37 @@ const DateSwiper = ({
     return moment(selectedDate).isSame(date, 'day');
   };
 
+  const openNativePicker = () => {
+    if (!nativeDateRef.current) return;
+    if (typeof nativeDateRef.current.showPicker === "function") {
+      nativeDateRef.current.showPicker();
+    } else {
+      nativeDateRef.current.focus();
+      nativeDateRef.current.click();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-[12px]">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-start gap-2 items-center">
         <p className="text-[12px] text-[#6A7282]">
           {t("select_date", "Select date")}:
         </p>
-        <DatePicker
-        startDate={selectedDate}
-        onChange={(date) => setStartDay(date)}
-        locale={getDateFnsLocale(language)}
-        customInput={<CalendarButton label={t("calendar_label", "Calendar")} />}
+        <CalendarButton
+          label={t("calendar_label", "Calendar")}
+          onClick={openNativePicker}
+        />
+        <input
+          ref={nativeDateRef}
+          type="date"
+          value={moment(selectedDate).format("YYYY-MM-DD")}
+          onChange={(e) => {
+            const next = moment(e.target.value, "YYYY-MM-DD").toDate();
+            setStartDay(next);
+          }}
+          className="absolute opacity-0 pointer-events-none w-0 h-0"
+          aria-hidden="true"
+          tabIndex={-1}
         />
         
       </div>
@@ -587,7 +607,7 @@ const DoctorBlock = ({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-[#6A7282] font-hebrew text-[12px]">
+        <span className="text-[#6A7282] text-nowrap font-hebrew text-[12px]">
           {t("slots_label", "slots")} {item.time?.length}
         </span>
          <img onClick={() => {

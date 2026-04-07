@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect ,forwardRef } from "react";
+import { useState, useRef, useEffect, useMemo, forwardRef } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { useOnClickOutside } from "../helpers/helpers";
 import {
@@ -23,36 +23,65 @@ import chevronLeft from "../../assets/images/self-booking/chevronLeft.png";
 import WithoutAvatar from "../../assets/images/svg/NoAvatar.svg";
 import { getBookingInformation } from "../../helpers/bookingStorage";
 import { formatDateForDisplay } from "../../helpers/dateFormat";
-import { getIntlLocale } from "../../i18n/dateLocale";
+import { getDateFnsLocale, getIntlLocale } from "../../i18n/dateLocale";
+import DatePicker from "react-datepicker";
 import useTimezoneFormatter from "../../hooks/useTimezoneFormatter";
 import { useAppTranslation } from "../../i18n/useAppTranslation";
+
+const normalizeLanguage = (language = "en") => {
+  const value = String(language || "en").toLowerCase();
+  if (value === "ua" || value.startsWith("uk")) return "uk";
+  if (value.startsWith("pl")) return "pl";
+  return "en";
+};
 const CalendarButton = forwardRef(({ onClick, label }, ref) => (
   <button
     ref={ref}
     onClick={onClick}
     type="button"
-    className="text-[12px] text-[#7D99FB]"
+    className="flex items-center gap-[4px] text-[12px] text-[#8380FF]"
   >
-    📅 {label}
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5.99927 1.5V4.5" stroke="#8380FF" stroke-width="1.49981" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M11.9985 1.5V4.5" stroke="#8380FF" stroke-width="1.49981" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M14.2482 2.99951H3.74956C2.92124 2.99951 2.24976 3.671 2.24976 4.49932V14.998C2.24976 15.8263 2.92124 16.4978 3.74956 16.4978H14.2482C15.0765 16.4978 15.748 15.8263 15.748 14.998V4.49932C15.748 3.671 15.0765 2.99951 14.2482 2.99951Z" stroke="#8380FF" stroke-width="1.49981" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2.24976 7.49902H15.748" stroke="#8380FF" stroke-width="1.49981" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>{label}</span>
+    <img
+      src={chevronRight}
+      className="w-[12px] h-[12px] rotate-90"
+      alt=""
+      aria-hidden="true"
+    />
   </button>
 ));
 const UpcomingScheduleM = ({ setSesionStorage }) => {
 const {auth} = useAuth();
   const { t } = useAppTranslation();
   const language = SelfBookingStore((state) => state.language || "en");
+  const normalizedLanguage = normalizeLanguage(language);
   const { formatInTimeZone, formatTimeInTimeZone } = useTimezoneFormatter({
-    locale: getIntlLocale(language),
+    locale: getIntlLocale(normalizedLanguage),
     timeZone: "Europe/Warsaw",
   });
   useEffect(() => {
-    const momentLocale = language === "uk" ? "uk" : language === "pl" ? "pl" : "en";
+    const momentLocale =
+      normalizedLanguage === "uk" ? "uk" : normalizedLanguage === "pl" ? "pl" : "en";
     moment.locale(momentLocale);
-  }, [language]);
+  }, [normalizedLanguage]);
   const [doctors, setDoctors] = useState(null);
   const [events, setEvents] = useState(null);
   const [types, setTypes] = useState(null);
   const [doctorsWithEvents, setDoctorsWithEvents] = useState([]);
-  const [startDate, setStartDay] = useState(new Date());
+  const toYmdLocal = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const [weekStartDate, setWeekStartDate] = useState(() => toYmdLocal(new Date()));
+  const [selectedDate, setSelectedDate] = useState(() => toYmdLocal(new Date()));
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
 
   const informationWithSorage = getBookingInformation() || {};
@@ -105,8 +134,8 @@ const {auth} = useAuth();
         setAppPage("visit type mobile");
         return;
       }
-      const start = moment(startDate).format("YYYY-MM-DD");
-      const endDate = moment(startDate).format("YYYY-MM-DD");
+      const start = weekStartDate;
+      const endDate = moment(weekStartDate, "YYYY-MM-DD").add(4, "days").format("YYYY-MM-DD");
       GetSlotApoimentInformation({
         bookingToken:auth,
         appointmentTypeId: activeAppointmentTypeId,
@@ -118,7 +147,7 @@ const {auth} = useAuth();
         appointmentTypeId: activeAppointmentTypeId,
       });
     }
-  }, [selectedAppointment, startDate, storedAppointmentTypeId, setAppPage]);
+  }, [selectedAppointment, weekStartDate, storedAppointmentTypeId, setAppPage]);
   useEffect(() => {
     if (GetDoctorByTypeIdData) {
       setDoctors(GetDoctorByTypeIdData.data.result);
@@ -201,11 +230,18 @@ const {auth} = useAuth();
           />
         </div>
         <DateSwiper
-          selectedDate={startDate}
-          setStartDay={setStartDay}
-          onDateChange={setStartDay}
-          language={language}
-          formatInTimeZone={formatInTimeZone}
+          selectedDate={selectedDate}
+          onSelectedDateChange={(nextSelected) => {
+            setSelectedDate(nextSelected);
+            setWeekStartDate(nextSelected);
+          }}
+          weekStartDate={weekStartDate}
+          onWeekChange={(nextWeekStart) => {
+            const normalized = toYmdLocal(nextWeekStart);
+            setWeekStartDate(normalized);
+            setSelectedDate(normalized);
+          }}
+          language={normalizedLanguage}
         />
         <div className="flex flex-col gap-[12px]">
           {doctorsWithEvents?.map((item, i) => (
@@ -217,7 +253,7 @@ const {auth} = useAuth();
               key={i}
               doctorId={item.id}
               date={item.time}
-              language={language}
+              language={normalizedLanguage}
               informationWithSorage={informationWithSorage}
               setSesionStorage={setSesionStorage}
               formatInTimeZone={formatInTimeZone}
@@ -233,74 +269,139 @@ export default UpcomingScheduleM;
 
 const DateSwiper = ({
   selectedDate,
-  onDateChange,
-  setStartDay,
+  onSelectedDateChange,
+  weekStartDate,
+  onWeekChange,
   language,
-  formatInTimeZone,
 }) => {
   const { t } = useAppTranslation();
-  const nativeDateRef = useRef(null);
-  const [currentWeekStart, setCurrentWeekStart] = useState(
-    moment(selectedDate).startOf('day')
+  const normalizedLanguage = normalizeLanguage(language);
+  const intlLocale = getIntlLocale(normalizedLanguage);
+  const momentLocale = useMemo(
+    () =>
+      normalizedLanguage === "uk" ? "uk" : normalizedLanguage === "pl" ? "pl" : "en",
+    [normalizedLanguage]
   );
+  const monthYearFormatter = useMemo(
+    () => new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }),
+    [intlLocale]
+  );
+  const monthFormatter = useMemo(
+    () => new Intl.DateTimeFormat(intlLocale, { month: "long" }),
+    [intlLocale]
+  );
+  const monthShortDayFormatter = useMemo(
+    () => new Intl.DateTimeFormat(intlLocale, { month: "short", day: "numeric" }),
+    [intlLocale]
+  );
+  const weekdayFormatter = useMemo(
+    () => new Intl.DateTimeFormat(intlLocale, { weekday: "short" }),
+    [intlLocale]
+  );
+  const capitalizeFirst = (value) => {
+    if (!value) return value;
+    const [first, ...rest] = value;
+    return `${first.toLocaleUpperCase(intlLocale)}${rest.join("")}`;
+  };
+  const formatWeekdayShort = (date) => {
+    const value = weekdayFormatter.format(date);
+    const trimmed = value.replace(".", "").trim();
+    if (!trimmed) return trimmed;
+    const letters = trimmed.slice(0, 2);
+    return letters.toLocaleUpperCase(intlLocale);
+  };
+  const toYmdLocal = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const ymdToNoonDate = (ymd) => {
+    const [year, month, day] = ymd.split("-").map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0);
+  };
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [tempSelectedDate, setTempSelectedDate] = useState(selectedDate);
 
-  
   useEffect(() => {
-   
-    const selected = moment(selectedDate).startOf('day');
-    const weekStart = moment(currentWeekStart).startOf('day');
-    const weekEnd = moment(weekStart).add(4, 'days').endOf('day');
-    if (!selected.isBetween(weekStart.clone().subtract(1, 'ms'), weekEnd.clone().add(1, 'ms'))) {
-      setCurrentWeekStart(selected);
+    if (!isPickerOpen) {
+      setTempSelectedDate(selectedDate);
     }
-  }, [selectedDate]);
-  
+  }, [isPickerOpen, selectedDate]);
+
   const generateWeekDays = (startDate) => {
     const days = [];
     for (let i = 0; i < 5; i++) {
-      days.push(moment(startDate).add(i, 'days'));
+      days.push(moment(startDate).locale(momentLocale).add(i, "days"));
     }
     return days;
   };
 
-  const weekDays = generateWeekDays(currentWeekStart);
+  const weekStart = moment(weekStartDate, "YYYY-MM-DD")
+    .locale(momentLocale)
+    .startOf("day");
+  const weekDays = generateWeekDays(weekStart);
+  const weekEnd = moment(weekStart).locale(momentLocale).add(4, "days").endOf("day");
+  const startMonthLabel = capitalizeFirst(monthFormatter.format(weekStart.toDate()));
+  const endMonthLabel = capitalizeFirst(monthFormatter.format(weekEnd.toDate()));
+  const calendarLabel =
+    startMonthLabel === endMonthLabel
+      ? startMonthLabel
+      : `${startMonthLabel} - ${endMonthLabel}`;
+  const rangeStartLabel = capitalizeFirst(
+    monthShortDayFormatter.format(ymdToNoonDate(tempSelectedDate))
+  );
+  const rangeEndLabel = capitalizeFirst(
+    monthShortDayFormatter.format(
+      moment(tempSelectedDate, "YYYY-MM-DD").add(4, "days").toDate()
+    )
+  );
+  const rangeLabel = `${rangeStartLabel} - ${rangeEndLabel}`;
 
-  const canGoPrev = currentWeekStart.isAfter(moment().startOf('day'));
+  const canGoPrev = weekStart.isAfter(moment().startOf("day"));
 
   const handlePrevWeek = () => {
     if (canGoPrev) {
-      const newStart = moment(currentWeekStart).subtract(1, 'days');
-      setCurrentWeekStart(newStart);
-      onDateChange(newStart.toDate());
+      const newStart = moment(weekStartDate, "YYYY-MM-DD")
+        .locale(momentLocale)
+        .subtract(5, "days");
+      onWeekChange(ymdToNoonDate(newStart.format("YYYY-MM-DD")));
     }
   };
 
   const handleNextWeek = () => {
-    const newStart = moment(currentWeekStart).add(1, 'days');
-    setCurrentWeekStart(newStart);
-    onDateChange(newStart.toDate());
+    const newStart = moment(weekStartDate, "YYYY-MM-DD")
+      .locale(momentLocale)
+      .add(5, "days");
+    onWeekChange(ymdToNoonDate(newStart.format("YYYY-MM-DD")));
   };
 
   const handleDateClick = (date) => {
-    onDateChange(date.toDate());
+    const normalized = date.format("YYYY-MM-DD");
+    onSelectedDateChange(normalized);
   };
 
   const isToday = (date) => {
-    return moment().isSame(date, 'day');
+    return moment().isSame(date, "day");
   };
 
   const isSelected = (date) => {
-    return moment(selectedDate).isSame(date, 'day');
+    return moment(selectedDate, "YYYY-MM-DD").isSame(date, "day");
   };
 
-  const openNativePicker = () => {
-    if (!nativeDateRef.current) return;
-    if (typeof nativeDateRef.current.showPicker === "function") {
-      nativeDateRef.current.showPicker();
-    } else {
-      nativeDateRef.current.focus();
-      nativeDateRef.current.click();
-    }
+  const openPicker = () => {
+    setTempSelectedDate(selectedDate);
+    setIsPickerOpen(true);
+  };
+
+  const closePicker = () => {
+    setIsPickerOpen(false);
+  };
+
+  const applyPickerDate = () => {
+    const next = tempSelectedDate || selectedDate;
+    onSelectedDateChange(next);
+    setIsPickerOpen(false);
   };
 
   return (
@@ -310,23 +411,119 @@ const DateSwiper = ({
           {t("select_date", "Select date")}:
         </p>
         <CalendarButton
-          label={t("calendar_label", "Calendar")}
-          onClick={openNativePicker}
-        />
-        <input
-          ref={nativeDateRef}
-          type="date"
-          value={moment(selectedDate).format("YYYY-MM-DD")}
-          onChange={(e) => {
-            const next = moment(e.target.value, "YYYY-MM-DD").toDate();
-            setStartDay(next);
-          }}
-          className="absolute opacity-0 pointer-events-none w-0 h-0"
-          aria-hidden="true"
-          tabIndex={-1}
+          label={calendarLabel || t("calendar_label", "Calendar")}
+          onClick={openPicker}
         />
         
       </div>
+
+      {isPickerOpen && (
+        <div className="fixed inset-0 z-50">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/30"
+            onClick={closePicker}
+            aria-label={t("close_date_picker", "Close date picker")}
+          />
+          <div className="absolute left-0 right-0 bottom-0 bg-white rounded-t-[20px] p-[16px] shadow-[0_-6px_24px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between mb-[12px]">
+              <p className="text-[16px] font-semibold text-[#111827]">
+                {capitalizeFirst(monthYearFormatter.format(ymdToNoonDate(tempSelectedDate)))}
+              </p>
+              <button
+                type="button"
+                onClick={closePicker}
+                className="flex items-center justify-center"
+                aria-label={t("close", "Close")}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.9882 5.99609L5.99609 17.9882" stroke="#4A5565" stroke-width="1.99868" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5.99609 5.99609L17.9882 17.9882" stroke="#4A5565" stroke-width="1.99868" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="text-center text-[13px] text-[#6B7280] mb-[6px] flex justify-center items-center">
+              {rangeLabel}
+            </div>
+            <DatePicker
+              inline
+              selected={ymdToNoonDate(tempSelectedDate)}
+              onChange={(date) => {
+                if (!date) return;
+                setTempSelectedDate(toYmdLocal(date));
+              }}
+              locale={getDateFnsLocale(normalizedLanguage)}
+              calendarClassName="mobile-sheet-calendar"
+              dayClassName={(date) => {
+                const start = moment(tempSelectedDate, "YYYY-MM-DD");
+                const end = start.clone().add(4, "days");
+                const current = moment(date);
+                if (!current.isBetween(start, end, "day", "[]")) return "";
+                if (current.isSame(start, "day")) return "mobile-range-start";
+                if (current.isSame(end, "day")) return "mobile-range-end";
+                return "mobile-range-middle";
+              }}
+              renderCustomHeader={({
+                date,
+                decreaseMonth,
+                increaseMonth,
+                prevMonthButtonDisabled,
+                nextMonthButtonDisabled,
+              }) => (
+                <div className="flex items-center justify-between px-[8px] mb-[8px]">
+                  <button
+                    type="button"
+                    onClick={decreaseMonth}
+                    disabled={prevMonthButtonDisabled}
+                    className={`w-[32px] h-[32px] rounded-full flex items-center justify-center ${
+                      prevMonthButtonDisabled
+                        ? "opacity-40"
+                        : "hover:bg-[#F3F4FF]"
+                    }`}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.4918 14.99L7.49512 9.99328L12.4918 4.99658" stroke="#4A5565" stroke-width="1.66557" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <span className="text-[14px] font-medium text-[#111827]">
+                    {capitalizeFirst(monthYearFormatter.format(date))}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={increaseMonth}
+                    disabled={nextMonthButtonDisabled}
+                    className={`w-[32px] h-[32px] rounded-full flex items-center justify-center ${
+                      nextMonthButtonDisabled
+                        ? "opacity-40"
+                        : "hover:bg-[#F3F4FF]"
+                    }`}
+                  >
+                    <svg className="rotate-180" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.4918 14.99L7.49512 9.99328L12.4918 4.99658" stroke="#4A5565" stroke-width="1.66557" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              )}
+            />
+            <div className="mt-[12px] flex gap-[12px]">
+              <button
+                type="button"
+                onClick={closePicker}
+                className="flex-1 h-[44px] rounded-[12px] border border-[#E5E7EB] text-[#111827] text-[14px] font-medium"
+              >
+                {t("cancel", "Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={applyPickerDate}
+                className="flex-1 h-[44px] rounded-[12px] bg-[#7D99FB] text-white text-[14px] font-medium"
+              >
+                {t("select", "Select")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="relative flex items-center gap-[8px]">
         <button
@@ -358,10 +555,10 @@ const DateSwiper = ({
                   }`}
                 >
                   <span className={`text-[10px] font-medium uppercase ${selected ? 'text-white' : 'text-[#8696BB]'}`}>
-                    {formatInTimeZone(day.toDate(), { weekday: "short" })}
+                    {formatWeekdayShort(day.toDate())}
                   </span>
                   <span className={`text-[18px] font-semibold mt-[2px] ${selected ? 'text-white' : 'text-[#0D1B34]'}`}>
-                    {formatInTimeZone(day.toDate(), { day: "numeric" })}
+                    {day.format("D")}
                   </span>
                 </button>
               );
@@ -575,14 +772,73 @@ const Dropdown = ({
 const DoctorBlock = ({
   item,
   name,
+  language,
   setSesionStorage,
   informationWithSorage,
   formatInTimeZone,
 }) => {
   const { t } = useAppTranslation();
+  const normalizedLanguage = normalizeLanguage(language);
+  const intlLocale = getIntlLocale(normalizedLanguage);
+  const momentLocale = useMemo(
+    () =>
+      normalizedLanguage === "uk" ? "uk" : normalizedLanguage === "pl" ? "pl" : "en",
+    [normalizedLanguage]
+  );
+  const displayDateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(intlLocale, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
+    [intlLocale]
+  );
+  const formatDisplayDate = (date) => {
+    const parts = displayDateFormatter.formatToParts(date);
+    const withCapitalizedMonth = parts.map((part) => {
+      if (part.type !== "month") return part.value;
+      const [first, ...rest] = part.value;
+      return `${first.toLocaleUpperCase(intlLocale)}${rest.join("")}`;
+    });
+    const joined = withCapitalizedMonth.join("");
+    const [first, ...rest] = joined;
+    return `${first.toLocaleUpperCase(intlLocale)}${rest.join("")}`;
+  };
   console.log(item , 'item in doctor block');
   const [open , setOpen] = useState(Boolean(item.time?.length));
-  const slotDate = item.time?.[0]?.dateStart;
+  const groupedSlots = useMemo(() => {
+    const slots = item.time || [];
+    const byDate = new Map();
+    const dateTimeFormats = [
+      "DD.MM.YYYY HH:mm:ss",
+      "DD.MM.YYYY HH:mm",
+      "YYYY-MM-DD HH:mm:ss",
+      "YYYY-MM-DD HH:mm",
+      "YYYY-MM-DDTHH:mm:ss",
+      "YYYY-MM-DDTHH:mm",
+      moment.ISO_8601,
+    ];
+
+    slots.forEach((slot) => {
+      const parsed = moment(slot.dateStart, dateTimeFormats, true).locale(momentLocale);
+      if (!parsed.isValid()) return;
+      const dateKey = parsed.format("YYYY-MM-DD");
+      const displayDate = formatDisplayDate(parsed.toDate());
+      if (!byDate.has(dateKey)) byDate.set(dateKey, { displayDate, slots: [] });
+      byDate.get(dateKey).slots.push(slot);
+    });
+
+    return Array.from(byDate.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([dateKey, group]) => ({
+        dateKey,
+        displayDate: group.displayDate,
+        slots: group.slots.sort(
+          (a, b) => new Date(a.dateStart) - new Date(b.dateStart)
+        ),
+      }));
+  }, [item.time, momentLocale, displayDateFormatter, intlLocale]);
 
   const setAppPage = SelfBookingStore((state) => state.setAppPage);
   const setChosenDoctor = SelfBookingStore((state) => state.setChosenDoctor);
@@ -616,25 +872,23 @@ const DoctorBlock = ({
       </div>
       </div>
       <div className="h-[1px] background-[#F5F5F5] w-full"></div>
-      {
-        open  && <div className="flex flex-col gap-[8px]">
-        <div className="flex flex-col   ">
-          <div className="flex gap-[8px] items-center">
-            <p className="font-hebrew text-[14px] text-[#4A5565]">
-              {slotDate
-                ? formatDateForDisplay(slotDate)
-                : ""}
-            </p>
-          </div>
-          <div className="flex gap-[4px] flex-wrap items-center">
-           
-            {item.time.map((time, i) => {
-              console.log(item , 'item in time map');
-              return (
-                <button
-                  key={i}
-                  onClick={() => {
-                     setAppPage("for who mobile");
+      {open && (
+        <div className="flex flex-col gap-[12px]">
+          {groupedSlots.map((group) => (
+            <div key={group.dateKey} className="flex flex-col">
+              <div className="flex gap-[8px] items-center">
+                <p className="font-hebrew text-[14px] text-[#4A5565]">
+                  {group.displayDate}
+                </p>
+              </div>
+              <div className="flex gap-[4px] flex-wrap items-center">
+                {group.slots.map((time, i) => {
+                  console.log(item, "item in time map");
+                  return (
+                    <button
+                      key={`${group.dateKey}-${i}`}
+                      onClick={() => {
+                        setAppPage("for who mobile");
                         setSesionStorage({
                           ...informationWithSorage,
                           doctor: {
@@ -643,27 +897,24 @@ const DoctorBlock = ({
                             speciality: item.speciality,
                             id: item.id,
                             cabinetId: item.cabinetId,
-                            eventStartDateTime:
-                             time.dateStart,
+                            eventStartDateTime: time.dateStart,
                             eventEnd: time.dateEnd,
                           },
                         });
-                  }}
-                  className="w-[100px] text-[#364153] active:text-white active:bg-[#8380FF] h-[53px] rounded-[10px] flex items-center justify-center shadow-[0_2px_10px_0_rgba(0,0,0,0.06),_0_1px_2px_-1px_rgba(0,0,0,0.05)]"
-                >
-                 
-                  <p className=" text-[16px] font-hebrew ">
-                    {time.title.toUpperCase()}
-                  </p>
-                </button>
-              );
-            })}
-
-           
-          </div>
+                      }}
+                      className="w-[100px] text-[#364153] active:text-white active:bg-[#8380FF] h-[53px] rounded-[10px] flex items-center justify-center shadow-[0_2px_10px_0_rgba(0,0,0,0.06),_0_1px_2px_-1px_rgba(0,0,0,0.05)]"
+                    >
+                      <p className=" text-[16px] font-hebrew ">
+                        {time.title.toUpperCase()}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-      }
+      )}
     </div>
   );
 };

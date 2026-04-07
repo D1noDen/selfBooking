@@ -69,6 +69,8 @@ const DatePickerField = ({
   const [isOpen, setIsOpen] = useState(false);
   const [pickerViewDate, setPickerViewDate] = useState(new Date());
   const [typedValue, setTypedValue] = useState("");
+  const [isMonthMenuOpen, setIsMonthMenuOpen] = useState(false);
+  const [isYearMenuOpen, setIsYearMenuOpen] = useState(false);
 
   useOnClickOutside(pickerRef, () => setIsOpen(false));
 
@@ -162,6 +164,10 @@ const DatePickerField = ({
   const inputValue = typedValue || displayValue;
 
   useEffect(() => {
+    if (!isOpen) {
+      setIsMonthMenuOpen(false);
+      setIsYearMenuOpen(false);
+    }
     if (!isOpen) return;
 
     const shouldScrollToLatestOnFirstOpen =
@@ -281,6 +287,8 @@ const DatePickerField = ({
             onClick={() => {
               if (disabled) return;
               setPickerViewDate(selectedDate || effectiveMaxDate || new Date());
+              setIsMonthMenuOpen(false);
+              setIsYearMenuOpen(false);
               setIsOpen((prev) => !prev);
             }}
           >
@@ -291,10 +299,10 @@ const DatePickerField = ({
         </div>
         {isOpen && !disabled && (
           <div
-            className="absolute top-[44px] left-1/2 -translate-x-1/2 z-30 w-[670px] rounded-[12px] bg-white p-4"
-            style={{ boxShadow: "0px 2px 4px -2px #0000001A" }}
+            className="absolute top-[44px] left-1/2 -translate-x-1/2 z-30 w-full max-w-[340px] rounded-[12px] bg-white p-4"
+            style={{ boxShadow: '0px 10px 60px 0px #0000001A' }}
           >
-            <div className="flex gap-4">
+            <div className="flex">
               {(() => {
                 const pickerMonth = pickerViewDate.getMonth();
                 const pickerYear = pickerViewDate.getFullYear();
@@ -330,110 +338,125 @@ const DatePickerField = ({
                 }
 
                 return (
-                  <>
-                    <div
-                      ref={monthListRef}
-                      className="w-[190px] max-h-[360px] scrollmainContent overflow-y-auto pr-2 border-r border-[#E3E4EA]"
-                    >
-                      {monthNames.map((month, index) => (
+                  <div className="flex-1">
+                    <div className="relative flex items-center gap-4 mb-4">
+                      <div className="relative">
                         <button
                           type="button"
-                          key={month}
-                          ref={index === pickerMonth ? activeMonthButtonRef : null}
-                          className={`w-full px-3 flex justify-center items-center text-center py-2 rounded-[8px] text-[15px] font-sans ${
-                            index === pickerMonth
-                              ? "bg-[#F5F3FF] text-[#2B2B2F]"
-                              : "text-[#8D8D8D] hover:bg-[#F0F1F7]"
-                          }`}
-                          onClick={() => setPickerViewDate(new Date(pickerYear, index, 1))}
+                          className="flex items-center gap-2 text-[18px] font-semibold text-[#333333] hover:text-[#7C67FF]"
+                          onClick={() => {
+                            setIsMonthMenuOpen((prev) => !prev);
+                            setIsYearMenuOpen(false);
+                          }}
                         >
-                          {month}
+                          {monthNames[pickerMonth]}
+                          <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11 1L6 6L1 1" stroke="#99A1AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                        {isMonthMenuOpen && (
+                          <div className="absolute left-0 mt-2 w-[170px] max-h-[240px] scrollmainContent overflow-y-auto rounded-[10px] border border-[#E3E4EA] bg-white p-2 z-40">
+                            <div ref={monthListRef} className="max-h-[220px] overflow-y-auto">
+                              {monthNames.map((month, index) => (
+                                <button
+                                  type="button"
+                                  key={month}
+                                  ref={index === pickerMonth ? activeMonthButtonRef : null}
+                                  className={`w-full px-3 flex justify-start items-center text-left py-2 rounded-[8px] text-[15px] font-sans ${
+                                    index === pickerMonth
+                                      ? "bg-[#F5F3FF] text-[#2B2B2F]"
+                                      : "text-[#8D8D8D] hover:bg-[#F0F1F7]"
+                                  }`}
+                                  onClick={() => {
+                                    setPickerViewDate(new Date(pickerYear, index, 1));
+                                    setIsMonthMenuOpen(false);
+                                  }}
+                                >
+                                  {month}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 text-[18px] font-semibold text-[#333333] hover:text-[#7C67FF]"
+                          onClick={() => {
+                            setIsYearMenuOpen((prev) => !prev);
+                            setIsMonthMenuOpen(false);
+                          }}
+                        >
+                          {pickerYear}
+                          <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11 1L6 6L1 1" stroke="#99A1AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                        {isYearMenuOpen && (
+                          <div className="absolute left-0 mt-2 w-[120px] max-h-[240px] scrollmainContent overflow-y-auto rounded-[10px] border border-[#E3E4EA] bg-white p-2 z-40">
+                            <div ref={yearListRef} className="max-h-[220px] overflow-y-auto">
+                              {yearOptions.map((year) => (
+                                <button
+                                  type="button"
+                                  key={year}
+                                  ref={year === pickerYear ? activeYearButtonRef : null}
+                                  className={`w-full px-3 flex justify-start items-center text-left py-2 rounded-[8px] text-[15px] font-sans ${
+                                    year === pickerYear
+                                      ? "bg-[#F5F3FF] text-[#2B2B2F]"
+                                      : "text-[#8D8D8D] hover:bg-[#F0F1F7]"
+                                  }`}
+                                  onClick={() => {
+                                    setPickerViewDate(new Date(year, pickerMonth, 1));
+                                    setIsYearMenuOpen(false);
+                                  }}
+                                >
+                                  {year}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-7 gap-y-2 mb-3">
+                      {weekdayNames.map((dayName) => (
+                        <span
+                          key={dayName}
+                          className="text-center text-[14px] text-[#B3B3B3] font-semibold font-sans"
+                        >
+                          {dayName}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-y-2">
+                      {calendarDays.map((day) => (
+                        <button
+                          type="button"
+                          key={day.iso}
+                          disabled={day.isDisabled}
+                          className={`h-[42px] w-[42px] mx-auto rounded-full text-[14px] font-medium ${
+                            day.isSelected
+                              ? "bg-[#EDEBFF] text-[#7C67FF]"
+                              : day.isCurrentMonth
+                              ? "text-[#333333] hover:bg-[#F5F3FF]"
+                              : "text-[#C9CBD4]"
+                          } ${day.isDisabled ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""}`}
+                          onClick={() => {
+                            if (day.isDisabled) return;
+                            field.onChange(toIsoDate(day.value));
+                            setTypedValue("");
+                            field.onBlur();
+                            setIsOpen(false);
+                            setIsMonthMenuOpen(false);
+                            setIsYearMenuOpen(false);
+                          }}
+                        >
+                          {day.day}
                         </button>
                       ))}
                     </div>
-                    <div
-                      ref={yearListRef}
-                      className="w-[120px] max-h-[360px] scrollmainContent overflow-y-auto pr-2"
-                    >
-                      {yearOptions.map((year) => (
-                        <button
-                          type="button"
-                          key={year}
-                          ref={year === pickerYear ? activeYearButtonRef : null}
-                          className={`w-full px-3 flex justify-center items-center text-center py-2 rounded-[8px] text-[15px] font-sans ${
-                            year === pickerYear
-                              ? "bg-[#F5F3FF] text-[#2B2B2F]"
-                              : "text-[#8D8D8D] hover:bg-[#F0F1F7]"
-                          }`}
-                          onClick={() => setPickerViewDate(new Date(year, pickerMonth, 1))}
-                        >
-                          {year}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex-1 pl-2">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-[17px] font-semibold text-[#333333]">
-                          {monthNames[pickerMonth]} {pickerYear}
-                        </h4>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#ECEEFF]"
-                            onClick={() => setPickerViewDate(new Date(pickerYear, pickerMonth - 1, 1))}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M11.4999 15L6.8999 10L11.4999 5" stroke="#7C67FF" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#ECEEFF]"
-                            onClick={() => setPickerViewDate(new Date(pickerYear, pickerMonth + 1, 1))}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M6.8999 15L11.4999 10L6.8999 5" stroke="#7C67FF" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-7 gap-y-2 mb-3">
-                        {weekdayNames.map((dayName) => (
-                          <span
-                            key={dayName}
-                            className="text-center text-[14px] text-[#33333366] font-semibold font-sans"
-                          >
-                            {dayName}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="grid grid-cols-7 gap-y-2">
-                        {calendarDays.map((day) => (
-                          <button
-                            type="button"
-                            key={day.iso}
-                            disabled={day.isDisabled}
-                            className={`h-[46px] rounded-[10px] text-[14px] font-medium ${
-                              day.isSelected
-                                ? "bg-[#7C67FF] text-white"
-                                : day.isCurrentMonth
-                                ? "text-[#333333] hover:bg-[#F5F3FF]"
-                                : "text-[#C9CBD4]"
-                            } ${day.isDisabled ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""}`}
-                            onClick={() => {
-                              if (day.isDisabled) return;
-                              field.onChange(toIsoDate(day.value));
-                              setTypedValue("");
-                              field.onBlur();
-                              setIsOpen(false);
-                            }}
-                          >
-                            {day.day}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
+                  </div>
                 );
               })()}
             </div>

@@ -66,25 +66,31 @@ export default function LanguageSelector({ showFlags = true }) {
         </button>
 
         {isOpen && (
-          <div className={`absolute z-20 ${!showFlags ? 'bottom-[30px]' : 'top-full mt-2'} w-max bg-white rounded-xl shadow-lg border border-white/30 overflow-hidden right-0`}>
-            {languageOptions.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => {
-                  setLanguage(lang.code);
-                  setIsOpen(false);
-                }}
-                className={`flex items-center gap-3 px-6 py-3 w-full text-left hover:bg-white/20 transition-colors duration-150 ${
-                  currentLanguage.code === lang.code ? "bg-white/10" : ""
-                }`}
-              >
-                {showFlags && <FlagIcon code={lang.code} />}
-                <span className="font-medium font-hebrew text-[15px] text-gray-500">
-                  {lang.label}
-                </span>
-              </button>
-            ))}
-          </div>
+          <>
+            <div
+              className="fixed inset-0 z-[998]"
+              onClick={() => setIsOpen(false)}
+            />
+            <div className={`absolute z-[999] ${!showFlags ? 'left-0 bottom-[20px]' : 'top-full mt-2'} w-max bg-white rounded-xl shadow-lg border border-white/30 overflow-hidden right-0`}>
+              {languageOptions.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    setLanguage(lang.code);
+                    setIsOpen(false);
+                  }}
+                  className={`flex items-center gap-3 px-6 py-3 w-full text-left hover:bg-white/20 transition-colors duration-150 ${
+                    currentLanguage.code === lang.code ? "bg-white/10" : ""
+                  }`}
+                >
+                  {showFlags && <FlagIcon code={lang.code} />}
+                  <span className="font-medium font-hebrew text-[15px] text-gray-500">
+                    {lang.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

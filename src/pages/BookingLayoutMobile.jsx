@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import axios from "axios";
 import useResize from "./pageSize";
 
 import ChooseACompanyM from "./MobilePges/ChooseACompanyM";
@@ -14,6 +15,7 @@ import FinalPage from "./FinalPage";
 import Footer from "./Footer";
 import SelfBookingStore from "../store/SelfBookingStore";
 import { useAppTranslation } from "../i18n/useAppTranslation";
+import useAuth from "../store/useAuth";
 
 const BookingLayoutMobile = ({
   types,
@@ -26,6 +28,56 @@ const BookingLayoutMobile = ({
   const mainBlock = useRef(0);
   const pageSize = useResize();
   const flashMessage = SelfBookingStore((state) => state.flashMessage);
+  const setFlashMessage = SelfBookingStore((state) => state.setFlashMessage);
+  const { auth } = useAuth();
+  const authHandledRef = useRef(false);
+  const apiErrorHandledRef = useRef(false);
+
+  useEffect(() => {
+    if (authHandledRef.current) return;
+    if (auth) return;
+    authHandledRef.current = true;
+    setFlashMessage(
+      t(
+        "invalid_booking_link",
+        "Your booking link is invalid or has expired. Please start over."
+      )
+    );
+  }, [auth, setFlashMessage, t]);
+
+  useEffect(() => {
+    const interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (apiErrorHandledRef.current) {
+          return Promise.reject(error);
+        }
+        const status = error?.response?.status;
+        let message = "";
+        if (status === 404) {
+          message = t(
+            "invalid_booking_link",
+            "Your booking link is invalid or has expired. Please start over."
+          );
+        } else if (!error?.response) {
+          message = t(
+            "api_unavailable",
+            "The server is not responding. Please try again."
+          );
+        } else {
+          message =
+            error?.response?.data?.DisplayMessage ||
+            t("api_error", "Something went wrong. Please try again.");
+        }
+        apiErrorHandledRef.current = true;
+        setFlashMessage(message);
+        return Promise.reject(error);
+      }
+    );
+    return () => {
+      axios.interceptors.response.eject(interceptorId);
+    };
+  }, [setFlashMessage, t]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });

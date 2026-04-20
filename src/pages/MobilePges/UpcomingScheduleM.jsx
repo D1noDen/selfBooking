@@ -248,9 +248,9 @@ const {auth} = useAuth();
           
         </div>
         <div className="flex gap-[12px] mt-[16px]">
-          <div className="px-[12px] h-[35px]  bg-[rgba(255,255,255,0.10)] flex items-center  gap-[8px]  rounded-[10px] w-[242px]">
+          <div className="px-[12px] h-[35px] w-max  bg-[rgba(255,255,255,0.10)] flex items-center  gap-[8px]  rounded-[10px]">
            <img className="h-[20px] w-[14px]" src={geoPoint} />
-              <p className="text-[14px] text-white font-hebrew ">
+              <p className="text-[14px] text-white font-hebrew w-full">
                 {t("default_city", "Warsaw")}
               </p>
             </div>
